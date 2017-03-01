@@ -168,10 +168,6 @@ sub processOperands($$) {
 				$arg->{mem}->{size} = $size;
 				$arg->{mem}->{type} = "m$size" if ( defined $size );
 			}
-			elsif (/is4/) {
-				$arg->{size} = 4;
-				push( @types, 'imm4' );
-			}
 			elsif (/^reg$/) {
 				$arg->{size} = 'PLATFORM_SIZE';
 				push( @types, 'reg' );

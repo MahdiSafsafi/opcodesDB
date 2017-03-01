@@ -89,7 +89,7 @@
 # - Fix xchg instructions.
 # - Add instructions aliases.
 
-# Last modification = 18:42:47 01 Mar 2017  
+# Last modification = 23:50:53 01 Mar 2017  
 
 use strict;
 use warnings;
@@ -1536,14 +1536,14 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
   ['vmovhlps'      , 'W:xmm, xmm, xmm'              , 'rvm:  vex.nds.128.0f.wig 12 /r      ' , 'CPUID=AVX'],
   ['vmovhlps'      , 'W:xmm, xmm, xmm'              , 'rvm:  evex.nds.128.0f.w0 12 /r      ' , 'CPUID=AVX512F'],
 
-  ['movhpd'        , 'xmm, m64'                     , 'rm:       66 0f 16 /r                   ' , 'CPUID=SSE2'],
+  ['movhpd'        , 'W:xmm, m64'                   , 'rm:       66 0f 16 /r                   ' , 'CPUID=SSE2'],
   ['vmovhpd'       , 'W:xmm, xmm, m64'              , 'rvm:      vex.nds.128.66.0f.wig 16 /r   ' , 'CPUID=AVX'],
   ['vmovhpd'       , 'W:xmm, xmm, m64'              , 'rvm:t1s:  evex.nds.128.66.0f.w1 16 /r   ' , 'CPUID=AVX512F'],
   ['movhpd'        , 'W:m64, xmm'                   , 'mr:       66 0f 17 /r                   ' , 'CPUID=SSE2'],
   ['vmovhpd'       , 'W:m64, xmm'                   , 'mr:       vex.128.66.0f.wig 17 /r       ' , 'CPUID=AVX'],
   ['vmovhpd'       , 'W:m64, xmm'                   , 'mr:t1s:   evex.128.66.0f.w1 17 /r       ' , 'CPUID=AVX512F'],
 
-  ['movhps'        , 'xmm, m64'                     , 'rm:      0f 16 /r                      ' , 'CPUID=SSE'],
+  ['movhps'        , 'W:xmm, m64'                   , 'rm:      0f 16 /r                      ' , 'CPUID=SSE'],
   ['vmovhps'       , 'W:xmm, xmm, m64'              , 'rvm:     vex.nds.128.0f.wig 16 /r      ' , 'CPUID=AVX'],
   ['vmovhps'       , 'W:xmm, xmm, m64'              , 'rvm:t2:  evex.nds.128.0f.w0 16 /r      ' , 'CPUID=AVX512F'],
   ['movhps'        , 'W:m64, xmm'                   , 'mr:      0f 17 /r                      ' , 'CPUID=SSE'],
@@ -1554,14 +1554,14 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
   ['vmovlhps'      , 'W:xmm, xmm, xmm'              , 'rvm:  vex.nds.128.0f.wig 16 /r      ' , 'CPUID=AVX'],
   ['vmovlhps'      , 'W:xmm, xmm, xmm'              , 'rvm:  evex.nds.128.0f.w0 16 /r      ' , 'CPUID=AVX512F'],
 
-  ['movlpd'        , 'xmm, m64'                     , 'rm:       66 0f 12 /r                   ' , 'CPUID=SSE2'],
+  ['movlpd'        , 'W:xmm, m64'                   , 'rm:       66 0f 12 /r                   ' , 'CPUID=SSE2'],
   ['vmovlpd'       , 'W:xmm, xmm, m64'              , 'rvm:      vex.nds.128.66.0f.wig 12 /r   ' , 'CPUID=AVX'],
   ['vmovlpd'       , 'W:xmm, xmm, m64'              , 'rvm:t1s:  evex.nds.128.66.0f.w1 12 /r   ' , 'CPUID=AVX512F'],
   ['movlpd'        , 'W:m64, xmm'                   , 'mr:       66 0f 13 /r                   ' , 'CPUID=SSE2'],
   ['vmovlpd'       , 'W:m64, xmm'                   , 'mr:       vex.128.66.0f.wig 13 /r       ' , 'CPUID=AVX'],
   ['vmovlpd'       , 'W:m64, xmm'                   , 'mr:t1s:   evex.128.66.0f.w1 13 /r       ' , 'CPUID=AVX512F'],
 
-  ['movlps'        , 'xmm, m64'                     , 'rm:      0f 12 /r                      ' , 'CPUID=SSE'],
+  ['movlps'        , 'W:xmm, m64'                   , 'rm:      0f 12 /r                      ' , 'CPUID=SSE'],
   ['vmovlps'       , 'W:xmm, xmm, m64'              , 'rvm:     vex.nds.128.0f.wig 12 /r      ' , 'CPUID=AVX'],
   ['vmovlps'       , 'W:xmm, xmm, m64'              , 'rvm:t2:  evex.nds.128.0f.w0 12 /r      ' , 'CPUID=AVX512F'],
   ['movlps'        , 'W:m64, xmm'                   , 'mr:      0f 13 /r                      ' , 'CPUID=SSE'],
@@ -1625,15 +1625,15 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
   ['movsd'         , 'W:<[es:*di]>, <[ds:*si]>'     , '      a5                            ' , 'REP'],
   ['movsq'         , 'W:<[*di]>, <[*si]>'           , 'x64:  rex.w a5                      ' , 'REP'],
 
-  ['movsd'         , 'xmm, xmm'                     , 'rm:      f2 0f 10 /r                   ' , 'REP CPUID=SSE2'],
-  ['movsd'         , 'xmm, m64'                     , 'rm:      f2 0f 10 /r                   ' , 'REP CPUID=SSE2'],
+  ['movsd'         , 'W:xmm, xmm'                   , 'rm:      f2 0f 10 /r                   ' , 'REP CPUID=SSE2'],
+  ['movsd'         , 'W:xmm, m64'                   , 'rm:      f2 0f 10 /r                   ' , 'REP CPUID=SSE2'],
   ['movsd'         , 'W:xmm/m64, xmm'               , 'mr:      f2 0f 11 /r                   ' , 'REP CPUID=SSE2'],
   ['vmovsd'        , 'W:xmm, xmm, xmm'              , 'rvm:     vex.nds.lig.f2.0f.wig 10 /r   ' , 'CPUID=AVX'],
   ['vmovsd'        , 'W:xmm, m64'                   , 'rm:      vex.lig.f2.0f.wig 10 /r       ' , 'CPUID=AVX'],
   ['vmovsd'        , 'W:xmm, xmm, xmm'              , 'mvr:     vex.nds.lig.f2.0f.wig 11 /r   ' , 'CPUID=AVX'],
   ['vmovsd'        , 'W:m64, xmm'                   , 'mr:      vex.lig.f2.0f.wig 11 /r       ' , 'CPUID=AVX'],
   ['vmovsd'        , 'W:xmm {kz}, xmm, xmm'         , 'rvm:     evex.nds.lig.f2.0f.w1 10 /r   ' , 'CPUID=AVX512F'],
-  ['vmovsd'        , 'xmm {kz}, m64'                , 'rm:t1s:  evex.lig.f2.0f.w1 10 /r       ' , 'CPUID=AVX512F'],
+  ['vmovsd'        , 'W:xmm {kz}, m64'              , 'rm:t1s:  evex.lig.f2.0f.w1 10 /r       ' , 'CPUID=AVX512F'],
   ['vmovsd'        , 'W:xmm {kz}, xmm, xmm'         , 'mvr:     evex.nds.lig.f2.0f.w1 11 /r   ' , 'CPUID=AVX512F'],
   ['vmovsd'        , 'W:m64 {k}, xmm'               , 'mr:t1s:  evex.lig.f2.0f.w1 11 /r       ' , 'CPUID=AVX512F'],
 
@@ -1651,15 +1651,15 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
   ['vmovsldup'     , 'W:ymm {kz}, ymm/m256'         , 'rm:fvm:  evex.256.f3.0f.w0 12 /r       ' , 'CPUID=AVX512F-VL'],
   ['vmovsldup'     , 'W:zmm {kz}, zmm/m512'         , 'rm:fvm:  evex.512.f3.0f.w0 12 /r       ' , 'CPUID=AVX512F'],
 
-  ['movss'         , 'xmm, xmm'                     , 'rm:      f3 0f 10 /r                   ' , 'CPUID=SSE'],
-  ['movss'         , 'xmm, m32'                     , 'rm:      f3 0f 10 /r                   ' , 'CPUID=SSE'],
+  ['movss'         , 'W:xmm, xmm'                   , 'rm:      f3 0f 10 /r                   ' , 'CPUID=SSE'],
+  ['movss'         , 'W:xmm, m32'                   , 'rm:      f3 0f 10 /r                   ' , 'CPUID=SSE'],
   ['vmovss'        , 'W:xmm, xmm, xmm'              , 'rvm:     vex.nds.lig.f3.0f.wig 10 /r   ' , 'CPUID=AVX'],
   ['vmovss'        , 'W:xmm, m32'                   , 'rm:      vex.lig.f3.0f.wig 10 /r       ' , 'CPUID=AVX'],
   ['movss'         , 'W:xmm/m32, xmm'               , 'mr:      f3 0f 11 /r                   ' , 'CPUID=SSE'],
   ['vmovss'        , 'W:xmm, xmm, xmm'              , 'mvr:     vex.nds.lig.f3.0f.wig 11 /r   ' , 'CPUID=AVX'],
   ['vmovss'        , 'W:m32, xmm'                   , 'mr:      vex.lig.f3.0f.wig 11 /r       ' , 'CPUID=AVX'],
   ['vmovss'        , 'W:xmm {kz}, xmm, xmm'         , 'rvm:     evex.nds.lig.f3.0f.w0 10 /r   ' , 'CPUID=AVX512F'],
-  ['vmovss'        , 'xmm {kz}, m32'                , 'rm:t1s:  evex.lig.f3.0f.w0 10 /r       ' , 'CPUID=AVX512F'],
+  ['vmovss'        , 'W:xmm {kz}, m32'              , 'rm:t1s:  evex.lig.f3.0f.w0 10 /r       ' , 'CPUID=AVX512F'],
   ['vmovss'        , 'W:xmm {kz}, xmm, xmm'         , 'mvr:     evex.nds.lig.f3.0f.w0 11 /r   ' , 'CPUID=AVX512F'],
   ['vmovss'        , 'W:m32 {k}, xmm'               , 'mr:t1s:  evex.lig.f3.0f.w0 11 /r       ' , 'CPUID=AVX512F'],
 
@@ -4421,239 +4421,239 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
 
   # ===>                                AMD SSE5 instructions                                <===
 
-  ['compd'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 2d /drex0 ib           ' , 'AMD CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
+  ['compd'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 2d /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
 
-  ['comps'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 2c /drex0 ib           ' , 'AMD CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
+  ['comps'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 2c /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
 
-  ['comsd'         , 'W:xmm, xmm, xmm/m64, imm8'    , 'xrmi:   0f 25 2f /drex0 ib           ' , 'AMD CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
+  ['comsd'         , 'W:xmm, xmm, xmm/m64, imm8'    , 'xrmi:   0f 25 2f /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
 
-  ['comss'         , 'W:xmm, xmm, xmm/m32, imm8'    , 'xrmi:   0f 25 2e /drex0 ib           ' , 'AMD CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
+  ['comss'         , 'W:xmm, xmm, xmm/m32, imm8'    , 'xrmi:   0f 25 2e /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.DE=M MXCSR.IE=M'],
 
-  ['cvtph2ps'      , 'W:xmm, xmm/m64'               , 'rm:   0f 7a 30 /r                  ' , 'AMD CPUID=SSE5'],
+  ['cvtph2ps'      , 'W:xmm, xmm/m64'               , 'rm:   0f 7a 30 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['cvtps2ph'      , 'W:xmm/m64, xmm'               , 'mr:   0f 7a 31 /r                  ' , 'AMD CPUID=SSE5'],
+  ['cvtps2ph'      , 'W:xmm/m64, xmm'               , 'mr:   0f 7a 31 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['fmaddpd'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 01 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 01 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 05 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddpd'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 05 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddpd'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 01 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 01 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 05 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddpd'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 05 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fmaddps'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 00 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 00 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 04 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddps'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 04 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddps'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 00 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 00 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 04 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddps'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 04 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fmaddsd'       , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 03 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 03 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 07 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddsd'       , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 07 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddsd'       , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 03 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 03 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 07 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddsd'       , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 07 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fmaddss'       , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 02 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 02 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 06 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmaddss'       , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 06 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddss'       , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 02 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 02 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 06 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmaddss'       , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 06 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fmsubpd'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 09 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 09 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 0d /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubpd'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 0d /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubpd'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 09 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 09 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubpd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 0d /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubpd'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 0d /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fmsubps'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 08 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 08 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 0c /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubps'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 0c /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubps'       , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 08 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 08 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubps'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 0c /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubps'       , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 0c /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fmsubsd'       , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 0b /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 0b /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 0f /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubsd'       , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 0f /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubsd'       , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 0b /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 0b /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubsd'       , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 0f /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubsd'       , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 0f /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fmsubss'       , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 0a /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 0a /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 0e /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fmsubss'       , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 0e /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubss'       , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 0a /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 0a /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubss'       , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 0e /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fmsubss'       , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 0e /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmaddpd'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 11 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 11 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 15 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddpd'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 15 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddpd'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 11 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 11 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 15 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddpd'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 15 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmaddps'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 10 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 10 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 14 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddps'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 14 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddps'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 10 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 10 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 14 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddps'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 14 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmaddsd'      , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 13 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 13 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 17 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddsd'      , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 17 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddsd'      , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 13 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 13 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 17 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddsd'      , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 17 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmaddss'      , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 12 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 12 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 16 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmaddss'      , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 16 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddss'      , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 12 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 12 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 16 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmaddss'      , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 16 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmsubpd'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 19 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 19 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 1d /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubpd'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 1d /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubpd'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 19 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 19 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubpd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 1d /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubpd'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 1d /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmsubps'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 18 /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 18 /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 1c /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubps'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 1c /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubps'      , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 18 /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 18 /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubps'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 1c /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubps'      , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 1c /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmsubsd'      , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 1b /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 1b /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 1f /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubsd'      , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 1f /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubsd'      , 'W:xmm, xmm, xmm, xmm/m64'     , 'xxrm:   0f 24 1b /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 1b /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubsd'      , 'W:xmm, xmm, xmm/m64, xmm'     , 'xrmx:   0f 24 1f /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubsd'      , 'W:xmm, xmm/m64, xmm, xmm'     , 'xmrx:   0f 24 1f /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['fnmsubss'      , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 1a /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 1a /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 1e /drex0              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
-  ['fnmsubss'      , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 1e /drex1              ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubss'      , 'W:xmm, xmm, xmm, xmm/m32'     , 'xxrm:   0f 24 1a /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 1a /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubss'      , 'W:xmm, xmm, xmm/m32, xmm'     , 'xrmx:   0f 24 1e /drex0              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['fnmsubss'      , 'W:xmm, xmm/m32, xmm, xmm'     , 'xmrx:   0f 24 1e /drex1              ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.OE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['frczpd'        , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 11 /r                  ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['frczpd'        , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 11 /r                  ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['frczps'        , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 10 /r                  ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['frczps'        , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 10 /r                  ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['frczsd'        , 'W:xmm, xmm/m64'               , 'rm:   0f 7a 13 /r                  ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['frczsd'        , 'W:xmm, xmm/m64'               , 'rm:   0f 7a 13 /r                  ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['frczss'        , 'W:xmm, xmm/m32'               , 'rm:   0f 7a 12 /r                  ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
+  ['frczss'        , 'W:xmm, xmm/m32'               , 'rm:   0f 7a 12 /r                  ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.UE=M MXCSR.DE=M MXCSR.IE=M'],
 
-  ['pcmov'         , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 22 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pcmov'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 22 /drex1              ' , 'AMD CPUID=SSE5'],
-  ['pcmov'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 26 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pcmov'         , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 26 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pcmov'         , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 22 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pcmov'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 22 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pcmov'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 26 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pcmov'         , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 26 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomb'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4c /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomb'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4c /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomd'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4e /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomd'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4e /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomq'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4f /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomq'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4f /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomub'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6c /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomub'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6c /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomud'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6e /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomud'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6e /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomuq'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6f /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomuq'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6f /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomuw'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6d /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomuw'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 6d /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pcomw'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4d /drex0 ib           ' , 'AMD CPUID=SSE5'],
+  ['pcomw'         , 'W:xmm, xmm, xmm/m128, imm8'   , 'xrmi:   0f 25 4d /drex0 ib           ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['permpd'        , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 21 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['permpd'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 21 /drex1              ' , 'AMD CPUID=SSE5'],
-  ['permpd'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 25 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['permpd'        , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 25 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['permpd'        , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 21 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['permpd'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 21 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['permpd'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 25 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['permpd'        , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 25 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['permps'        , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 20 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['permps'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 20 /drex1              ' , 'AMD CPUID=SSE5'],
-  ['permps'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 24 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['permps'        , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 24 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['permps'        , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 20 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['permps'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 20 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['permps'        , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 24 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['permps'        , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 24 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddbd'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 42 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddbd'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 42 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddbq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 43 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddbq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 43 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddbw'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 41 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddbw'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 41 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phadddq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 4b /r                  ' , 'AMD CPUID=SSE5'],
+  ['phadddq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 4b /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddubd'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 52 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddubd'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 52 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddubq'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 53 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddubq'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 53 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddubw'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 51 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddubw'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 51 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddudq'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 5b /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddudq'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 5b /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phadduwd'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 56 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phadduwd'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 56 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phadduwq'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 57 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phadduwq'      , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 57 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddwd'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 46 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddwd'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 46 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phaddwq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 47 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phaddwq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 47 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phsubbw'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 61 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phsubbw'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 61 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phsubdq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 63 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phsubdq'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 63 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['phsubwd'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 62 /r                  ' , 'AMD CPUID=SSE5'],
+  ['phsubwd'       , 'W:xmm, xmm/m128'              , 'rm:   0f 7a 62 /r                  ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacsdd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 9e /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacsdd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 9e /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacsdqh'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 9f /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacsdqh'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 9f /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacsdql'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 97 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacsdql'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 97 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacssdd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 8e /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacssdd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 8e /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacssdqh'     , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 8f /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacssdqh'     , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 8f /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacssdql'     , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 87 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacssdql'     , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 87 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacsswd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 86 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacsswd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 86 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacssww'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 85 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacssww'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 85 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacswd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 96 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacswd'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 96 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmacsww'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 95 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmacsww'       , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 95 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmadcsswd'     , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 a6 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmadcsswd'     , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 a6 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pmadcswd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 b6 /drex0              ' , 'AMD CPUID=SSE5'],
+  ['pmadcswd'      , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 b6 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pperm'         , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 23 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pperm'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 23 /drex1              ' , 'AMD CPUID=SSE5'],
-  ['pperm'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 27 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pperm'         , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 27 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pperm'         , 'W:xmm, xmm, xmm, xmm/m128'    , 'xxrm:   0f 24 23 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pperm'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 23 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pperm'         , 'W:xmm, xmm, xmm/m128, xmm'    , 'xrmx:   0f 24 27 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pperm'         , 'W:xmm, xmm/m128, xmm, xmm'    , 'xmrx:   0f 24 27 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['protb'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 40 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['protb'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 40 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['protb'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 40 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['protb'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 40 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['protd'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 42 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['protd'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 42 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['protd'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 42 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['protd'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 42 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['protq'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 43 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['protq'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 43 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['protq'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 43 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['protq'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 43 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['protw'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 41 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['protw'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 41 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['protw'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 41 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['protw'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 41 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshab'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 48 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshab'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 48 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshab'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 48 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshab'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 48 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshad'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 4a /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshad'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 4a /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshad'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 4a /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshad'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 4a /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshaq'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 4b /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshaq'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 4b /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshaq'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 4b /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshaq'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 4b /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshaw'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 49 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshaw'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 49 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshaw'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 49 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshaw'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 49 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshlb'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 44 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshlb'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 44 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshlb'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 44 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshlb'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 44 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshld'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 46 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshld'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 46 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshld'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 46 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshld'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 46 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshlq'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 47 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshlq'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 47 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshlq'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 47 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshlq'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 47 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['pshlw'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 45 /drex0              ' , 'AMD CPUID=SSE5'],
-  ['pshlw'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 45 /drex1              ' , 'AMD CPUID=SSE5'],
+  ['pshlw'         , 'W:xmm, xmm, xmm/m128'         , 'xrm:   0f 24 45 /drex0              ' , 'AMD ABANDONED CPUID=SSE5'],
+  ['pshlw'         , 'W:xmm, xmm/m128, xmm'         , 'xmr:   0f 24 45 /drex1              ' , 'AMD ABANDONED CPUID=SSE5'],
 
-  ['ptest'         , 'W:xmm, xmm/m128'              , 'rm:   66 0f 38 17 /r               ' , 'AMD CPUID=SSE5 ZF=U CF=U'],
+  ['ptest'         , 'W:xmm, xmm/m128'              , 'rm:   66 0f 38 17 /r               ' , 'AMD ABANDONED CPUID=SSE5 ZF=U CF=U'],
 
-  ['roundpd'       , 'W:xmm, xmm/m128, imm8'        , 'rmi:   66 0f 3a 09 /r ib            ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.IE=M'],
+  ['roundpd'       , 'W:xmm, xmm/m128, imm8'        , 'rmi:   66 0f 3a 09 /r ib            ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.IE=M'],
 
-  ['roundps'       , 'W:xmm, xmm/m128, imm8'        , 'rmi:   66 0f 3a 08 /r ib            ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.IE=M'],
+  ['roundps'       , 'W:xmm, xmm/m128, imm8'        , 'rmi:   66 0f 3a 08 /r ib            ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.IE=M'],
 
-  ['roundsd'       , 'W:xmm, xmm/m64, imm8'         , 'rmi:   66 0f 3a 0b /r ib            ' , 'AMD CPUID=SSE5 MXCSR.PE=M MXCSR.IE=M'],
+  ['roundsd'       , 'W:xmm, xmm/m64, imm8'         , 'rmi:   66 0f 3a 0b /r ib            ' , 'AMD ABANDONED CPUID=SSE5 MXCSR.PE=M MXCSR.IE=M'],
 
 
   # ===>                                AMD XOP & FMA instructions                                <===
@@ -4779,15 +4779,15 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
 
   ['vpcomw'        , 'W:xmm, xmm, xmm/m128, imm8'   , 'rvmi:   xop.nds.128.m8.w0 cd /r ib   ' , 'AMD CPUID=XOP'],
 
-  ['vpermil2pd'    , 'W:xmm, xmm, xmm/m128, xmm, is4' , 'rvmi:   vex.nds.128.0f3a.w0 49 /is4  ' , 'AMD CPUID=XOP'],
-  ['vpermil2pd'    , 'W:xmm, xmm, xmm, xmm/m128, is4' , 'rvim:   vex.nds.128.0f3a.w1 49 /is4  ' , 'AMD CPUID=XOP'],
-  ['vpermil2pd'    , 'W:ymm, ymm, ymm/m256, ymm, is4' , 'rvmi:   vex.nds.256.0f3a.w0 49 /is4  ' , 'AMD CPUID=XOP'],
-  ['vpermil2pd'    , 'W:ymm, ymm, ymm, ymm/m256, is4' , 'rvim:   vex.nds.256.0f3a.w1 49 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2pd'    , 'W:xmm, xmm, xmm/m128, xmm, imm4' , 'rvmi:   vex.nds.128.0f3a.w0 49 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2pd'    , 'W:xmm, xmm, xmm, xmm/m128, imm4' , 'rvim:   vex.nds.128.0f3a.w1 49 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2pd'    , 'W:ymm, ymm, ymm/m256, ymm, imm4' , 'rvmi:   vex.nds.256.0f3a.w0 49 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2pd'    , 'W:ymm, ymm, ymm, ymm/m256, imm4' , 'rvim:   vex.nds.256.0f3a.w1 49 /is4  ' , 'AMD CPUID=XOP'],
 
-  ['vpermil2ps'    , 'W:xmm, xmm, xmm/m128, xmm, is4' , 'rvmi:   vex.nds.128.0f3a.w0 48 /is4  ' , 'AMD CPUID=XOP'],
-  ['vpermil2ps'    , 'W:xmm, xmm, xmm, xmm/m128, is4' , 'rvim:   vex.nds.128.0f3a.w1 48 /is4  ' , 'AMD CPUID=XOP'],
-  ['vpermil2ps'    , 'W:ymm, ymm, ymm/m256, ymm, is4' , 'rvmi:   vex.nds.256.0f3a.w0 48 /is4  ' , 'AMD CPUID=XOP'],
-  ['vpermil2ps'    , 'W:ymm, ymm, ymm, ymm/m256, is4' , 'rvim:   vex.nds.256.0f3a.w1 48 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2ps'    , 'W:xmm, xmm, xmm/m128, xmm, imm4' , 'rvmi:   vex.nds.128.0f3a.w0 48 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2ps'    , 'W:xmm, xmm, xmm, xmm/m128, imm4' , 'rvim:   vex.nds.128.0f3a.w1 48 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2ps'    , 'W:ymm, ymm, ymm/m256, ymm, imm4' , 'rvmi:   vex.nds.256.0f3a.w0 48 /is4  ' , 'AMD CPUID=XOP'],
+  ['vpermil2ps'    , 'W:ymm, ymm, ymm, ymm/m256, imm4' , 'rvim:   vex.nds.256.0f3a.w1 48 /is4  ' , 'AMD CPUID=XOP'],
 
   ['vphaddbd'      , 'W:xmm, xmm/m128'              , 'rm:   xop.128.m9.w0 c2 /r          ' , 'AMD CPUID=XOP'],
 
