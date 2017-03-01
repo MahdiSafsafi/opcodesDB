@@ -10,9 +10,9 @@ require 'base.pl';
 require 'x86data.pl';
 our $environment;
 
-my %char2Size = ( b => 8, w => 16, d => 32, p => 48, q => 64, x => 128, y => 256, z => 512 );
+my %char2size = ( b => 8, w => 16, d => 32, p => 48, q => 64, x => 128, y => 256, z => 512 );
 my %char2vsibSize = ();
-grep { /^([xyz])$/ && ( $char2vsibSize{$1} = $char2Size{$1} ) } keys %char2Size;
+grep { /^([xyz])$/ && ( $char2vsibSize{$1} = $char2size{$1} ) } keys %char2size;
 
 # ---> Utils <---
 {
@@ -118,8 +118,8 @@ sub processOperands($$) {
 
 				# process inside {..}.
 				( $arg->{mask}, $arg->{zeroing} ) = ( 1, defined($1) || 0 ) if ( $word =~ /^k(z)*$/ );
-				$insn->{suppress_all_exceptions} = $arg->{hint} = $word eq 'sae' || 0;
-				$insn->{embedded_rounding}       = $arg->{hint} = $word eq 'er'  || 0;
+				$insn->{suppress_all_exceptions} = $arg->{vector_hint} = $word eq 'sae' || 0;
+				$insn->{embedded_rounding}       = $arg->{vector_hint} = $word eq 'er'  || 0;
 			}
 
 			if (/^(rel|moffs|imm)(\d+)$/) {
@@ -164,7 +164,7 @@ sub processOperands($$) {
 				$arg->{mem}->{index} = $index;
 				$arg->{mem}->{seg}   = $segment;
 				$arg->{embedded}     = 1;
-				my $size = $insn->{mnemonic} =~ /([bwdq])$/ ? $char2Size{$1} : undef;
+				my $size = $insn->{mnemonic} =~ /([bwdq])$/ ? $char2size{$1} : undef;
 				$arg->{mem}->{size} = $size;
 				$arg->{mem}->{type} = "m$size" if ( defined $size );
 			}
@@ -217,7 +217,7 @@ sub processOperands($$) {
 
 		# make type looks nicely.
 		@types = rmdup sort { ( $a =~ /mem/ ) - ( $b =~ /mem/ ) } @types;
-		@types = grep(!/mem/, @types)if(scalar @types >1);
+		@types = grep( !/mem/, @types ) if ( scalar @types > 1 );
 		my $type = join( '|', @types );
 		$arg->{type} = $type;
 		$arg->{mem}->{brdcst} = $brdcst if ( defined $brdcst );
@@ -232,9 +232,7 @@ sub handleVectorPrefix($$) {
 		if (/^(evex|vex|xop)$/) {
 			$hash->{name} = $1;
 			$hash->{size} = { xop => 3, evex => 4, vex => -1 }->{$1};
-			if ( $hash->{size} == -1 ) {
-				$hash->{size} = $full =~ /((0f(38|3a)*))|(w([01]|ig))/ ? 3 : 2;
-			}
+			$hash->{size} = $full =~ /((0f(38|3a)*))|(w([01]|ig))/ ? 3 : 2 if ( $hash->{size} == -1 );
 		}
 		elsif (/^(nds|ndd|dds)$/) {
 			$hash->{vvvv} = $1;
@@ -349,7 +347,7 @@ sub processOpcode($$) {
 		}
 		elsif (/^([iom])([bwdpq])$/) {
 			my $name = { i => 'imm', o => 'offset', m => 'moffs' }->{$1};
-			my $sz = $char2Size{$2};
+			my $sz = $char2size{$2};
 			$hash->{name} = "$name$sz";
 			$hash->{size} = $sz / 8;
 		}
