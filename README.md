@@ -1,7 +1,7 @@
 # opcodesDB:
 opcodesDB is a CPU low level environment representation (registers, flags, instructions, ...).  Data are listed in a packed dynamic structure which can be unpacked by a parser at any time.
 
-This project is a fruit of many years of development and a lot of attempts to standardize CPU environment.
+This project is a fruit of many years of development and a lot of attempts ([Parsable-Instructions](https://github.com/MahdiSafsafi/Parsable-Instructions), [asmdb](https://github.com/MahdiSafsafi/asmdb)) to standardize CPU environment.
 
 Currently, only two architecture are supported (x86 and x64).
 
@@ -26,6 +26,12 @@ export.pl x86.json
 -	**instructions** = contains a list of all instructions used by x86 environment (Intel and AMD).
 
 ### Instructions:
+opcodesDB supports all instructions found in Intel and AMD documentation. Including:
+- FPU, MMX, SSE, SSE2, SSE3, SSSE3, SSE4.1, SSE4.2 instructions.
+- AMD 3DNOW and SSE5 instructions.
+- AES, MPX, F16C, VME, BMI, BMI2... instructions.
+- FMA, FMA4, AVX, AVX2, AVX512 instructions.
+
 Each instruction is represented as a hash and contains the following info:
 -	**mnemonic**: instruction mnemonic (name).
 -	**architecture**: required architecture for instruction.
@@ -45,12 +51,17 @@ Each instruction is represented as a hash and contains the following info:
 	  - **ignore** : accept lock but ignore it because memory is not the destination operand.
 -	**opcode**: is a list of hash representing the instruction opcode. Each hash has a name (evex,vex,xop,3dnow,opcode,modrm,imm…) and a size. Depending on hash name, it contains field specified to that name.
     - **vex|evex|xop**:
-    	- size: vector prefix size (2|3|4).
+    	- size: vector prefix size.
       - length: vector length (128|256|512).
       - mmmmm: vector embedded escaping (0f|0f38|0f3a|m8|m9).
       - pp: vector.pp field (mandatory prefixes).
       - vvvv: vector.vvvv field (nds|ndd|dds).
       - w: like rex.w (1|0|ignore).
+    - **rex|drex**:
+      - oc0|w: (rex.w|drex.oc0) field. Could be 0 or 1.
+    - **3dnow**:
+      - size: size of 3dnow prefix = 2.
+      - value: value of 3dnow prefix = 0x0f0f.
     - **prefix**
       - value = decimal code for prefix (0x66, 0xf2, 0xf3).
     - **escape**:
@@ -60,7 +71,7 @@ Each instruction is represented as a hash and contains the following info:
       - reg: if argument is encoded inside the opcode, this field describes the register (i => fpu, r[bwdq] => general reg).
     - **modrm**:
       - reg: if defined, it indicates that ModRm.Reg must be equal to reg.
-    - **imm|offset|moffs|3dnow**: standar fields. they have size and value fields.
+    - **imm|offset|moffs**: standar fields. they have size and value fields.
     
 -	**operands**: a list of hash representing arguments used by the instruction.
   -	**optional**: if true, it means that this argument is optional and assembler/dissembler may omit it.
