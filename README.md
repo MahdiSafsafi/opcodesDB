@@ -1,6 +1,8 @@
 # opcodesDB:
 opcodesDB is a CPU low level environment representation (registers, flags, instructions, ...).  Data are listed in a packed dynamic structure which can be unpacked by a parser at any time.
+
 This project is a fruit of many years of development and a lot of attempts to standardize CPU environment.
+
 Currently, only two architecture are supported (x86 and x64).
 
 # Using opcodesDB:
