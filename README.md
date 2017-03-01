@@ -129,18 +129,18 @@ Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zm
 
 	'operands' => [
 		{
-			'value'    => undef,
-			'encoding' => 'modrm.reg',
-			'read'     => 0,
-			'embedded' => 0,
-			'mem'      => undef,
-			'type'     => 'zmmreg',
-			'zeroing'  => 1,
-			'mask'     => 1,
-			'size'     => 512,
-			'write'    => 1,
-			'hint'     => 0,
-			'optional' => 0
+			'value'       => undef,
+			'encoding'    => 'modrm.reg',
+			'read'        => 0,
+			'embedded'    => 0,
+			'mem'         => undef,
+			'type'        => 'zmmreg',
+			'zeroing'     => 1,
+			'mask'        => 1,
+			'size'        => 512,
+			'write'       => 1,
+			'optional'    => 0,
+			'vectorHint'  => 0,
 		},
 		{
 			'mem'      => undef,
@@ -166,13 +166,13 @@ Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zm
 				'type'     => 'm512',
 				'vsibSize' => undef
 			},
-			'value'    => undef,
-			'encoding' => 'modrm.rm',
-			'read'     => 1,
-			'optional' => 0,
-			'size'     => 512,
-			'hint'     => 1,
-			'write'    => 0
+			'value'      => undef,
+			'encoding'   => 'modrm.rm',
+			'read'       => 1,
+			'optional'   => 0,
+			'size'       => 512,
+			'write'      => 0,
+			'vectorHint' => 1,
 		}
 	],
 	'opcode' => [
