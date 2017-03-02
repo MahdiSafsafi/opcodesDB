@@ -42,7 +42,8 @@ Each instruction is represented as a hash and contains the following info:
 -	**suppressAllExceptions**: AVX512 instruction supports suppressing all exceptions {sae}.
 -	**embeddedRounding**: AVX512 instruction supports embedded rounding {er}.
 -	**fpuPush|fpuPop** = N: FPU instruction pushes|popes stack-register N time.
-- **fpuTop** = N: FPU instruction increment top register by N time (N could be negative = decrement).
+-	**fpuTop** = N: FPU instruction increment top register by N time (N could be negative = decrement).
+-	**branchType**: if instruction is branch, this field contains branch type (SHORT|NEAR|FAR).
 -	**lock**: provides lock info for the instruction. Instruction is lockable if **hardware|legacy** is set.
 	  - **hardware** : hardware lock is supported.
 	  - **legacy** : locking using legacy lock prefix is supported. 
@@ -82,6 +83,8 @@ Each instruction is represented as a hash and contains the following info:
   -	**write**: if true, the operand is written.
   -	**size**: argument size in bits.
   -	**type**: argument type (reg, imm,…).
+  -	**mask**: register|memory supports AVX512 masking.
+  -	**zeroing**: register supports masking with zeroing.
   -	**mem**: if defined, it means that argument is a memory or supports memory addressing. It contains the following info:
     - size : size of memory in bits.
     - seg: memory segment.
@@ -101,6 +104,23 @@ Each instruction is represented as a hash and contains the following info:
   - **N** = Not affected.
   - **X** = TM.
 
+#### Accessing instructions
+The snippet below, just shown how to iterate all instructions.```$instruction``` is a hash representing all feature listed above.
+```
+use strict;
+use warnings;
+use Data::Dumper;
+
+require'x86.pl';
+
+my $environment = getEnvironment();
+foreach my $instruction ( @{ $environment->{instructions} } ) {
+	print Dumper $instruction;
+	# do something with $instruction ...
+}
+
+print "Done\n";
+```
 ## Example:
 Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zmm, zmm/m512/b32 {er}'``` . After parsing it, the parser reports the following result:
 ```
