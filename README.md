@@ -42,7 +42,8 @@ Each instruction is represented as a hash and contains the following info:
 -	**suppressAllExceptions**: AVX512 instruction supports suppressing all exceptions {sae}.
 -	**embeddedRounding**: AVX512 instruction supports embedded rounding {er}.
 -	**fpuPush|fpuPop** = N: FPU instruction pushes|popes stack-register N time.
-- **fpuTop** = N: FPU instruction increment top register by N time (N could be negative = decrement).
+-	**fpuTop** = N: FPU instruction increment top register by N time (N could be negative = decrement).
+-	**branchType: if instruction is branch, this field contains branch type (SHORT|NEAR|FAR).
 -	**lock**: provides lock info for the instruction. Instruction is lockable if **hardware|legacy** is set.
 	  - **hardware** : hardware lock is supported.
 	  - **legacy** : locking using legacy lock prefix is supported. 
