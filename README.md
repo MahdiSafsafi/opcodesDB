@@ -83,6 +83,8 @@ Each instruction is represented as a hash and contains the following info:
   -	**write**: if true, the operand is written.
   -	**size**: argument size in bits.
   -	**type**: argument type (reg, imm,…).
+  -	**mask**: register|memory supports AVX512 masking.
+  -	**zeroing**: register supports masking with zeroing.
   -	**mem**: if defined, it means that argument is a memory or supports memory addressing. It contains the following info:
     - size : size of memory in bits.
     - seg: memory segment.
