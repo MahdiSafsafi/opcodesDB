@@ -104,6 +104,23 @@ Each instruction is represented as a hash and contains the following info:
   - **N** = Not affected.
   - **X** = TM.
 
+#### Accessing instructions
+The snippet below, just shown how to iterate all instructions.```$instruction``` is a hash representing all feature listed above.
+```
+use strict;
+use warnings;
+use Data::Dumper;
+
+require'x86.pl';
+
+my $environment = getEnvironment();
+foreach my $instruction ( @{ $environment->{instructions} } ) {
+	print Dumper $instruction;
+	# do something with $instruction ...
+}
+
+print "Done\n";
+```
 ## Example:
 Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zmm, zmm/m512/b32 {er}'``` . After parsing it, the parser reports the following result:
 ```
