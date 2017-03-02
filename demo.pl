@@ -2,12 +2,12 @@
 use strict;
 use warnings;
 use Data::Dumper;
-
-require'x86.pl';
+require 'x86.pl';
 
 my $environment = getEnvironment();
 foreach my $instruction ( @{ $environment->{instructions} } ) {
-	print Dumper $instruction;
+	print Dumper sortInsnKeys($instruction);
+
 	# do something with $instruction ...
 }
 

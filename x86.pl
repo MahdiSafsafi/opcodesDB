@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use Data::Dumper;
 use Storable 'dclone';
-
 no warnings 'experimental::smartmatch';
 use feature 'say';
 
@@ -60,6 +59,27 @@ sub prettifyHashKeys {
 	elsif ( ref($ref) eq 'ARRAY' ) {
 		prettifyHashKeys($_) foreach (@$ref);
 	}
+}
+
+sub sortInsnKeys($) {
+	my $insn = shift;
+	eval 'require Tie::IxHash;';
+	return $insn if ($@);    # not installed !
+	tie my %sorted, 'Tie::IxHash';
+	my @orders = qw/
+	  mnemonic architecture vendor level deprecated lock
+	  rep repe repne bnd branchType
+	  suppressAllExceptions embeddedRounding
+	  fpuTop fpuPush fpuPop
+	  cpuid operands opcode
+	  flags x87flags mxcsr
+	  /;
+	my %orders = ();
+	my $order  = 1000;
+	$orders{$_} = $order-- foreach (@orders);
+	$sorted{$_} = $insn->{$_} foreach ( sort { ( $orders{$b} || 0 ) - ( $orders{$a} || 0 ) } keys %$insn );
+	undef $insn;
+	return \%sorted;
 }
 
 # ------------------------------------ ------------------------------------
