@@ -100,7 +100,7 @@
 # - Fix xchg instructions.    => Done :)
 # - Add instructions aliases. => Done :)
 
-# Last modification = 22:31:23 03 Mar 2017  
+# Last modification = 22:53:54 03 Mar 2017  
 
 use strict;
 use warnings;
@@ -144,12 +144,18 @@ my %flags = (
 
 my @shortcuts = (
 	{ map    => [qw/SHORT NEAR FAR/],                                      to => 'BRANCH_TYPE' },
-	{ map    => 'AMD',                                                     to => 'Vendor' },
+	{ map    => 'AMD',                                                     to => 'vendor' },
 	{ expand => [qw/ID VIP VIF AC VM RF NT OF DF IF TF ZF AF PF CF IOPL/], to => 'FLAGS' },
 	{ expand => [qw/B TOP C0 C1 C2 C3 ES/],                                to => 'x87Flags.SW' },
 	{ expand => [qw/X PC/],                                                to => 'x87Flags.CW' },
 	{ expand => [qw/DUE MM FZ DAZ/],                                       to => 'MXCSR' },
 );
+
+# Keys are case-sensitive => do not edit them !
+# The parser needs to fill the template from the meta-data, so the key in the
+# template should match exactly the one found in meta-data.
+# After instruction got processed, names will be transformed to c-style names:
+# eg:  ALIAS_OF => aliasOf.
 
 my %template = (
 	mnemonic                => '',
@@ -163,9 +169,11 @@ my %template = (
 	BND                     => 0,
 	suppress_all_exceptions => 0,
 	embedded_rounding       => 0,
+	STACK_PTR               => 0,
 	FPU_PUSH                => 0,
 	FPU_POP                 => 0,
 	FPU_TOP                 => 0,
+	BRANCH_TYPE             => 0,
 	CPUID                   => [],
 	FLAGS                   => {},
 	MXCSR                   => {},
