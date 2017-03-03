@@ -100,7 +100,7 @@
 # - Fix xchg instructions.    => Done :)
 # - Add instructions aliases. => Done :)
 
-# Last modification = 18:47:12 03 Mar 2017  
+# Last modification = 22:31:23 03 Mar 2017  
 
 use strict;
 use warnings;
@@ -1089,9 +1089,9 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
   ['invpcid'       , 'r32, m128'                    , 'x86:rm:  66 0f 38 82 /r                ' , 'LEVEL=0 CPUID=INVPCID'],
   ['invpcid'       , 'r64, m128'                    , 'x64:rm:  66 0f 38 82 /r                ' , 'LEVEL=0 CPUID=INVPCID'],
 
-  ['iret'          , ''                             , '      os16 cf                       ' , 'OF=P FLAGS.SF=P ZF=P AF=P PF=P CF=P TF=P IF=P DF=P NT=T'],
-  ['iretd'         , ''                             , '      os32 cf                       ' , ''],
-  ['iretq'         , ''                             , 'x64:  os64 cf                       ' , ''],
+  ['iretw'         , ''                             , '      os16 cf                       ' , 'OF=P FLAGS.SF=P ZF=P AF=P PF=P CF=P TF=P IF=P DF=P NT=T'],
+  ['iretd'         , ''                             , '      os32 cf                       ' , 'OF=P FLAGS.SF=P ZF=P AF=P PF=P CF=P TF=P IF=P DF=P NT=T'],
+  ['iretq'         , ''                             , 'x64:  os64 cf                       ' , 'OF=P FLAGS.SF=P ZF=P AF=P PF=P CF=P TF=P IF=P DF=P NT=T'],
 
   ['ja'            , 'rel8'                         , 'd:      77 ob                         ' , 'SHORT BND CF=T ZF=T'],
   ['jae'           , 'rel8'                         , 'd:      73 ob                         ' , 'SHORT BND CF=T'],
@@ -3129,7 +3129,7 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
   ['sysexit64'     , ''                             , 'x64:  os64 0f 35                    ' , ''],
 
   ['sysret'        , ''                             , 'x64:  os32 0f 07                    ' , ''],
-  ['sysret'        , ''                             , 'x64:  os64 0f 07                    ' , ''],
+  ['sysret64'      , ''                             , 'x64:  os64 0f 07                    ' , ''],
 
   ['test'          , 'R:al, imm8'                   , 'i:       a8 ib                         ' , 'OF=C FLAGS.SF=M ZF=M AF=U PF=M CF=C'],
   ['test'          , 'R:ax, imm16'                  , 'i:       os16 a9 iw                    ' , 'OF=C FLAGS.SF=M ZF=M AF=U PF=M CF=C'],
@@ -4318,7 +4318,7 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
 
   ['xlat'          , 'al, <[*bx+al]>'               , '      d7                            ' , 'FORM=1'],
   ['xlatb'         , ''                             , '      d7                            ' , 'FORM=2'],
-  ['xlatb'         , ''                             , 'x64:  os64 d7                       ' , 'FORM=2'],
+  ['xlatb'         , ''                             , 'x64:  rex.w d7                      ' , 'FORM=2'],
 
   ['xor'           , 'al, imm8'                     , 'i:       34 ib                         ' , 'OF=C FLAGS.SF=M ZF=M AF=U PF=M CF=C'],
   ['xor'           , 'ax, imm16'                    , 'i:       os16 35 iw                    ' , 'OF=C FLAGS.SF=M ZF=M AF=U PF=M CF=C'],
