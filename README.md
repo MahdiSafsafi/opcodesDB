@@ -99,7 +99,7 @@ Each instruction is represented as a hash and contains the following info:
     - vsibSize: AVX vsib size (128|256|512).
     - type: memory type (m8,m128, ptr16,m16-m32,...).
 
--	**Flags**: modified flags by instruction. Each flag is represented as follow :
+-	**flags**: modified flags by instruction. Each flag is represented as follow :
   - **T** = instruction Tests flag.
   - **M** = instruction Modifies flag.
   - **C** = instruction sets flag to zero (Clear).
