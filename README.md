@@ -38,9 +38,11 @@ Each instruction is represented as a hash and contains the following info:
 -	**deprecated**: if true, it means that manufacturing (Intel or AMD) stopped supporting such instruction.
 -	**bnd|rep|repe|repne**: if true, instruction supports that prefix.
 -	**level**: privilege level required to execute the instruction (3 or 0).
+-	**aliasOf** = X: instruction is an alias to X instruction.
 -	**cupid**: a list of required flags of cupid to run this instruction.
 -	**suppressAllExceptions**: AVX512 instruction supports suppressing all exceptions {sae}.
 -	**embeddedRounding**: AVX512 instruction supports embedded rounding {er}.
+-	**stackPtr** = +/- N: instruction increments/decrements stack pointer by N bits.
 -	**fpuPush|fpuPop** = N: FPU instruction pushes|popes stack-register N time.
 -	**fpuTop** = N: FPU instruction increment top register by N time (N could be negative = decrement).
 -	**branchType**: if instruction is branch, this field contains branch type (SHORT|NEAR|FAR).
@@ -63,6 +65,8 @@ Each instruction is represented as a hash and contains the following info:
     - **3dnow**:
       - size: size of 3dnow prefix = 2.
       - value: value of 3dnow prefix = 0x0f0f.
+    - **opsize**: instruction requires operand size prefix. The value (16,32,64) specifies the type of prefix depending on architecture.
+    - **adsize**: instruction requires address size prefix(16,32,64).
     - **prefix**
       - value = decimal code for prefix (0x66, 0xf2, 0xf3).
     - **escape**:
