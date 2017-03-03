@@ -6,8 +6,7 @@ require 'x86.pl';
 
 my $environment = getEnvironment();
 foreach my $instruction ( @{ $environment->{instructions} } ) {
-	print Dumper sortInsnKeys($instruction);
-
+	print Dumper $instruction;
 	# do something with $instruction ...
 }
 

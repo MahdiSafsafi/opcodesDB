@@ -328,6 +328,14 @@ sub processOpcode($$) {
 		elsif (/rex|drex/) {
 			handleRexPrefix( $hash, $_ );
 		}
+		elsif (/os(\d+)/) {
+			$hash->{name}   = 'opsize';
+			$hash->{value} = $1;
+		}
+		elsif (/as(\d+)/) {
+			$hash->{name} = 'adsize';
+			$hash->{value} = $1;
+		}
 		elsif (/^0f0f$/) {
 			my $byte = hex($_);
 			$hash->{name} = '3dnow';
@@ -443,6 +451,7 @@ sub processInstruction($$) {
 	processMetaData( $insn, @$insnFields[3] );
 	processOperands( $insn, @$insnFields[1] );
 	applyEncoding($insn);
+	$insn->{ALIAS_OF} = lc $insn->{ALIAS_OF} if ( $insn->{ALIAS_OF} );
 	delete $insn->{environment};
 	delete $insn->{internal};
 	return $insn;
