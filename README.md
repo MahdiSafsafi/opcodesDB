@@ -7,7 +7,7 @@ Currently, only two architecture are supported (x86 and x64).
 
 # Using opcodesDB:
 If you’re a Perl developer, you can directly start exploring x86 environment by calling ```getEnvironment``` function:
-```
+```pl
 require 'x86.pl';
 my $environment = getEnvironment();
 # explore ...
@@ -110,7 +110,7 @@ Each instruction is represented as a hash and contains the following info:
 
 #### Accessing instructions
 The snippet below, just shown how to iterate all instructions.```$instruction``` is a hash representing all feature listed above.
-```
+```pl
 use strict;
 use warnings;
 use Data::Dumper;
@@ -127,7 +127,7 @@ print "Done\n";
 ```
 ## Example:
 Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zmm, zmm/m512/b32 {er}'``` . After parsing it, the parser reports the following result:
-```
+```pl
 {
 	'architecture'          => 'x86-64',
 	'mnemonic'              => 'vaddps',
