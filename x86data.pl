@@ -100,15 +100,11 @@
 # - Fix xchg instructions.    => Done :)
 # - Add instructions aliases. => Done :)
 
-# Last modification = 22:53:54 03 Mar 2017  
+# Last modification = 22:19:30 06 Mar 2017  
 
 use strict;
 use warnings;
-use ReadOnly;
 no warnings 'experimental::smartmatch';
-
-# ===> constants <===
-use constant PLATFORM_SIZE => -1;
 
 my $PLATFORM_SIZE = qw(PLATFORM_SIZE);
 
