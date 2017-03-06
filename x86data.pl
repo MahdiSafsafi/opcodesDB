@@ -100,7 +100,7 @@
 # - Fix xchg instructions.    => Done :)
 # - Add instructions aliases. => Done :)
 
-# Last modification = 22:19:30 06 Mar 2017  
+# Last modification = 00:03:55 07 Mar 2017  
 
 use strict;
 use warnings;
@@ -1710,10 +1710,10 @@ my $locked = 1;    # Don't edit instructions until ($locked == 0) !
   ['vmovups'       , 'W:ymm/m256 {kz}, ymm'         , 'rm:fvm:  evex.256.0f.w0 11 /r          ' , 'CPUID=AVX512F-VL'],
   ['vmovups'       , 'W:zmm/m512 {kz}, zmm'         , 'rm:fvm:  evex.512.0f.w0 11 /r          ' , 'CPUID=AVX512F'],
 
-  ['movzx'         , 'W:r16, r/m8'                  , 'rm:      0f b6 /r                      ' , ''],
-  ['movzx'         , 'W:r32, r/m8'                  , 'rm:      0f b6 /r                      ' , ''],
+  ['movzx'         , 'W:r16, r/m8'                  , 'rm:      os16 0f b6 /r                 ' , ''],
+  ['movzx'         , 'W:r32, r/m8'                  , 'rm:      os32 0f b6 /r                 ' , ''],
   ['movzx'         , 'W:r64, r/m8'                  , 'x64:rm:  os64 0f b6 /r                 ' , ''],
-  ['movzx'         , 'W:r32, r/m16'                 , 'rm:      os16 0f b7 /r                 ' , ''],
+  ['movzx'         , 'W:r32, r/m16'                 , 'rm:      os32 0f b7 /r                 ' , ''],
   ['movzx'         , 'W:r64, r/m16'                 , 'x64:rm:  os64 0f b7 /r                 ' , ''],
 
   ['mpsadbw'       , 'xmm, xmm/m128, imm8'          , 'rmi:   66 0f 3a 42 /r ib                 ' , 'CPUID=SSE4v1'],
