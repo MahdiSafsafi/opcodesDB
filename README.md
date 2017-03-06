@@ -17,6 +17,8 @@ If not, that’s not a problem, all what you need to do is to export the environ
 # open a cmd in the opcodesDB folder and run this command:
 export.pl x86.json
 ```
+This will produce a 'x86.json' file that contains all x86 environment informations (registers, instructions,...).
+
 ## X86 environment:
 -	**name** = environment name.
 -	**version** = environment version.
