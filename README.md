@@ -7,7 +7,7 @@ Currently, only two architecture are supported (x86 and x64).
 
 # Statut:
 ### x86-64: Mostly completed.
-### ARM: Work in progress.
+### ARM: Work in progress:
 * **AArch32.Base** = 80%.
 * **AArch32.SIMD** = 0%.
 * **AArch64.Base** = 50%.
