@@ -1,0 +1,1851 @@
+
+// === ARMv8-AArch64 instructions ===
+
+// Author: Mahdi Safsafi.
+// Doc : 'ARM® Architecture Reference Manual: ARMv8, for ARMv8-A architecture profil ID092916.' 
+
+// CHANGE LOG
+// ----------
+// 22/1/17:
+// - Unused fields in opcodes are now all hidden.
+// - Fixed syntax for MOV (wide immediate) && MOV (bitmask immediate) instructions.
+//
+// 21/1/17:
+// - Added aliases instructions info.
+// - Added groups to aliases instructions.
+// - Added missing (aliases and pseudo) instructions.
+//   => ALL instructions found in ARM doc are included ! 
+// - Fixed opcode for some instructions.
+// - Removed instruction class => I'm thinking to provide it on the fly.
+// - Removed A64 from meta data => Now it's encoded inside the opcode field.
+// - Removed "'" from sz field.
+// - Re-sorted instructions.
+//
+// 19/1/17:
+// - Added groups.
+// - Added NZCV info to the meta data.
+//
+// 18/1/17:
+// - First release.
+
+// Each group consists of 4 strings:
+//   [0] - Group ID or reference. Encoded as GRP* where * is a digit (ID).
+//   [1] - Group name.
+//   [2] - Group opcode.
+//   [3] - Group meta data. It contains group that decodes the sub-group.
+ 
+// Each instruction tuple consists of 4 strings:
+//   [0] - Instruction class.
+//   [1] - Instruction operands.
+//   [2] - Instruction opcode.
+//   [3] - Instruction metadata.
+
+// INSTRUCTION CLASS
+// -----------------
+//
+// Each instruction has a UNIQUE class that distinguishes it from instructions that have same mnemonic.
+// Class = [Mnemonic][Suffixes]*[.Arrangement specifier]*
+// * means optional.
+//
+// Mnemonic is instruction's mnemonic encoded using upper-case letters.
+// If mnemonic starts with lower-case letters, a 'S' in upper-case letter follows the mnemonic,
+// and this format means that the instruction updates the flags. Eg: 'adcSw' instruction.
+// %c means that the condition is encoded into instruction's mnemonic.
+// If '*' was used at the beginning of the mnemonic, it means that the instruction is an alias to other instruction.
+//
+// Suffixes follows mnemonic. and can be combined with the following values:
+// - b	=> Byte.
+// - h	=> Half-word.
+// - w	=> Word.
+// - d	=> Double-word.
+// - q	=> Qword.
+// - r	=> Register.
+// - x  => eXtend register.
+// - i  => Immediate.
+// - n 	=> Signed offset.
+// - u  => Unsigned offset.
+// - p  => Post index.
+// - k  => Pre index.
+// - f	=> Fixed-Point.
+// - z  => Zero.
+// - e	=> Element.
+// - s  => Scalar.
+// - v	=> Vector.
+// - fp => Floating-Point.
+// - sp => Single-Precision.
+// - dp => Double-Precision.
+// - hp => Half-Precision.
+// - hq => Half of 128-bit.
+// - g* => List items count where * is a digit [1-4].
+// - im	=> bitMask Immediate.
+// - il => Literal Immediate.
+// - it	=> inverTed Immediate.
+// - xX2yY => convert xX to yY.
+//
+// Arrangement specifier is present only when all operands have the same arrangement specifier.
+
+// INSTRUCTION OPERANDS
+// --------------------
+//
+// The operands have the same format used in ARM doc.
+// However, operands were mangled to provide more info.
+//
+// $RegX indicates that the register X accepts SP register.
+// RegX.T means that the arrangement specifier (T) is inherited from instruction's class. 
+// All immediates, labels are shown in [Imm|Label][Size] format.
+//
+// Interpreting the '%' operator.
+// The '%' operator was introduced to compress the required data. and is shown as "B%N*:S*"
+// * means optional.
+// B%N:S means that it's an array where 'B' (base) is the first_element, 'N' is (items_count-1)
+// and 'S' indicates a step used to generate (B+1..N+1) elements.
+// When N is omitted, it defaults to 1.
+// When (N = 0), it means that the '%' operator have no influence 
+// and it was just used to give a hint that {.+} encodes a list.
+// If step ('S') is present, the '%' operator is decoded using this formula: "element = previous_element + step".
+// Eg: 0%3:8 => [0, 8, 16, 24] 
+// If step is omitted,the '%' operator is decoded using this formula: "element += previous_element". 
+// Eg: 2%3 => [2, 4, 8, 16]
+// If %N is used after '}' it means that '{.+}' is a list, and (N+1) is the items count.
+// If %N is used after register X it means that the register could be (X,Y,... till N).
+// Eg : Bn%2 means that the register could be (Bn|Hn|Sn).
+// Eg2: Wm% means that the register could be (Wm|Xm).
+
+// INSTRUCTION OPCODE
+// ------------------
+//
+// The opcode represents a sequence of fields separated by '|'.
+// Each field is represented as : "[name][match][value][:size]".
+// All field's fields are optional, however a field can not be empty.
+// - name  : field's name.
+// - match : '=' or '!='.
+// - value : field's value in binary format.
+// - size  : field's size. Used to override default size.
+// If "'" is used, it means that field can't be 0 to encode arrangement.
+// If (field = ':size'), it means that value is 0.
+
+// META DATA
+// ---------
+//
+// GRP*:
+// A reference to group that decodes instruction.
+//
+// NZCV:
+// The NZCV represents the PSTATE.NZCV flags, 
+// and each flag can have one of the following values:
+// - W => instruction Writes flag.
+// - R => instruction Reads flag.
+// - X => instruction Reads AND Writes flag.
+// - Z => instruction sets flag to Zero.
+// - U => instruction deos not use flag (flag remains Unchanged).
+// Eg: NZCV=UURU => N=U, Z=U, C=R, V=U.
+// If only one letter is used, it applies to all flags.
+// Eg: NZCV=W => N=W, Z=W, C=W, V=W.
+//
+// ALIAS_OF:
+// If the instruction is an alias to other instruction, 'ALIAS_OF' provides the original instruction.
+//
+// PSEUDO_OF:
+// The instruction is a pseudo instruction of another instruction. 
+//
+// PREFERRED_IF:
+// Provides the necessary condition(s) to decode the alias instruction:
+//   - ALWAYS     => The instruction alias is always the preferred disassembly.
+//   - NEVER      => The instruction alias is never the preferred disassembly (Only supported for assembly).
+//   - Conditions => field1 [>|==|!=|<] field2.
+//   - Functions  => See alias functions.
+
+// ALIAS FUNCTIONS
+// ---------------
+//
+// Those functions bellow, are used to check whether the alias should be decoded or not.
+// Each function has 5 strings:
+//   [0]        - Function's name.
+//   [1] .. [4] - Function's argument.
+// If argument is empty, it means that the function does not use it.
+// Arguments are pushed to the function from instruction meta-data.
+// For more information about how to implement those functions,
+// refer to the ARM-ARM doc. They provide a c-like implementation.
+
+// TODO
+// ----
+//
+// - Add group to instructions. => Done :)
+// - Add aliases instructions to the main instruction. => Done :)
+// - MOV (from general) alias is missing ! => Done :)
+// - Check MOV (inverted wide immediate) alias instruction. => Done :)
+
+
+{
+
+  "architectures": [
+    { "H": "Thumb16" },
+    { "T": "Thumb32" },
+    { "A": "AArch32" },
+    { "X": "AArch64" }
+  ],
+  
+  "alias functions": [
+    ["MoveWidePreferred" , "sf"  , "N"   , "imms" , "immr"],
+    ["BFXPreferred"      , "sf"  , "opc" , "imms" , "immr"],
+    ["SysOp"             , "op1" , "CRn" , "CRm"  , "op2" ],
+    ["BitCount"          , "X"   , ""    , ""     , ""]
+  ],
+
+  "groups": [
+    ["GRP0"  , "Main"                           , "X:xxx|op0:4|xxxxxxxxxxxxxxxxxxxxxxxxx"                      , ""],
+    ["GRP1"  , "DataProcessingImm"              , "X:xxx|100|op0:3|xxxxxxxxxxxxxxxxxxxxxxx"                    , "GRP0"],
+    ["GRP2"  , "AddSubtractImm"                 , "X:sf|op|S|10001|shift|imm12|Rn|Rd"                          , "GRP1"],
+    ["GRP3"  , "Bitfield"                       , "X:sf|opc:2|100110|N|immr|imms|Rn|Rd"                        , "GRP1"],
+    ["GRP4"  , "Extract"                        , "X:sf|op21:2|100111|N|o0|Rm|imms|Rn|Rd"                      , "GRP1"],
+    ["GRP5"  , "LogicalImm"                     , "X:sf|opc:2|100100|N|immr|imms|Rn|Rd"                        , "GRP1"],
+    ["GRP6"  , "MoveWideImm"                    , "X:sf|opc:2|100101|shift|imm16|Rd"                           , "GRP1"],
+    ["GRP7"  , "RelAddressing"                  , "X:op|immlo|10000|immhi|Rd"                                  , "GRP1"],
+    ["GRP8"  , "BranchesExceptionSystem"        , "X:op0:3|101|op1:4|xxxxxxxxxxxxxxxxxxxxxx"                   , "GRP0"],
+    ["GRP9"  , "CompareBranchImm"               , "X:sf|011010|op|imm19|Rt"                                    , "GRP8"],
+    ["GRP10" , "ConditionalBranchImm"           , "X:0101010|o1|imm19|o0|cond"                                 , "GRP8"],
+    ["GRP11" , "Exception"                      , "X:11010100|opc:3|imm16|op2|LL:2"                            , "GRP8"],
+    ["GRP12" , "System"                         , "X:1101010100|L|op0:2|op1|CRn|CRm|op2|Rt"                    , "GRP8"],
+    ["GRP13" , "TestBranchImm"                  , "X:b5|011011|op|b40|imm14|Rt"                                , "GRP8"],
+    ["GRP14" , "UnconditionalBranchImm"         , "X:op|00101|imm26"                                           , "GRP8"],
+    ["GRP15" , "UnconditionalBranchReg"         , "X:1101011|opc:4|op2:5|op3:6|Rn|op4:5"                       , "GRP8"],
+    ["GRP16" , "LoadsStores"                    , "X:op0|x|op1:2|1|op2|0|op3:2|x|op4:6|xxxx|op5:2|xxxxxxxxxx"  , "GRP0"],
+    ["GRP17" , "SIMDLoadStoreMS"                , "X:0|Q|0011000|L|:6|opcode:4|sz:2|Rn|Rt"                     , "GRP16"],
+    ["GRP18" , "SIMDLoadStoreMSPostIndex"       , "X:0|Q|0011001|L|0|Rm|opcode:4|sz:2|Rn|Rt"                   , "GRP16"],
+    ["GRP19" , "SIMDLoadStoreSS"                , "X:0|Q|0011010|L|R|:5|opcode:3|S|sz:2|Rn|Rt"                 , "GRP16"],
+    ["GRP20" , "SIMDLoadStoreSSPostIndex"       , "X:0|Q|0011011|L|R|Rm|opcode:3|S|sz:2|Rn|Rt"                 , "GRP16"],
+    ["GRP21" , "LoadRegLiteral"                 , "X:opc:2|011|V|00|imm19|Rt"                                  , "GRP16"],
+    ["GRP22" , "LoadStoreExclusive"             , "X:sz:2|001000|o2|L|o1|Rs|o0|Rt2|Rn|Rt"                      , "GRP16"],
+    ["GRP23" , "LoadStoreNoAllocatePairOffset"  , "X:opc:2|101|V|:3|L|imm7|Rt2|Rn|Rt"                          , "GRP16"],
+    ["GRP24" , "LoadStoreRegImmPostIndex"       , "X:sz:2|111|V|00|opc:2|0|imm9|01|Rn|Rt"                      , "GRP16"],
+    ["GRP25" , "LoadStoreRegImmPreIndex"        , "X:sz:2|111|V|00|opc:2|0|imm9|11|Rn|Rt"                      , "GRP16"],
+    ["GRP26" , "LoadStoreRegRegisterOffset"     , "X:sz:2|111|V|00|opc:2|1|Rm|extend|S|10|Rn|Rt"               , "GRP16"],
+    ["GRP27" , "LoadStoreRegUnprivileged"       , "X:sz:2|111|V|00|opc:2|0|imm9|10|Rn|Rt"                      , "GRP16"],
+    ["GRP28" , "LoadStoreRegUnscaledImm"        , "X:sz:2|111|V|00|opc:2|0|imm9|00|Rn|Rt"                      , "GRP16"],
+    ["GRP29" , "LoadStoreRegUnsignedImm"        , "X:sz:2|111|V|01|opc:2|imm12|Rn|Rt"                          , "GRP16"],
+    ["GRP30" , "LoadStoreRegPairOffset"         , "X:opc:2|101|V|010|L|imm7|Rt2|Rn|Rt"                         , "GRP16"],
+    ["GRP31" , "LoadStoreRegPairPostIndex"      , "X:opc:2|101|V|001|L|imm7|Rt2|Rn|Rt"                         , "GRP16"],
+    ["GRP32" , "LoadStoreRegPairPreIndex"       , "X:opc:2|101|V|011|L|imm7|Rt2|Rn|Rt"                         , "GRP16"],
+    ["GRP33" , "DataProcessingReg"              , "X:x|op0|x|op1|101|op2:4|xxxxxxxxx|op3|xxxxxxxxxxx"          , "GRP0"],
+    ["GRP34" , "AddSubtractExtendedReg"         , "X:sf|op|S|01011|extend:2|1|Rm|extend|imm3|Rn|Rd"            , "GRP33"],
+    ["GRP35" , "AddSubtractShiftedReg"          , "X:sf|op|S|01011|shift|0|Rm|imm6|Rn|Rd"                      , "GRP33"],
+    ["GRP36" , "AddSubtractWithCarry"           , "X:sf|op|S|11010000|Rm|opcode2:6|Rn|Rd"                      , "GRP33"],
+    ["GRP37" , "ConditionalCompareImm"          , "X:sf|op|S|11010010|imm5|cond|1|o2|Rn|o3|nzcv"               , "GRP33"],
+    ["GRP38" , "ConditionalCompareReg"          , "X:sf|op|S|11010010|Rm|cond|0|o2|Rn|o3|nzcv"                 , "GRP33"],
+    ["GRP39" , "ConditionalSelect"              , "X:sf|op|S|11010100|Rm|cond|op2:2|Rn|Rd"                     , "GRP33"],
+    ["GRP40" , "DataProcessing1Source"          , "X:sf|1|S|11010110|opcode2:5|opcode:6|Rn|Rd"                 , "GRP33"],
+    ["GRP41" , "DataProcessing2Source"          , "X:sf|0|S|11010110|Rm|opcode:6|Rn|Rd"                        , "GRP33"],
+    ["GRP42" , "DataProcessing3Source"          , "X:sf|op54:2|11011|op31:3|Rm|o0|Ra|Rn|Rd"                    , "GRP33"],
+    ["GRP43" , "LogicalShiftedReg"              , "X:sf|opc:2|01010|shift|N|Rm|imm6|Rn|Rd"                     , "GRP33"],
+    ["GRP44" , "DataProcessingSIMDFP"           , "X:op0:4|111|op1:2|op2:4|op3:2|x|op4:6|xxxxxxxxxx"           , "GRP0"],
+    ["GRP45" , "SIMDAcrossLanes"                , "X:0|Q|U|01110|sz:2|11000|opcode:5|10|Rn|Rd"                 , "GRP44"],
+    ["GRP46" , "SIMDCopy"                       , "X:0|Q|op|01110000|imm5|0|imm4|1|Rn|Rd"                      , "GRP44"],
+    ["GRP47" , "SIMDExtract"                    , "X:0|Q|101110|op2:2|0|Rm|0|imm4|0|Rn|Rd"                     , "GRP44"],
+    ["GRP48" , "SIMDModifiedImm"                , "X:0|Q|op|0111100000|a|b|c|cmode:4|o2|1|d|e|f|g|h|Rd"        , "GRP44"],
+    ["GRP49" , "SIMDPermute"                    , "X:0|Q|001110|sz:2|0|Rm|0|opcode:3|10|Rn|Rd"                 , "GRP44"],
+    ["GRP50" , "SIMDScalarCopy"                 , "X:01|op|11110000|imm5|0|imm4|1|Rn|Rd"                       , "GRP44"],
+    ["GRP51" , "SIMDScalarPairwise"             , "X:01|U|11110|sz:2|11000|opcode:5|10|Rn|Rd"                  , "GRP44"],
+    ["GRP52" , "SIMDScalarShiftImm"             , "X:01|U|111110|immh:4|immb|opcode:5|1|Rn|Rd"                 , "GRP44"],
+    ["GRP53" , "SIMDScalarThreeDifferent"       , "X:01|U|11110|sz:2|1|Rm|opcode:4|00|Rn|Rd"                   , "GRP44"],
+    ["GRP54" , "SIMDScalarThreeSame"            , "X:01|U|11110|sz:2|1|Rm|opcode:5|1|Rn|Rd"                    , "GRP44"],
+    ["GRP55" , "SIMDScalarTwoRegMisc"           , "X:01|U|11110|sz:2|10000|opcode:5|10|Rn|Rd"                  , "GRP44"],
+    ["GRP56" , "SIMDScalarXIndexedElement"      , "X:01|U|11111|sz:2|L|M|Rm:4|opcode:4|H|0|Rn|Rd"              , "GRP44"],
+    ["GRP57" , "SIMDShiftImm"                   , "X:0|Q|U|011110|immh!=0000|immb|opcode:5|1|Rn|Rd"            , "GRP44"],
+    ["GRP58" , "SIMDTableLookup"                , "X:0|Q|001110|op2:2|0|Rm|0|len:2|op|00|Rn|Rd"                , "GRP44"],
+    ["GRP59" , "SIMDThreeDifferent"             , "X:0|Q|U|01110|sz:2|1|Rm|opcode:4|00|Rn|Rd"                  , "GRP44"],
+    ["GRP60" , "SIMDThreeSame"                  , "X:0|Q|U|01110|sz:2|1|Rm|opcode:5|1|Rn|Rd"                   , "GRP44"],
+    ["GRP61" , "SIMDTwoRegMisc"                 , "X:0|Q|U|01110|sz:2|10000|opcode:5|10|Rn|Rd"                 , "GRP44"],
+    ["GRP62" , "SIMDVectorXIndexedElement"      , "X:0|Q|U|01111|sz:2|L|M|Rm:4|opcode:4|H|0|Rn|Rd"             , "GRP44"],
+    ["GRP63" , "CryptographicAES"               , "X:01001110|sz:2|10100|opcode:5|10|Rn|Rd"                    , "GRP44"],
+    ["GRP64" , "CryptographicThreeRegSHA"       , "X:01011110|sz:2|0|Rm|0|opcode:3|00|Rn|Rd"                   , "GRP44"],
+    ["GRP65" , "CryptographicTwoRegSHA"         , "X:01011110|sz:2|10100|opcode:5|10|Rn|Rd"                    , "GRP44"],
+    ["GRP66" , "FPCompare"                      , "X:M|0|S|11110|type:2|1|Rm|op:2|1000|Rn|opcode2:5"           , "GRP44"],
+    ["GRP67" , "FPConditionalCompare"           , "X:M|0|S|11110|type:2|1|Rm|cond|01|Rn|op|nzcv"               , "GRP44"],
+    ["GRP68" , "FPConditionalSelect"            , "X:M|0|S|11110|type:2|1|Rm|cond|11|Rn|Rd"                    , "GRP44"],
+    ["GRP69" , "FPDataProcessing1Source"        , "X:M|0|S|11110|type:2|1|opcode:6|10000|Rn|Rd"                , "GRP44"],
+    ["GRP70" , "FPDataProcessing2Source"        , "X:M|0|S|11110|type:2|1|Rm|opcode:4|10|Rn|Rd"                , "GRP44"],
+    ["GRP71" , "FPDataProcessing3Source"        , "X:M|0|S|11111|type:2|o1|Rm|o0|Ra|Rn|Rd"                     , "GRP44"],
+    ["GRP72" , "FPImm"                          , "X:M|0|S|11110|type:2|1|imm8|100|imm5|Rd"                    , "GRP44"],
+    ["GRP73" , "ConvertBetweenFPAndFPt"         , "X:sf|0|S|11110|type:2|0|rmode:2|opcode:3|scale|Rn|Rd"       , "GRP44"],
+    ["GRP74" , "ConvertBetweenFPAndInt"         , "X:sf|0|S|11110|type:2|1|rmode:2|opcode:3|:6|Rn|Rd"          , "GRP44"]
+  ],
+
+  "instructions": [
+    ["abs"            , "Dd, Dn"                             , "X:01|0|11110|11|10000|01011|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["abs.8B%5|2D"    , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|sz:2|10000|01011|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["adc"            , "Wd, Wn, Wm"                         , "X:0|0|0|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=UURU"],
+    ["adc"            , "Xd, Xn, Xm"                         , "X:1|0|0|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=UURU"],
+    ["adcS"           , "Wd, Wn, Wm"                         , "X:0|0|1|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=WWXW"],
+    ["adcS"           , "Xd, Xn, Xm"                         , "X:1|0|1|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=WWXW"],
+
+    ["add"            , "$Wd, $Wn, #imm12{, LSL #0|12}"      , "X:0|0|0|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2"],
+    ["add"            , "$Xd, $Xn, #imm12{, LSL #0|12}"      , "X:1|0|0|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2"],
+    ["add"            , "$Wd, $Wn, Wm{, extend {#amount}}"   , "X:0|0|0|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34"],
+    ["add"            , "$Xd, $Xn, Rm{, extend {#amount}}"   , "X:1|0|0|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34"],
+    ["add"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|0|0|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35"],
+    ["add"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|0|0|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35"],
+    ["add"            , "Dd, Dn, Dm"                         , "X:01|0|11110|11|1|Rm|10000|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["addS"           , "Wd, $Wn, #imm12{, LSL #0|12}"       , "X:0|0|1|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2 NZCV=W"],
+    ["addS"           , "Xd, $Xn, #imm12{, LSL #0|12}"       , "X:1|0|1|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2 NZCV=W"],
+    ["addS"           , "Wd, $Wn, Wm{, extend {#amount}}"    , "X:0|0|1|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34 NZCV=W"],
+    ["addS"           , "Xd, $Xn, Rm{, extend {#amount}}"    , "X:1|0|1|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34 NZCV=W"],
+    ["addS"           , "Wd, Wn, Wm{, shift #amount}"        , "X:0|0|1|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35 NZCV=W"],
+    ["addS"           , "Xd, Xn, Xm{, shift #amount}"        , "X:1|0|1|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35 NZCV=W"],
+    ["add.8B%5|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|10000|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["addhn'2"        , "Vd.8B%5, Vn.8H|4S|2D, Vm.8H|4S|2D"  , "X:0|Q|0|01110|sz:2|1|Rm|0100|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["addp"           , "Dd, Vn.2D"                          , "X:01|0|11110|11|11000|11011|10|Rn|Rd"                 , "ARMv8+ GRP51"],
+    ["addp.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|10111|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["addv"           , "Bd%2, Vn.8B%3|4S"                   , "X:0|Q|0|01110|sz:2|11000|11011|10|Rn|Rd"              , "ARMv8+ GRP45"],
+
+    ["adr"            , "Xd, offset21"                       , "X:0|immlo|10000|immhi|Rd"                             , "ARMv8+ GRP7"],
+
+    ["adrp"           , "Xd, offset21*4096"                  , "X:1|immlo|10000|immhi|Rd"                             , "ARMv8+ GRP7"],
+
+    ["aesd.16B"       , "Vd.T, Vn.T"                         , "X:01001110|00|10100|00101|10|Rn|Rd"                   , "ARMv8+ GRP63"],
+
+    ["aese.16B"       , "Vd.T, Vn.T"                         , "X:01001110|00|10100|00100|10|Rn|Rd"                   , "ARMv8+ GRP63"],
+
+    ["aesimc.16B"     , "Vd.T, Vn.T"                         , "X:01001110|00|10100|00111|10|Rn|Rd"                   , "ARMv8+ GRP63"],
+
+    ["aesmc.16B"      , "Vd.T, Vn.T"                         , "X:01001110|00|10100|00110|10|Rn|Rd"                   , "ARMv8+ GRP63"],
+
+    ["and"            , "$Wd, Wn, #imm12"                    , "X:0|00|100100|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5"],
+    ["and"            , "$Xd, Xn, #imm13"                    , "X:1|00|100100|N|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5"],
+    ["and"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|00|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["and"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|00|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["andS"           , "Wd, Wn, #imm12"                     , "X:0|11|100100|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5 NZCV=WWZZ"],
+    ["andS"           , "Xd, Xn, #imm13"                     , "X:1|11|100100|N|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5 NZCV=WWZZ"],
+    ["andS"           , "Wd, Wn, Wm{, shift #amount}"        , "X:0|11|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43 NZCV=WWZZ"],
+    ["andS"           , "Xd, Xn, Xm{, shift #amount}"        , "X:1|11|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43 NZCV=WWZZ"],
+    ["and.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|00|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["asr"            , "Wd, Wn, #shift"                     , "X:0|00|100110|0|immr|011111|Rn|Rd"                    , "ARMv8+ GRP3 ALIAS_OF=sbfm"],
+    ["asr"            , "Xd, Xn, #shift"                     , "X:1|00|100110|1|immr|111111|Rn|Rd"                    , "ARMv8+ GRP3 ALIAS_OF=sbfm"],
+    ["asr"            , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001010|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=asrv PREFERRED_IF=ALWAYS"],
+    ["asr"            , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001010|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=asrv PREFERRED_IF=ALWAYS"],
+
+    ["asrv"           , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001010|Rn|Rd"                     , "ARMv8+ GRP41"],
+    ["asrv"           , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001010|Rn|Rd"                     , "ARMv8+ GRP41"],
+
+    ["at"             , "at_op, Xt"                          , "X:1101010100|0|01|op1|0111|CRm=100x|op2|Rt"           , "ARMv8+ GRP12 ALIAS_OF=sys PREFERRED_IF=SysOp:op1:0111:CRm:op2==Sys_AT"],
+
+    ["b"              , "offset26*4"                         , "X:0|00101|imm26"                                      , "ARMv8+ GRP14"],
+    ["b%c"            , "offset19*4"                         , "X:0101010|0|imm19|0|cond"                             , "ARMv8+ GRP10"],
+
+    ["bfi"            , "Wd, Wn, #lsb, #width"               , "X:0|01|100110|0|immr|imms|Rn!=11111|Rd"               , "ARMv8+ GRP3 ALIAS_OF=bfm PREFERRED_IF=imms<immr"],
+    ["bfi"            , "Xd, Xn, #lsb, #width"               , "X:1|01|100110|1|immr|imms|Rn!=11111|Rd"               , "ARMv8+ GRP3 ALIAS_OF=bfm PREFERRED_IF=imms<immr"],
+
+    ["bfm"            , "Wd, Wn, #immr, #imms"               , "X:0|01|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3"],
+    ["bfm"            , "Xd, Xn, #immr, #imms"               , "X:1|01|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3"],
+
+    ["bfxil"          , "Wd, Wn, #lsb, #width"               , "X:0|01|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=bfm PREFERRED_IF=imms>=immr"],
+    ["bfxil"          , "Xd, Xn, #lsb, #width"               , "X:1|01|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=bfm PREFERRED_IF=imms>=immr"],
+
+    ["bic"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|00|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["bic"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|00|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["bic"            , "Vd.2S%, #imm8{, LSL #0%3:8}"        , "X:0|Q|1|0111100000|a|b|c|cmode=0xx1|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["bic"            , "Vd.4H%, #imm8{, LSL #0|8}"          , "X:0|Q|1|0111100000|a|b|c|cmode=10x1|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["bicS"           , "Wd, Wn, Wm{, shift #amount}"        , "X:0|11|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43 NZCV=WWZZ"],
+    ["bicS"           , "Xd, Xn, Xm{, shift #amount}"        , "X:1|11|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43 NZCV=WWZZ"],
+    ["bic.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|01|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["bif.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|11|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["bit.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|10|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["bl"             , "offset26*4"                         , "X:1|00101|imm26"                                      , "ARMv8+ GRP14"],
+
+    ["blr"            , "Xn"                                 , "X:1101011|0001|11111|:6|Rn|00000"                     , "ARMv8+ GRP15"],
+
+    ["br"             , "Xn"                                 , "X:1101011|:4|11111|:6|Rn|00000"                       , "ARMv8+ GRP15"],
+
+    ["brk"            , "#imm16"                             , "X:11010100|001|imm16|:3|00"                           , "ARMv8+ GRP11"],
+
+    ["bsl.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|01|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["cbnz"           , "Wt, offset19*4"                     , "X:0|011010|1|imm19|Rt"                                , "ARMv8+ GRP9"],
+    ["cbnz"           , "Xt, offset19*4"                     , "X:1|011010|1|imm19|Rt"                                , "ARMv8+ GRP9"],
+
+    ["cbz"            , "Wt, offset19*4"                     , "X:0|011010|0|imm19|Rt"                                , "ARMv8+ GRP9"],
+    ["cbz"            , "Xt, offset19*4"                     , "X:1|011010|0|imm19|Rt"                                , "ARMv8+ GRP9"],
+
+    ["ccmn"           , "Wn, #imm5, #nzcv, cond"             , "X:0|0|1|11010010|imm5|cond|1|0|Rn|0|nzcv"             , "ARMv8+ GRP37 NZCV=W"],
+    ["ccmn"           , "Xn, #imm5, #nzcv, cond"             , "X:1|0|1|11010010|imm5|cond|1|0|Rn|0|nzcv"             , "ARMv8+ GRP37 NZCV=W"],
+    ["ccmn"           , "Wn, Wm, #nzcv, cond"                , "X:0|0|1|11010010|Rm|cond|0|0|Rn|0|nzcv"               , "ARMv8+ GRP38 NZCV=W"],
+    ["ccmn"           , "Xn, Xm, #nzcv, cond"                , "X:1|0|1|11010010|Rm|cond|0|0|Rn|0|nzcv"               , "ARMv8+ GRP38 NZCV=W"],
+
+    ["ccmp"           , "Wn, #imm5, #nzcv, cond"             , "X:0|1|1|11010010|imm5|cond|1|0|Rn|0|nzcv"             , "ARMv8+ GRP37 NZCV=W"],
+    ["ccmp"           , "Xn, #imm5, #nzcv, cond"             , "X:1|1|1|11010010|imm5|cond|1|0|Rn|0|nzcv"             , "ARMv8+ GRP37 NZCV=W"],
+    ["ccmp"           , "Wn, Wm, #nzcv, cond"                , "X:0|1|1|11010010|Rm|cond|0|0|Rn|0|nzcv"               , "ARMv8+ GRP38 NZCV=W"],
+    ["ccmp"           , "Xn, Xm, #nzcv, cond"                , "X:1|1|1|11010010|Rm|cond|0|0|Rn|0|nzcv"               , "ARMv8+ GRP38 NZCV=W"],
+
+    ["cinc"           , "Wd, Wn, cond"                       , "X:0|0|0|11010100|Rm!=11111|cond!=111x|01|Rn!=11111|Rd" , "ARMv8+ GRP39 ALIAS_OF=csinc PREFERRED_IF=Rn==Rm"],
+    ["cinc"           , "Xd, Xn, cond"                       , "X:1|0|0|11010100|Rm!=11111|cond!=111x|01|Rn!=11111|Rd" , "ARMv8+ GRP39 ALIAS_OF=csinc PREFERRED_IF=Rn==Rm"],
+
+    ["cinv"           , "Wd, Wn, cond"                       , "X:0|1|0|11010100|Rm!=11111|cond!=111x|00|Rn!=11111|Rd" , "ARMv8+ GRP39 ALIAS_OF=csinv PREFERRED_IF=Rn==Rm"],
+    ["cinv"           , "Xd, Xn, cond"                       , "X:1|1|0|11010100|Rm!=11111|cond!=111x|00|Rn!=11111|Rd" , "ARMv8+ GRP39 ALIAS_OF=csinv PREFERRED_IF=Rn==Rm"],
+
+    ["clrex"          , "{#imm4}"                            , "X:1101010100|0|00|011|0011|CRm|010|11111"             , "ARMv8+ GRP12"],
+
+    ["cls"            , "Wd, Wn"                             , "X:0|1|0|11010110|:5|000101|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["cls"            , "Xd, Xn"                             , "X:1|1|0|11010110|:5|000101|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["cls.8B%5"       , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|sz:2|10000|00100|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["clz"            , "Wd, Wn"                             , "X:0|1|0|11010110|:5|000100|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["clz"            , "Xd, Xn"                             , "X:1|1|0|11010110|:5|000100|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["clz.8B%5"       , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|sz:2|10000|00100|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["cmeq"           , "Dd, Dn, Dm"                         , "X:01|1|11110|11|1|Rm|10001|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["cmeq"           , "Dd, Dn, #0"                         , "X:01|0|11110|11|10000|01001|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["cmeq.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|10001|1|Rn|Rd"                , "ARMv8+ GRP60"],
+    ["cmeq.8B%5|2D"   , "Vd.T, Vn.T, #0"                     , "X:0|Q|0|01110|sz:2|10000|01001|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["cmge"           , "Dd, Dn, Dm"                         , "X:01|0|11110|11|1|Rm|00111|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["cmge"           , "Dd, Dn, #0"                         , "X:01|1|11110|11|10000|01000|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["cmge.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|00111|1|Rn|Rd"                , "ARMv8+ GRP60"],
+    ["cmge.8B%5|2D"   , "Vd.T, Vn.T, #0"                     , "X:0|Q|1|01110|sz:2|10000|01000|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["cmgt"           , "Dd, Dn, Dm"                         , "X:01|0|11110|11|1|Rm|00110|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["cmgt"           , "Dd, Dn, #0"                         , "X:01|0|11110|11|10000|01000|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["cmgt.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|00110|1|Rn|Rd"                , "ARMv8+ GRP60"],
+    ["cmgt.8B%5|2D"   , "Vd.T, Vn.T, #0"                     , "X:0|Q|0|01110|sz:2|10000|01000|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["cmhi"           , "Dd, Dn, Dm"                         , "X:01|1|11110|11|1|Rm|00110|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["cmhi.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|00110|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["cmhs"           , "Dd, Dn, Dm"                         , "X:01|1|11110|11|1|Rm|00111|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["cmhs.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|00111|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["cmle"           , "Dd, Dn, #0"                         , "X:01|1|11110|11|10000|01001|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["cmle.8B%5|2D"   , "Vd.T, Vn.T, #0"                     , "X:0|Q|1|01110|sz:2|10000|01001|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["cmlt"           , "Dd, Dn, #0"                         , "X:01|0|11110|11|10000|01010|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["cmlt.8B%5|2D"   , "Vd.T, Vn.T, #0"                     , "X:0|Q|0|01110|sz:2|10000|01010|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["cmn"            , "$Wn, #imm12{, LSL #0|12}"           , "X:0|0|1|10001|shift|imm12|Rn|11111"                   , "ARMv8+ GRP2 NZCV=W ALIAS_OF=addS"],
+    ["cmn"            , "$Xn, #imm12{, LSL #0|12}"           , "X:1|0|1|10001|shift|imm12|Rn|11111"                   , "ARMv8+ GRP2 NZCV=W ALIAS_OF=addS"],
+    ["cmn"            , "$Wn, Wm{, extend {#amount}}"        , "X:0|0|1|01011|00|1|Rm|extend|imm3|Rn|11111"           , "ARMv8+ GRP34 NZCV=W ALIAS_OF=addS"],
+    ["cmn"            , "$Xn, Rm{, extend {#amount}}"        , "X:1|0|1|01011|00|1|Rm|extend|imm3|Rn|11111"           , "ARMv8+ GRP34 NZCV=W ALIAS_OF=addS"],
+    ["cmn"            , "Wn, Wm{, shift #amount}"            , "X:0|0|1|01011|shift|0|Rm|imm6|Rn|11111"               , "ARMv8+ GRP35 NZCV=W ALIAS_OF=addS"],
+    ["cmn"            , "Xn, Xm{, shift #amount}"            , "X:1|0|1|01011|shift|0|Rm|imm6|Rn|11111"               , "ARMv8+ GRP35 NZCV=W ALIAS_OF=addS"],
+
+    ["cmp"            , "$Wn, #imm12{, LSL #0|12}"           , "X:0|1|1|10001|shift|imm12|Rn|11111"                   , "ARMv8+ GRP2 NZCV=W ALIAS_OF=subS"],
+    ["cmp"            , "$Xn, #imm12{, LSL #0|12}"           , "X:1|1|1|10001|shift|imm12|Rn|11111"                   , "ARMv8+ GRP2 NZCV=W ALIAS_OF=subS"],
+    ["cmp"            , "$Wn, Wm{, extend {#amount}}"        , "X:0|1|1|01011|00|1|Rm|extend|imm3|Rn|11111"           , "ARMv8+ GRP34 NZCV=W ALIAS_OF=subS"],
+    ["cmp"            , "$Xn, Rm{, extend {#amount}}"        , "X:1|1|1|01011|00|1|Rm|extend|imm3|Rn|11111"           , "ARMv8+ GRP34 NZCV=W ALIAS_OF=subS"],
+    ["cmp"            , "Wn, Wm{, shift #amount}"            , "X:0|1|1|01011|shift|0|Rm|imm6|Rn|11111"               , "ARMv8+ GRP35 NZCV=W ALIAS_OF=subS"],
+    ["cmp"            , "Xn, Xm{, shift #amount}"            , "X:1|1|1|01011|shift|0|Rm|imm6|Rn|11111"               , "ARMv8+ GRP35 NZCV=W ALIAS_OF=subS"],
+
+    ["cmtst"          , "Dd, Dn, Dm"                         , "X:01|0|11110|11|1|Rm|10001|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["cmtst.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|10001|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["cneg"           , "Wd, Wn, cond"                       , "X:0|1|0|11010100|Rm|cond!=111x|01|Rn|Rd"              , "ARMv8+ GRP39 ALIAS_OF=csneg PREFERRED_IF=Rn==Rm"],
+    ["cneg"           , "Xd, Xn, cond"                       , "X:1|1|0|11010100|Rm|cond!=111x|01|Rn|Rd"              , "ARMv8+ GRP39 ALIAS_OF=csneg PREFERRED_IF=Rn==Rm"],
+
+    ["cnt.8B%"        , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|sz:2|10000|00101|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["crc32b"         , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|0100|00|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["crc32cb"        , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|0101|00|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["crc32ch"        , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|0101|01|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["crc32cw"        , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|0101|10|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["crc32cx"        , "Wd, Wn, Xm"                         , "X:1|0|0|11010110|Rm|0101|11|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["crc32h"         , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|0100|01|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["crc32w"         , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|0100|10|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["crc32x"         , "Wd, Wn, Xm"                         , "X:1|0|0|11010110|Rm|0100|11|Rn|Rd"                    , "ARMv8+ GRP41"],
+
+    ["csel"           , "Wd, Wn, Wm, cond"                   , "X:0|0|0|11010100|Rm|cond|00|Rn|Rd"                    , "ARMv8+ GRP39"],
+    ["csel"           , "Xd, Xn, Xm, cond"                   , "X:1|0|0|11010100|Rm|cond|00|Rn|Rd"                    , "ARMv8+ GRP39"],
+
+    ["cset"           , "Wd, cond"                           , "X:0|0|0|11010100|11111|cond!=111x|01|11111|Rd"        , "ARMv8+ GRP39 ALIAS_OF=csinc"],
+    ["cset"           , "Xd, cond"                           , "X:1|0|0|11010100|11111|cond!=111x|01|11111|Rd"        , "ARMv8+ GRP39 ALIAS_OF=csinc"],
+
+    ["csetm"          , "Wd, cond"                           , "X:0|1|0|11010100|11111|cond!=111x|00|11111|Rd"        , "ARMv8+ GRP39 ALIAS_OF=csinv"],
+    ["csetm"          , "Xd, cond"                           , "X:1|1|0|11010100|11111|cond!=111x|00|11111|Rd"        , "ARMv8+ GRP39 ALIAS_OF=csinv"],
+
+    ["csinc"          , "Wd, Wn, Wm, cond"                   , "X:0|0|0|11010100|Rm|cond|01|Rn|Rd"                    , "ARMv8+ GRP39"],
+    ["csinc"          , "Xd, Xn, Xm, cond"                   , "X:1|0|0|11010100|Rm|cond|01|Rn|Rd"                    , "ARMv8+ GRP39"],
+
+    ["csinv"          , "Wd, Wn, Wm, cond"                   , "X:0|1|0|11010100|Rm|cond|00|Rn|Rd"                    , "ARMv8+ GRP39"],
+    ["csinv"          , "Xd, Xn, Xm, cond"                   , "X:1|1|0|11010100|Rm|cond|00|Rn|Rd"                    , "ARMv8+ GRP39"],
+
+    ["csneg"          , "Wd, Wn, Wm, cond"                   , "X:0|1|0|11010100|Rm|cond|01|Rn|Rd"                    , "ARMv8+ GRP39"],
+    ["csneg"          , "Xd, Xn, Xm, cond"                   , "X:1|1|0|11010100|Rm|cond|01|Rn|Rd"                    , "ARMv8+ GRP39"],
+
+    ["dc"             , "dc_op, Xt"                          , "X:1101010100|0|01|op1|0111|CRm|op2|Rt"                , "ARMv8+ GRP12 ALIAS_OF=sys PREFERRED_IF=SysOp:op1:0111:CRm:op2==Sys_DC"],
+
+    ["dcps1"          , "{#imm16}"                           , "X:11010100|101|imm16|:3|01"                           , "ARMv8+ GRP11"],
+
+    ["dcps2"          , "{#imm16}"                           , "X:11010100|101|imm16|:3|10"                           , "ARMv8+ GRP11"],
+
+    ["dcps3"          , "{#imm16}"                           , "X:11010100|101|imm16|:3|11"                           , "ARMv8+ GRP11"],
+
+    ["dmb"            , "option"                             , "X:1101010100|0|00|011|0011|CRm|101|11111"             , "ARMv8+ GRP12"],
+
+    ["drps"           , ""                                   , "X:1101011|0101|11111|:6|11111|00000"                  , "ARMv8+ GRP15"],
+
+    ["dsb"            , "option"                             , "X:1101010100|0|00|011|0011|CRm|100|11111"             , "ARMv8+ GRP12"],
+
+    ["dup"            , "Vd.8B%5|2D, Vn.B%3[idx]"            , "X:0|Q|0|01110000|imm5|0|:4|1|Rn|Rd"                   , "ARMv8+ GRP46"],
+    ["dup"            , "Vd.8B%5|2D, Rn"                     , "X:0|Q|0|01110000|imm5|0|0001|1|Rn|Rd"                 , "ARMv8+ GRP46"],
+    ["dup"            , "Bd%3, Vn.B%3[idx]"                  , "X:01|0|11110000|imm5|0|:4|1|Rn|Rd"                    , "ARMv8+ GRP50"],
+
+    ["eon"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|10|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["eon"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|10|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+
+    ["eor"            , "$Wd, Wn, #imm12"                    , "X:0|10|100100|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5"],
+    ["eor"            , "$Xd, Xn, #imm13"                    , "X:1|10|100100|N|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5"],
+    ["eor"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|10|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["eor"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|10|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["eor.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|00|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["eret"           , ""                                   , "X:1101011|0100|11111|:6|11111|00000"                  , "ARMv8+ GRP15"],
+
+    ["ext.8B%"        , "Vd.T, Vn.T, Vm.T, #idx"             , "X:0|Q|101110|00|0|Rm|0|imm4|0|Rn|Rd"                  , "ARMv8+ GRP47"],
+
+    ["extr"           , "Wd, Wn, Wm, #lsb"                   , "X:0|00|100111|0|0|Rm|imms=0xxxxx|Rn|Rd"               , "ARMv8+ GRP4"],
+    ["extr"           , "Xd, Xn, Xm, #lsb"                   , "X:1|00|100111|1|0|Rm|imms|Rn|Rd"                      , "ARMv8+ GRP4"],
+
+    ["fabd"           , "Sd%, Sn%, Sm%"                      , "X:01|1|111101|sz|1|Rm|11010|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["fabd.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011101|sz|1|Rm|11010|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fabs"           , "Sd, Sn"                             , "X:0|0|0|11110|00|1|000001|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fabs"           , "Dd, Dn"                             , "X:0|0|0|11110|01|1|000001|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fabs.2S%|2D"    , "Vd.T, Vn.T"                         , "X:0|Q|0|011101|sz|10000|01111|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["facge"          , "Sd%, Sn%, Sm%"                      , "X:01|1|111100|sz|1|Rm|11101|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["facge.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011100|sz|1|Rm|11101|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["facgt"          , "Sd%, Sn%, Sm%"                      , "X:01|1|111101|sz|1|Rm|11101|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["facgt.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011101|sz|1|Rm|11101|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fadd"           , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|0010|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fadd"           , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|0010|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fadd.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011100|sz|1|Rm|11010|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["faddp"          , "Sd%, Vn.2S|2D"                      , "X:01|1|111100|sz|11000|01101|10|Rn|Rd"                , "ARMv8+ GRP51"],
+    ["faddp.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011100|sz|1|Rm|11010|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fccmp"          , "Sn, Sm, #nzcv, cond"                , "X:0|0|0|11110|00|1|Rm|cond|01|Rn|0|nzcv"              , "ARMv8+ GRP67 NZCV=W"],
+    ["fccmp"          , "Dn, Dm, #nzcv, cond"                , "X:0|0|0|11110|01|1|Rm|cond|01|Rn|0|nzcv"              , "ARMv8+ GRP67 NZCV=W"],
+
+    ["fccmpe"         , "Sn, Sm, #nzcv, cond"                , "X:0|0|0|11110|00|1|Rm|cond|01|Rn|1|nzcv"              , "ARMv8+ GRP67 NZCV=W"],
+    ["fccmpe"         , "Dn, Dm, #nzcv, cond"                , "X:0|0|0|11110|01|1|Rm|cond|01|Rn|1|nzcv"              , "ARMv8+ GRP67 NZCV=W"],
+
+    ["fcmeq"          , "Sd%, Sn%, Sm%"                      , "X:01|0|111100|sz|1|Rm|11100|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["fcmeq"          , "Sd%, Sn%, #0.0"                     , "X:01|0|111101|sz|10000|01101|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcmeq.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011100|sz|1|Rm|11100|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+    ["fcmeq.2S%|2D"   , "Vd.T, Vn.T, #0.0"                   , "X:0|Q|0|011101|sz|10000|01101|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcmge"          , "Sd%, Sn%, Sm%"                      , "X:01|1|111100|sz|1|Rm|11100|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["fcmge"          , "Sd%, Sn%, #0.0"                     , "X:01|1|111101|sz|10000|01100|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcmge.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011100|sz|1|Rm|11100|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+    ["fcmge.2S%|2D"   , "Vd.T, Vn.T, #0.0"                   , "X:0|Q|1|011101|sz|10000|01100|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcmgt"          , "Sd%, Sn%, Sm%"                      , "X:01|1|111101|sz|1|Rm|11100|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["fcmgt"          , "Sd%, Sn%, #0.0"                     , "X:01|0|111101|sz|10000|01100|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcmgt.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011101|sz|1|Rm|11100|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+    ["fcmgt.2S%|2D"   , "Vd.T, Vn.T, #0.0"                   , "X:0|Q|0|011101|sz|10000|01100|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcmle"          , "Sd%, Sn%, #0.0"                     , "X:01|1|111101|sz|10000|01101|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcmle.2S%|2D"   , "Vd.T, Vn.T, #0.0"                   , "X:0|Q|1|011101|sz|10000|01101|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcmlt"          , "Sd%, Sn%, #0.0"                     , "X:01|0|111101|sz|10000|01110|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcmlt.2S%|2D"   , "Vd.T, Vn.T, #0.0"                   , "X:0|Q|0|011101|sz|10000|01110|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcmp"           , "Sn, Sm"                             , "X:0|0|0|11110|00|1|Rm|00|1000|Rn|00000"               , "ARMv8+ GRP66 NZCV=W"],
+    ["fcmp"           , "Dn, Dm"                             , "X:0|0|0|11110|01|1|Rm|00|1000|Rn|00000"               , "ARMv8+ GRP66 NZCV=W"],
+    ["fcmp"           , "Sn, #0.0"                           , "X:0|0|0|11110|00|1|:5|00|1000|Rn|01000"               , "ARMv8+ GRP66 NZCV=W"],
+    ["fcmp"           , "Dn, #0.0"                           , "X:0|0|0|11110|01|1|:5|00|1000|Rn|01000"               , "ARMv8+ GRP66 NZCV=W"],
+
+    ["fcmpe"          , "Sn, Sm"                             , "X:0|0|0|11110|00|1|Rm|00|1000|Rn|10000"               , "ARMv8+ GRP66 NZCV=W"],
+    ["fcmpe"          , "Dn, Dm"                             , "X:0|0|0|11110|01|1|Rm|00|1000|Rn|10000"               , "ARMv8+ GRP66 NZCV=W"],
+    ["fcmpe"          , "Sn, #0.0"                           , "X:0|0|0|11110|00|1|:5|00|1000|Rn|11000"               , "ARMv8+ GRP66 NZCV=W"],
+    ["fcmpe"          , "Dn, #0.0"                           , "X:0|0|0|11110|01|1|:5|00|1000|Rn|11000"               , "ARMv8+ GRP66 NZCV=W"],
+
+    ["fcsel"          , "Sd, Sn, Sm, cond"                   , "X:0|0|0|11110|00|1|Rm|cond|11|Rn|Rd"                  , "ARMv8+ GRP68"],
+    ["fcsel"          , "Dd, Dn, Dm, cond"                   , "X:0|0|0|11110|01|1|Rm|cond|11|Rn|Rd"                  , "ARMv8+ GRP68"],
+
+    ["fcvt"           , "Dd, Sn"                             , "X:0|0|0|11110|00|10001|01|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fcvt"           , "Hd, Sn"                             , "X:0|0|0|11110|00|10001|11|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fcvt"           , "Sd, Dn"                             , "X:0|0|0|11110|01|10001|00|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fcvt"           , "Hd, Dn"                             , "X:0|0|0|11110|01|10001|11|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fcvt"           , "Sd, Hn"                             , "X:0|0|0|11110|11|10001|00|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fcvt"           , "Dd, Hn"                             , "X:0|0|0|11110|11|10001|01|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+
+    ["fcvtas"         , "Sd%, Sn%"                           , "X:01|0|111100|sz|10000|11100|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtas"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|00|100|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtas"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|00|100|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtas"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|00|100|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtas"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|00|100|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtas.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011100|sz|10000|11100|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtau"         , "Sd%, Sn%"                           , "X:01|1|111100|sz|10000|11100|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtau"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|00|101|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtau"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|00|101|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtau"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|00|101|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtau"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|00|101|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtau.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011100|sz|10000|11100|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtl'2"        , "Vd.4S|2D, Vn.4H%3"                  , "X:0|Q|0|011100|sz|10000|10111|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtms"         , "Sd%, Sn%"                           , "X:01|0|111100|sz|10000|11011|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtms"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|10|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtms"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|10|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtms"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|10|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtms"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|10|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtms.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011100|sz|10000|11011|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtmu"         , "Sd%, Sn%"                           , "X:01|1|111100|sz|10000|11011|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtmu"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|10|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtmu"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|10|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtmu"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|10|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtmu"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|10|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtmu.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011100|sz|10000|11011|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtn'2"        , "Vd.4H%3, Vn.4S|2D"                  , "X:0|Q|0|011100|sz|10000|10110|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtns"         , "Sd%, Sn%"                           , "X:01|0|111100|sz|10000|11010|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtns"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|00|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtns"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|00|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtns"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|00|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtns"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|00|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtns.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011100|sz|10000|11010|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtnu"         , "Sd%, Sn%"                           , "X:01|1|111100|sz|10000|11010|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtnu"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|00|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtnu"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|00|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtnu"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|00|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtnu"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|00|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtnu.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011100|sz|10000|11010|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtps"         , "Sd%, Sn%"                           , "X:01|0|111101|sz|10000|11010|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtps"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|01|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtps"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|01|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtps"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|01|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtps"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|01|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtps.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011101|sz|10000|11010|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtpu"         , "Sd%, Sn%"                           , "X:01|1|111101|sz|10000|11010|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtpu"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|01|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtpu"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|01|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtpu"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|01|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtpu"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|01|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtpu.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011101|sz|10000|11010|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtxn"         , "Sd, Dn"                             , "X:01|1|111100|1|10000|10110|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["fcvtxn'2"       , "Vd.2S%, Vn.2D"                      , "X:0|Q|1|011100|1|10000|10110|10|Rn|Rd"                , "ARMv8+ GRP61"],
+
+    ["fcvtzs"         , "Sd%, Sn%, #fbits"                   , "X:01|0|111110|immh!=0000|immb|11111|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["fcvtzs"         , "Sd%, Sn%"                           , "X:01|0|111101|sz|10000|11011|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtzs"         , "Wd, Sn, #fbits"                     , "X:0|0|0|11110|00|0|11|:3|scale|Rn|Rd"                 , "ARMv8+ GRP73"],
+    ["fcvtzs"         , "Wd, Dn, #fbits"                     , "X:0|0|0|11110|01|0|11|:3|scale|Rn|Rd"                 , "ARMv8+ GRP73"],
+    ["fcvtzs"         , "Xd, Sn, #fbits"                     , "X:1|0|0|11110|00|0|11|:3|scale|Rn|Rd"                 , "ARMv8+ GRP73"],
+    ["fcvtzs"         , "Xd, Dn, #fbits"                     , "X:1|0|0|11110|01|0|11|:3|scale|Rn|Rd"                 , "ARMv8+ GRP73"],
+    ["fcvtzs"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|11|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtzs"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|11|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtzs"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|11|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtzs"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|11|:3|:6|Rn|Rd"                    , "ARMv8+ GRP74"],
+    ["fcvtzs.2S%|2D"  , "Vd.T, Vn.T, #fbits"                 , "X:0|Q|0|011110|immh!=0000|immb|11111|1|Rn|Rd"         , "ARMv8+ GRP57"],
+    ["fcvtzs.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011101|sz|10000|11011|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fcvtzu"         , "Sd%, Sn%, #fbits"                   , "X:01|1|111110|immh!=0000|immb|11111|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["fcvtzu"         , "Sd%, Sn%"                           , "X:01|1|111101|sz|10000|11011|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["fcvtzu"         , "Wd, Sn, #fbits"                     , "X:0|0|0|11110|00|0|11|001|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["fcvtzu"         , "Wd, Dn, #fbits"                     , "X:0|0|0|11110|01|0|11|001|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["fcvtzu"         , "Xd, Sn, #fbits"                     , "X:1|0|0|11110|00|0|11|001|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["fcvtzu"         , "Xd, Dn, #fbits"                     , "X:1|0|0|11110|01|0|11|001|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["fcvtzu"         , "Wd, Sn"                             , "X:0|0|0|11110|00|1|11|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtzu"         , "Wd, Dn"                             , "X:0|0|0|11110|01|1|11|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtzu"         , "Xd, Sn"                             , "X:1|0|0|11110|00|1|11|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtzu"         , "Xd, Dn"                             , "X:1|0|0|11110|01|1|11|001|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fcvtzu.2S%|2D"  , "Vd.T, Vn.T, #fbits"                 , "X:0|Q|1|011110|immh!=0000|immb|11111|1|Rn|Rd"         , "ARMv8+ GRP57"],
+    ["fcvtzu.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011101|sz|10000|11011|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fdiv"           , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|0001|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fdiv"           , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|0001|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fdiv.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011100|sz|1|Rm|11111|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmadd"          , "Sd, Sn, Sm, Sa"                     , "X:0|0|0|11111|00|0|Rm|0|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+    ["fmadd"          , "Dd, Dn, Dm, Da"                     , "X:0|0|0|11111|01|0|Rm|0|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+
+    ["fmax"           , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|0100|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fmax"           , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|0100|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fmax.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011100|sz|1|Rm|11110|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmaxnm"         , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|0110|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fmaxnm"         , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|0110|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fmaxnm.2S%|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011100|sz|1|Rm|11000|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmaxnmp"        , "Sd%, Vn.2S|2D"                      , "X:01|1|111100|sz|11000|01100|10|Rn|Rd"                , "ARMv8+ GRP51"],
+    ["fmaxnmp.2S%|2D" , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011100|sz|1|Rm|11000|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmaxnmv"        , "Sd, Vn.4S"                          , "X:0|1|1|011100|0|11000|01100|10|Rn|Rd"                , "ARMv8+ GRP45"],
+
+    ["fmaxp"          , "Sd%, Vn.2S|2D"                      , "X:01|1|111100|sz|11000|01111|10|Rn|Rd"                , "ARMv8+ GRP51"],
+    ["fmaxp.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011100|sz|1|Rm|11110|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmaxv"          , "Sd, Vn.4S"                          , "X:0|1|1|011100|0|11000|01111|10|Rn|Rd"                , "ARMv8+ GRP45"],
+
+    ["fmin"           , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|0101|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fmin"           , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|0101|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fmin.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011101|sz|1|Rm|11110|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fminnm"         , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|0111|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fminnm"         , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|0111|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fminnm.2S%|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011101|sz|1|Rm|11000|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fminnmp"        , "Sd%, Vn.2S|2D"                      , "X:01|1|111101|sz|11000|01100|10|Rn|Rd"                , "ARMv8+ GRP51"],
+    ["fminnmp.2S%|2D" , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011101|sz|1|Rm|11000|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fminnmv"        , "Sd, Vn.4S"                          , "X:0|1|1|011101|0|11000|01100|10|Rn|Rd"                , "ARMv8+ GRP45"],
+
+    ["fminp"          , "Sd%, Vn.2S|2D"                      , "X:01|1|111101|sz|11000|01111|10|Rn|Rd"                , "ARMv8+ GRP51"],
+    ["fminp.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011101|sz|1|Rm|11110|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fminv"          , "Sd, Vn.4S"                          , "X:0|1|1|011101|0|11000|01111|10|Rn|Rd"                , "ARMv8+ GRP45"],
+
+    ["fmla"           , "Sd%, Sn%, Vm.S%[idx]"               , "X:01|0|111111|sz|L|M|Rm:4|0001|H|0|Rn|Rd"             , "ARMv8+ GRP56"],
+    ["fmla"           , "Vd.2S%|2D, Vn.2S%|2D, Vm.S%[idx]"   , "X:0|Q|0|011111|sz|L|M|Rm:4|0001|H|0|Rn|Rd"            , "ARMv8+ GRP62"],
+    ["fmla.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011100|sz|1|Rm|11001|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmls"           , "Sd%, Sn%, Vm.S%[idx]"               , "X:01|0|111111|sz|L|M|Rm:4|0101|H|0|Rn|Rd"             , "ARMv8+ GRP56"],
+    ["fmls"           , "Vd.2S%|2D, Vn.2S%|2D, Vm.S%[idx]"   , "X:0|Q|0|011111|sz|L|M|Rm:4|0101|H|0|Rn|Rd"            , "ARMv8+ GRP62"],
+    ["fmls.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011101|sz|1|Rm|11001|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmov"           , "Sd, Sn"                             , "X:0|0|0|11110|00|1|:6|10000|Rn|Rd"                    , "ARMv8+ GRP69"],
+    ["fmov"           , "Dd, Dn"                             , "X:0|0|0|11110|01|1|:6|10000|Rn|Rd"                    , "ARMv8+ GRP69"],
+    ["fmov"           , "Sd, #imm8"                          , "X:0|0|0|11110|00|1|imm8|100|:5|Rd"                    , "ARMv8+ GRP72"],
+    ["fmov"           , "Dd, #imm8"                          , "X:0|0|0|11110|01|1|imm8|100|:5|Rd"                    , "ARMv8+ GRP72"],
+    ["fmov"           , "Wd, Sn"                             , "X:0|0|0|11110|00|1|00|110|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fmov"           , "Sd, Wn"                             , "X:0|0|0|11110|00|1|00|111|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fmov"           , "Xd, Dn"                             , "X:1|0|0|11110|01|1|00|110|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fmov"           , "Dd, Xn"                             , "X:1|0|0|11110|01|1|00|111|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fmov"           , "Vd.2S%, #imm8"                      , "X:0|Q|0|0111100000|a|b|c|1111|0|1|d|e|f|g|h|Rd"       , "ARMv8+ GRP48"],
+    ["fmov"           , "Vd.2D, #imm8"                       , "X:0|1|1|0111100000|a|b|c|1111|0|1|d|e|f|g|h|Rd"       , "ARMv8+ GRP48"],
+    ["fmov"           , "Xd, Vn.D[1]"                        , "X:1|0|0|11110|10|1|01|110|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["fmov"           , "Vd.D[1], Xn"                        , "X:1|0|0|11110|10|1|01|111|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+
+    ["fmsub"          , "Sd, Sn, Sm, Sa"                     , "X:0|0|0|11111|00|0|Rm|1|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+    ["fmsub"          , "Dd, Dn, Dm, Da"                     , "X:0|0|0|11111|01|0|Rm|1|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+
+    ["fmul"           , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|:4|10|Rn|Rd"                    , "ARMv8+ GRP70"],
+    ["fmul"           , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|:4|10|Rn|Rd"                    , "ARMv8+ GRP70"],
+    ["fmul"           , "Sd%, Sn%, Vm.S%[idx]"               , "X:01|0|111111|sz|L|M|Rm:4|1001|H|0|Rn|Rd"             , "ARMv8+ GRP56"],
+    ["fmul"           , "Vd.2S%|2D, Vn.2S%|2D, Vm.S%[idx]"   , "X:0|Q|0|011111|sz|L|M|Rm:4|1001|H|0|Rn|Rd"            , "ARMv8+ GRP62"],
+    ["fmul.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|011100|sz|1|Rm|11011|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fmulx"          , "Sd%, Sn%, Sm%"                      , "X:01|0|111100|sz|1|Rm|11011|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["fmulx"          , "Sd%, Sn%, Vm.S%[idx]"               , "X:01|1|111111|sz|L|M|Rm:4|1001|H|0|Rn|Rd"             , "ARMv8+ GRP56"],
+    ["fmulx"          , "Vd.2S%|2D, Vn.2S%|2D, Vm.S%[idx]"   , "X:0|Q|1|011111|sz|L|M|Rm:4|1001|H|0|Rn|Rd"            , "ARMv8+ GRP62"],
+    ["fmulx.2S%|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011100|sz|1|Rm|11011|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fneg"           , "Sd, Sn"                             , "X:0|0|0|11110|00|1|000010|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fneg"           , "Dd, Dn"                             , "X:0|0|0|11110|01|1|000010|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fneg.2S%|2D"    , "Vd.T, Vn.T"                         , "X:0|Q|1|011101|sz|10000|01111|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fnmadd"         , "Sd, Sn, Sm, Sa"                     , "X:0|0|0|11111|00|1|Rm|0|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+    ["fnmadd"         , "Dd, Dn, Dm, Da"                     , "X:0|0|0|11111|01|1|Rm|0|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+
+    ["fnmsub"         , "Sd, Sn, Sm, Sa"                     , "X:0|0|0|11111|00|1|Rm|1|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+    ["fnmsub"         , "Dd, Dn, Dm, Da"                     , "X:0|0|0|11111|01|1|Rm|1|Ra|Rn|Rd"                     , "ARMv8+ GRP71"],
+
+    ["fnmul"          , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|1000|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fnmul"          , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|1000|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+
+    ["frecpe"         , "Sd%, Sn%"                           , "X:01|0|111101|sz|10000|11101|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["frecpe.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011101|sz|10000|11101|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frecps"         , "Sd%, Sn%, Sm%"                      , "X:01|0|111100|sz|1|Rm|11111|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["frecps.2S%|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011100|sz|1|Rm|11111|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["frecpx"         , "Sd%, Sn%"                           , "X:01|0|111101|sz|10000|11111|10|Rn|Rd"                , "ARMv8+ GRP55"],
+
+    ["frinta"         , "Sd, Sn"                             , "X:0|0|0|11110|00|1|001100|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frinta"         , "Dd, Dn"                             , "X:0|0|0|11110|01|1|001100|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frinta.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011100|sz|10000|11000|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frinti"         , "Sd, Sn"                             , "X:0|0|0|11110|00|1|001111|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frinti"         , "Dd, Dn"                             , "X:0|0|0|11110|01|1|001111|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frinti.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011101|sz|10000|11001|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frintm"         , "Sd, Sn"                             , "X:0|0|0|11110|00|1|001010|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintm"         , "Dd, Dn"                             , "X:0|0|0|11110|01|1|001010|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintm.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011100|sz|10000|11001|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frintn"         , "Sd, Sn"                             , "X:0|0|0|11110|00|1|001000|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintn"         , "Dd, Dn"                             , "X:0|0|0|11110|01|1|001000|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintn.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011100|sz|10000|11000|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frintp"         , "Sd, Sn"                             , "X:0|0|0|11110|00|1|001001|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintp"         , "Dd, Dn"                             , "X:0|0|0|11110|01|1|001001|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintp.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011101|sz|10000|11000|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frintx"         , "Sd, Sn"                             , "X:0|0|0|11110|00|1|001110|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintx"         , "Dd, Dn"                             , "X:0|0|0|11110|01|1|001110|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintx.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|011100|sz|10000|11001|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frintz"         , "Sd, Sn"                             , "X:0|0|0|11110|00|1|001011|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintz"         , "Dd, Dn"                             , "X:0|0|0|11110|01|1|001011|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["frintz.2S%|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|011101|sz|10000|11001|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frsqrte"        , "Sd%, Sn%"                           , "X:01|1|111101|sz|10000|11101|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["frsqrte.2S%|2D" , "Vd.T, Vn.T"                         , "X:0|Q|1|011101|sz|10000|11101|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["frsqrts"        , "Sd%, Sn%, Sm%"                      , "X:01|0|111101|sz|1|Rm|11111|1|Rn|Rd"                  , "ARMv8+ GRP54"],
+    ["frsqrts.2S%|2D" , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011101|sz|1|Rm|11111|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["fsqrt"          , "Sd, Sn"                             , "X:0|0|0|11110|00|1|000011|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fsqrt"          , "Dd, Dn"                             , "X:0|0|0|11110|01|1|000011|10000|Rn|Rd"                , "ARMv8+ GRP69"],
+    ["fsqrt.2S%|2D"   , "Vd.T, Vn.T"                         , "X:0|Q|1|011101|sz|10000|11111|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["fsub"           , "Sd, Sn, Sm"                         , "X:0|0|0|11110|00|1|Rm|0011|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fsub"           , "Dd, Dn, Dm"                         , "X:0|0|0|11110|01|1|Rm|0011|10|Rn|Rd"                  , "ARMv8+ GRP70"],
+    ["fsub.2S%|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|011101|sz|1|Rm|11010|1|Rn|Rd"                 , "ARMv8+ GRP60"],
+
+    ["hint"           , "#imm7"                              , "X:1101010100|0|00|011|0010|CRm!=0000|op2|11111"       , "ARMv8+ GRP12"],
+    ["hint"           , "#imm7"                              , "X:1101010100|0|00|011|0010|CRm=0000|op2=11x|11111"    , "ARMv8+ GRP12"],
+
+    ["hlt"            , "#imm16"                             , "X:11010100|010|imm16|:3|00"                           , "ARMv8+ GRP11"],
+
+    ["hvc"            , "#imm16"                             , "X:11010100|:3|imm16|:3|10"                            , "ARMv8+ GRP11"],
+
+    ["ic"             , "ic_op{, Xt}"                        , "X:1101010100|0|01|op1|0111|CRm|op2|Rt"                , "ARMv8+ GRP12 ALIAS_OF=sys PREFERRED_IF=SysOp:op1:0111:CRm:op2==Sys_IC"],
+
+    ["ins"            , "Vd.B%3[idx], Rn"                    , "X:0|1|0|01110000|imm5|0|0011|1|Rn|Rd"                 , "ARMv8+ GRP46"],
+    ["ins.B%3"        , "Vd.T[idx1], Vn.T[idx2]"             , "X:0|1|1|01110000|imm5|0|imm4|1|Rn|Rd"                 , "ARMv8+ GRP46"],
+
+    ["isb"            , "{option}"                           , "X:1101010100|0|00|011|0011|CRm|110|11111"             , "ARMv8+ GRP12"],
+
+    ["ld1"            , "{Vt.8B%7}%3, [$Xn]"                 , "X:0|Q|0011000|1|:6|0010|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["ld1"            , "{Vt.8B%7}%2, [$Xn]"                 , "X:0|Q|0011000|1|:6|0110|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["ld1"            , "{Vt.8B%7}%0, [$Xn]"                 , "X:0|Q|0011000|1|:6|0111|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["ld1"            , "{Vt.8B%7}%1, [$Xn]"                 , "X:0|Q|0011000|1|:6|1010|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["ld1"            , "{Vt.8B%7}%3, [$Xn], Xm"             , "X:0|Q|0011001|1|0|Rm!=11111|0010|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.8B%7}%2, [$Xn], Xm"             , "X:0|Q|0011001|1|0|Rm!=11111|0110|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.8B%7}%0, [$Xn], Xm"             , "X:0|Q|0011001|1|0|Rm!=11111|0111|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.8B%7}%1, [$Xn], Xm"             , "X:0|Q|0011001|1|0|Rm!=11111|1010|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.B}%0[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|:3|S|sz:2|Rn|Rt"                 , "ARMv8+ GRP19"],
+    ["ld1"            , "{Vt.H}%0[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|010|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["ld1"            , "{Vt.S}%0[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|100|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld1"            , "{Vt.D}%0[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|100|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld1"            , "{Vt.B}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|:3|S|sz:2|Rn|Rt"          , "ARMv8+ GRP20"],
+    ["ld1"            , "{Vt.H}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|010|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["ld1"            , "{Vt.S}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|100|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld1"            , "{Vt.D}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|100|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld1"            , "{Vt.8B%7}%3, [$Xn], #32%"           , "X:0|Q|0011001|1|0|11111|0010|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.8B%7}%2, [$Xn], #24%"           , "X:0|Q|0011001|1|0|11111|0110|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.8B%7}%0, [$Xn], #8%"            , "X:0|Q|0011001|1|0|11111|0111|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.8B%7}%1, [$Xn], #16%"           , "X:0|Q|0011001|1|0|11111|1010|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["ld1"            , "{Vt.B}%0[idx], [$Xn], #1"           , "X:0|Q|0011011|1|0|11111|:3|S|sz:2|Rn|Rt"              , "ARMv8+ GRP20"],
+    ["ld1"            , "{Vt.H}%0[idx], [$Xn], #2"           , "X:0|Q|0011011|1|0|11111|010|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["ld1"            , "{Vt.S}%0[idx], [$Xn], #4"           , "X:0|Q|0011011|1|0|11111|100|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["ld1"            , "{Vt.D}%0[idx], [$Xn], #8"           , "X:0|Q|0011011|1|0|11111|100|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["ld1r"           , "{Vt.8B%7}%0, [$Xn]"                 , "X:0|Q|0011010|1|0|:5|110|0|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["ld1r"           , "{Vt.8B%7}%0, [$Xn], Xm"             , "X:0|Q|0011011|1|0|Rm!=11111|110|0|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["ld1r"           , "{Vt.8B%7}%0, [$Xn], #1%3"           , "X:0|Q|0011011|1|0|11111|110|0|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+
+    ["ld2"            , "{Vt.8B%5|2D}%1, [$Xn]"              , "X:0|Q|0011000|1|:6|1000|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["ld2"            , "{Vt.8B%5|2D}%1, [$Xn], Xm"          , "X:0|Q|0011001|1|0|Rm!=11111|1000|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["ld2"            , "{Vt.B}%1[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|:3|S|sz:2|Rn|Rt"                 , "ARMv8+ GRP19"],
+    ["ld2"            , "{Vt.H}%1[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|010|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["ld2"            , "{Vt.S}%1[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|100|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld2"            , "{Vt.D}%1[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|100|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld2"            , "{Vt.B}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|:3|S|sz:2|Rn|Rt"          , "ARMv8+ GRP20"],
+    ["ld2"            , "{Vt.H}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|010|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["ld2"            , "{Vt.S}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|100|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld2"            , "{Vt.D}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|100|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld2"            , "{Vt.8B%5|2D}%1, [$Xn], #16%"        , "X:0|Q|0011001|1|0|11111|1000|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["ld2"            , "{Vt.B}%1[idx], [$Xn], #2"           , "X:0|Q|0011011|1|1|11111|:3|S|sz:2|Rn|Rt"              , "ARMv8+ GRP20"],
+    ["ld2"            , "{Vt.H}%1[idx], [$Xn], #4"           , "X:0|Q|0011011|1|1|11111|010|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["ld2"            , "{Vt.S}%1[idx], [$Xn], #8"           , "X:0|Q|0011011|1|1|11111|100|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["ld2"            , "{Vt.D}%1[idx], [$Xn], #16"          , "X:0|Q|0011011|1|1|11111|100|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["ld2r"           , "{Vt.8B%7}%1, [$Xn]"                 , "X:0|Q|0011010|1|1|:5|110|0|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["ld2r"           , "{Vt.8B%7}%1, [$Xn], Xm"             , "X:0|Q|0011011|1|1|Rm!=11111|110|0|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["ld2r"           , "{Vt.8B%7}%1, [$Xn], #2%3"           , "X:0|Q|0011011|1|1|11111|110|0|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+
+    ["ld3"            , "{Vt.8B%5|2D}%2, [$Xn]"              , "X:0|Q|0011000|1|:6|0100|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["ld3"            , "{Vt.8B%5|2D}%2, [$Xn], Xm"          , "X:0|Q|0011001|1|0|Rm!=11111|0100|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["ld3"            , "{Vt.B}%2[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|001|S|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["ld3"            , "{Vt.H}%2[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|011|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["ld3"            , "{Vt.S}%2[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|101|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld3"            , "{Vt.D}%2[idx], [$Xn]"               , "X:0|Q|0011010|1|0|:5|101|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld3"            , "{Vt.B}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|001|S|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["ld3"            , "{Vt.H}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|011|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["ld3"            , "{Vt.S}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|101|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld3"            , "{Vt.D}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|0|Rm!=11111|101|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld3"            , "{Vt.8B%5|2D}%2, [$Xn], #24%"        , "X:0|Q|0011001|1|0|11111|0100|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["ld3"            , "{Vt.B}%2[idx], [$Xn], #3"           , "X:0|Q|0011011|1|0|11111|001|S|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+    ["ld3"            , "{Vt.H}%2[idx], [$Xn], #6"           , "X:0|Q|0011011|1|0|11111|011|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["ld3"            , "{Vt.S}%2[idx], [$Xn], #12"          , "X:0|Q|0011011|1|0|11111|101|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["ld3"            , "{Vt.D}%2[idx], [$Xn], #24"          , "X:0|Q|0011011|1|0|11111|101|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["ld3r"           , "{Vt.8B%7}%2, [$Xn]"                 , "X:0|Q|0011010|1|0|:5|111|0|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["ld3r"           , "{Vt.8B%7}%2, [$Xn], Xm"             , "X:0|Q|0011011|1|0|Rm!=11111|111|0|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["ld3r"           , "{Vt.8B%7}%2, [$Xn], #3%3"           , "X:0|Q|0011011|1|0|11111|111|0|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+
+    ["ld4"            , "{Vt.8B%5|2D}%3, [$Xn]"              , "X:0|Q|0011000|1|:6|:4|sz:2|Rn|Rt"                     , "ARMv8+ GRP17"],
+    ["ld4"            , "{Vt.8B%5|2D}%3, [$Xn], Xm"          , "X:0|Q|0011001|1|0|Rm!=11111|:4|sz:2|Rn|Rt"            , "ARMv8+ GRP18"],
+    ["ld4"            , "{Vt.B}%3[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|001|S|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["ld4"            , "{Vt.H}%3[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|011|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["ld4"            , "{Vt.S}%3[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|101|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld4"            , "{Vt.D}%3[idx], [$Xn]"               , "X:0|Q|0011010|1|1|:5|101|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["ld4"            , "{Vt.B}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|001|S|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["ld4"            , "{Vt.H}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|011|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["ld4"            , "{Vt.S}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|101|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld4"            , "{Vt.D}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|1|1|Rm!=11111|101|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["ld4"            , "{Vt.8B%5|2D}%3, [$Xn], #32%"        , "X:0|Q|0011001|1|0|11111|:4|sz:2|Rn|Rt"                , "ARMv8+ GRP18"],
+    ["ld4"            , "{Vt.B}%3[idx], [$Xn], #4"           , "X:0|Q|0011011|1|1|11111|001|S|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+    ["ld4"            , "{Vt.H}%3[idx], [$Xn], #8"           , "X:0|Q|0011011|1|1|11111|011|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["ld4"            , "{Vt.S}%3[idx], [$Xn], #16"          , "X:0|Q|0011011|1|1|11111|101|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["ld4"            , "{Vt.D}%3[idx], [$Xn], #32"          , "X:0|Q|0011011|1|1|11111|101|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["ld4r"           , "{Vt.8B%7}%3, [$Xn]"                 , "X:0|Q|0011010|1|1|:5|111|0|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["ld4r"           , "{Vt.8B%7}%3, [$Xn], Xm"             , "X:0|Q|0011011|1|1|Rm!=11111|111|0|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["ld4r"           , "{Vt.8B%7}%3, [$Xn], #4%3"           , "X:0|Q|0011011|1|1|11111|111|0|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+
+    ["ldar"           , "Wt, [$Xn{,#0}]"                     , "X:10|001000|1|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+    ["ldar"           , "Xt, [$Xn{,#0}]"                     , "X:11|001000|1|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldarb"          , "Wt, [$Xn{,#0}]"                     , "X:00|001000|1|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldarh"          , "Wt, [$Xn{,#0}]"                     , "X:01|001000|1|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldaxp"          , "Wt1, Wt2, [$Xn{,#0}]"               , "X:1|0|001000|0|1|1|11111|1|Rt2|Rn|Rt"                 , "ARMv8+ GRP22"],
+    ["ldaxp"          , "Xt1, Xt2, [$Xn{,#0}]"               , "X:1|1|001000|0|1|1|11111|1|Rt2|Rn|Rt"                 , "ARMv8+ GRP22"],
+
+    ["ldaxr"          , "Wt, [$Xn{,#0}]"                     , "X:10|001000|0|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+    ["ldaxr"          , "Xt, [$Xn{,#0}]"                     , "X:11|001000|0|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldaxrb"         , "Wt, [$Xn{,#0}]"                     , "X:00|001000|0|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldaxrh"         , "Wt, [$Xn{,#0}]"                     , "X:01|001000|0|1|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldnp"           , "Wt1, Wt2, [$Xn{, #imm7*4}]"         , "X:00|101|0|:3|1|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["ldnp"           , "St1, St2, [$Xn{, #imm7*4}]"         , "X:00|101|1|:3|1|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["ldnp"           , "Dt1, Dt2, [$Xn{, #imm7*8}]"         , "X:01|101|1|:3|1|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["ldnp"           , "Xt1, Xt2, [$Xn{, #imm7*8}]"         , "X:10|101|0|:3|1|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["ldnp"           , "Qt1, Qt2, [$Xn{, #imm7*16}]"        , "X:10|101|1|:3|1|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+
+    ["ldp"            , "Wt1, Wt2, [$Xn{, #imm7*4}]"         , "X:00|101|0|010|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["ldp"            , "St1, St2, [$Xn{, #imm7*4}]"         , "X:00|101|1|010|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["ldp"            , "Dt1, Dt2, [$Xn{, #imm7*8}]"         , "X:01|101|1|010|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["ldp"            , "Xt1, Xt2, [$Xn{, #imm7*8}]"         , "X:10|101|0|010|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["ldp"            , "Qt1, Qt2, [$Xn{, #imm7*16}]"        , "X:10|101|1|010|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["ldp"            , "Wt1, Wt2, [$Xn], #imm7*4"           , "X:00|101|0|001|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["ldp"            , "St1, St2, [$Xn], #imm7*4"           , "X:00|101|1|001|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["ldp"            , "Dt1, Dt2, [$Xn], #imm7*8"           , "X:01|101|1|001|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["ldp"            , "Xt1, Xt2, [$Xn], #imm7*8"           , "X:10|101|0|001|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["ldp"            , "Qt1, Qt2, [$Xn], #imm7*16"          , "X:10|101|1|001|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["ldp"            , "Wt1, Wt2, [$Xn, #imm7*4]!"          , "X:00|101|0|011|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["ldp"            , "St1, St2, [$Xn, #imm7*4]!"          , "X:00|101|1|011|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["ldp"            , "Dt1, Dt2, [$Xn, #imm7*8]!"          , "X:01|101|1|011|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["ldp"            , "Xt1, Xt2, [$Xn, #imm7*8]!"          , "X:10|101|0|011|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["ldp"            , "Qt1, Qt2, [$Xn, #imm7*16]!"         , "X:10|101|1|011|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+
+    ["ldpsw"          , "Xt1, Xt2, [$Xn{, #imm7*4}]"         , "X:01|101|0|010|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["ldpsw"          , "Xt1, Xt2, [$Xn], #imm7*4"           , "X:01|101|0|001|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["ldpsw"          , "Xt1, Xt2, [$Xn, #imm7*4]!"          , "X:01|101|0|011|1|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+
+    ["ldr"            , "Wt, offset19*4"                     , "X:00|011|0|00|imm19|Rt"                               , "ARMv8+ GRP21"],
+    ["ldr"            , "St, offset19*4"                     , "X:00|011|1|00|imm19|Rt"                               , "ARMv8+ GRP21"],
+    ["ldr"            , "Xt, offset19*4"                     , "X:01|011|0|00|imm19|Rt"                               , "ARMv8+ GRP21"],
+    ["ldr"            , "Dt, offset19*4"                     , "X:01|011|1|00|imm19|Rt"                               , "ARMv8+ GRP21"],
+    ["ldr"            , "Qt, offset19*4"                     , "X:10|011|1|00|imm19|Rt"                               , "ARMv8+ GRP21"],
+    ["ldr"            , "Bt, [$Xn], #simm9"                  , "X:00|111|1|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldr"            , "Qt, [$Xn], #simm9"                  , "X:00|111|1|00|11|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldr"            , "Ht, [$Xn], #simm9"                  , "X:01|111|1|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldr"            , "Wt, [$Xn], #simm9"                  , "X:10|111|0|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldr"            , "St, [$Xn], #simm9"                  , "X:10|111|1|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldr"            , "Xt, [$Xn], #simm9"                  , "X:11|111|0|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldr"            , "Dt, [$Xn], #simm9"                  , "X:11|111|1|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldr"            , "Bt, [$Xn, #simm9]!"                 , "X:00|111|1|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldr"            , "Qt, [$Xn, #simm9]!"                 , "X:00|111|1|00|11|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldr"            , "Ht, [$Xn, #simm9]!"                 , "X:01|111|1|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldr"            , "Wt, [$Xn, #simm9]!"                 , "X:10|111|0|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldr"            , "St, [$Xn, #simm9]!"                 , "X:10|111|1|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldr"            , "Xt, [$Xn, #simm9]!"                 , "X:11|111|0|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldr"            , "Dt, [$Xn, #simm9]!"                 , "X:11|111|1|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldr"            , "Bt, [$Xn, Wm%, extend {amount}]"    , "X:00|111|1|00|01|1|Rm|extend!=011|S|10|Rn|Rt"         , "ARMv8+ GRP26"],
+    ["ldr"            , "Bt, [$Xn, Xm{, LSL amount}]"        , "X:00|111|1|00|01|1|Rm|011|S|10|Rn|Rt"                 , "ARMv8+ GRP26"],
+    ["ldr"            , "Qt, [$Xn, Wm%{, extend {#0|4}}]"    , "X:00|111|1|00|11|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldr"            , "Ht, [$Xn, Wm%{, extend {#0|1}}]"    , "X:01|111|1|00|01|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldr"            , "Wt, [$Xn, Wm%{, extend {#0|2}}]"    , "X:10|111|0|00|01|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldr"            , "St, [$Xn, Wm%{, extend {#0|2}}]"    , "X:10|111|1|00|01|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldr"            , "Xt, [$Xn, Wm%{, extend {#0|3}}]"    , "X:11|111|0|00|01|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldr"            , "Dt, [$Xn, Wm%{, extend {#0|3}}]"    , "X:11|111|1|00|01|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldr"            , "Bt, [$Xn{, #pimm12}]"               , "X:00|111|1|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldr"            , "Qt, [$Xn{, #pimm12*16}]"            , "X:00|111|1|01|11|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldr"            , "Ht, [$Xn{, #pimm12*2}]"             , "X:01|111|1|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldr"            , "Wt, [$Xn{, #pimm12*4}]"             , "X:10|111|0|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldr"            , "St, [$Xn{, #pimm12*4}]"             , "X:10|111|1|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldr"            , "Xt, [$Xn{, #pimm12*8}]"             , "X:11|111|0|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldr"            , "Dt, [$Xn{, #pimm12*8}]"             , "X:11|111|1|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["ldrb"           , "Wt, [$Xn], #simm9"                  , "X:00|111|0|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldrb"           , "Wt, [$Xn, #simm9]!"                 , "X:00|111|0|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldrb"           , "Wt, [$Xn, Wm%, extend {amount}]"    , "X:00|111|0|00|01|1|Rm|extend!=011|S|10|Rn|Rt"         , "ARMv8+ GRP26"],
+    ["ldrb"           , "Wt, [$Xn, Xm{, LSL amount}]"        , "X:00|111|0|00|01|1|Rm|011|S|10|Rn|Rt"                 , "ARMv8+ GRP26"],
+    ["ldrb"           , "Wt, [$Xn{, #pimm12}]"               , "X:00|111|0|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["ldrh"           , "Wt, [$Xn], #simm9"                  , "X:01|111|0|00|01|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldrh"           , "Wt, [$Xn, #simm9]!"                 , "X:01|111|0|00|01|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldrh"           , "Wt, [$Xn, Wm%{, extend {#0|1}}]"    , "X:01|111|0|00|01|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldrh"           , "Wt, [$Xn{, #pimm12*2}]"             , "X:01|111|0|01|01|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["ldrsb"          , "Xt, [$Xn], #simm9"                  , "X:00|111|0|00|10|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldrsb"          , "Wt, [$Xn], #simm9"                  , "X:00|111|0|00|11|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldrsb"          , "Xt, [$Xn, #simm9]!"                 , "X:00|111|0|00|10|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldrsb"          , "Wt, [$Xn, #simm9]!"                 , "X:00|111|0|00|11|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldrsb"          , "Xt, [$Xn, Wm%, extend {amount}]"    , "X:00|111|0|00|10|1|Rm|extend!=011|S|10|Rn|Rt"         , "ARMv8+ GRP26"],
+    ["ldrsb"          , "Xt, [$Xn, Xm{, LSL amount}]"        , "X:00|111|0|00|10|1|Rm|011|S|10|Rn|Rt"                 , "ARMv8+ GRP26"],
+    ["ldrsb"          , "Wt, [$Xn, Wm%, extend {amount}]"    , "X:00|111|0|00|11|1|Rm|extend!=011|S|10|Rn|Rt"         , "ARMv8+ GRP26"],
+    ["ldrsb"          , "Wt, [$Xn, Xm{, LSL amount}]"        , "X:00|111|0|00|11|1|Rm|011|S|10|Rn|Rt"                 , "ARMv8+ GRP26"],
+    ["ldrsb"          , "Xt, [$Xn{, #pimm12}]"               , "X:00|111|0|01|10|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldrsb"          , "Wt, [$Xn{, #pimm12}]"               , "X:00|111|0|01|11|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["ldrsh"          , "Xt, [$Xn], #simm9"                  , "X:01|111|0|00|10|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldrsh"          , "Wt, [$Xn], #simm9"                  , "X:01|111|0|00|11|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldrsh"          , "Xt, [$Xn, #simm9]!"                 , "X:01|111|0|00|10|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldrsh"          , "Wt, [$Xn, #simm9]!"                 , "X:01|111|0|00|11|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldrsh"          , "Xt, [$Xn, Wm%{, extend {#0|1}}]"    , "X:01|111|0|00|10|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldrsh"          , "Wt, [$Xn, Wm%{, extend {#0|1}}]"    , "X:01|111|0|00|11|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldrsh"          , "Xt, [$Xn{, #pimm12*2}]"             , "X:01|111|0|01|10|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["ldrsh"          , "Wt, [$Xn{, #pimm12*2}]"             , "X:01|111|0|01|11|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["ldrsw"          , "Xt, offset19*4"                     , "X:10|011|0|00|imm19|Rt"                               , "ARMv8+ GRP21"],
+    ["ldrsw"          , "Xt, [$Xn], #simm9"                  , "X:10|111|0|00|10|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["ldrsw"          , "Xt, [$Xn, #simm9]!"                 , "X:10|111|0|00|10|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["ldrsw"          , "Xt, [$Xn, Wm%{, extend {#0|2}}]"    , "X:10|111|0|00|10|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["ldrsw"          , "Xt, [$Xn{, #pimm12*4}]"             , "X:10|111|0|01|10|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["ldtr"           , "Wt, [$Xn{, #simm9}]"                , "X:10|111|0|00|01|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+    ["ldtr"           , "Xt, [$Xn{, #simm9}]"                , "X:11|111|0|00|01|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["ldtrb"          , "Wt, [$Xn{, #simm9}]"                , "X:00|111|0|00|01|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["ldtrh"          , "Wt, [$Xn{, #simm9}]"                , "X:01|111|0|00|01|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["ldtrsb"         , "Xt, [$Xn{, #simm9}]"                , "X:00|111|0|00|10|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+    ["ldtrsb"         , "Wt, [$Xn{, #simm9}]"                , "X:00|111|0|00|11|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["ldtrsh"         , "Xt, [$Xn{, #simm9}]"                , "X:01|111|0|00|10|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+    ["ldtrsh"         , "Wt, [$Xn{, #simm9}]"                , "X:01|111|0|00|11|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["ldtrsw"         , "Xt, [$Xn{, #simm9}]"                , "X:10|111|0|00|10|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["ldur"           , "Bt, [$Xn{, #simm9}]"                , "X:00|111|1|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldur"           , "Qt, [$Xn{, #simm9}]"                , "X:00|111|1|00|11|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldur"           , "Ht, [$Xn{, #simm9}]"                , "X:01|111|1|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldur"           , "Wt, [$Xn{, #simm9}]"                , "X:10|111|0|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldur"           , "St, [$Xn{, #simm9}]"                , "X:10|111|1|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldur"           , "Xt, [$Xn{, #simm9}]"                , "X:11|111|0|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldur"           , "Dt, [$Xn{, #simm9}]"                , "X:11|111|1|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["ldurb"          , "Wt, [$Xn{, #simm9}]"                , "X:00|111|0|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["ldurh"          , "Wt, [$Xn{, #simm9}]"                , "X:01|111|0|00|01|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["ldursb"         , "Xt, [$Xn{, #simm9}]"                , "X:00|111|0|00|10|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldursb"         , "Wt, [$Xn{, #simm9}]"                , "X:00|111|0|00|11|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["ldursh"         , "Xt, [$Xn{, #simm9}]"                , "X:01|111|0|00|10|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["ldursh"         , "Wt, [$Xn{, #simm9}]"                , "X:01|111|0|00|11|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["ldursw"         , "Xt, [$Xn{, #simm9}]"                , "X:10|111|0|00|10|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["ldxp"           , "Wt1, Wt2, [$Xn{,#0}]"               , "X:1|0|001000|0|1|1|11111|0|Rt2|Rn|Rt"                 , "ARMv8+ GRP22"],
+    ["ldxp"           , "Xt1, Xt2, [$Xn{,#0}]"               , "X:1|1|001000|0|1|1|11111|0|Rt2|Rn|Rt"                 , "ARMv8+ GRP22"],
+
+    ["ldxr"           , "Wt, [$Xn{,#0}]"                     , "X:10|001000|0|1|0|11111|0|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+    ["ldxr"           , "Xt, [$Xn{,#0}]"                     , "X:11|001000|0|1|0|11111|0|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldxrb"          , "Wt, [$Xn{,#0}]"                     , "X:00|001000|0|1|0|11111|0|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["ldxrh"          , "Wt, [$Xn{,#0}]"                     , "X:01|001000|0|1|0|11111|0|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["lsl"            , "Wd, Wn, #shift"                     , "X:0|10|100110|0|immr|imms!=011111|Rn|Rd"              , "ARMv8+ GRP3 ALIAS_OF=ubfm PREFERRED_IF=imms+1==immr"],
+    ["lsl"            , "Xd, Xn, #shift"                     , "X:1|10|100110|1|immr|imms!=111111|Rn|Rd"              , "ARMv8+ GRP3 ALIAS_OF=ubfm PREFERRED_IF=imms+1==immr"],
+    ["lsl"            , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001000|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=lslv PREFERRED_IF=ALWAYS"],
+    ["lsl"            , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001000|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=lslv PREFERRED_IF=ALWAYS"],
+
+    ["lslv"           , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001000|Rn|Rd"                     , "ARMv8+ GRP41"],
+    ["lslv"           , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001000|Rn|Rd"                     , "ARMv8+ GRP41"],
+
+    ["lsr"            , "Wd, Wn, #shift"                     , "X:0|10|100110|0|immr|011111|Rn|Rd"                    , "ARMv8+ GRP3 ALIAS_OF=ubfm"],
+    ["lsr"            , "Xd, Xn, #shift"                     , "X:1|10|100110|1|immr|111111|Rn|Rd"                    , "ARMv8+ GRP3 ALIAS_OF=ubfm"],
+    ["lsr"            , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001001|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=lsrv PREFERRED_IF=ALWAYS"],
+    ["lsr"            , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001001|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=lsrv PREFERRED_IF=ALWAYS"],
+
+    ["lsrv"           , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001001|Rn|Rd"                     , "ARMv8+ GRP41"],
+    ["lsrv"           , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001001|Rn|Rd"                     , "ARMv8+ GRP41"],
+
+    ["madd"           , "Wd, Wn, Wm, Wa"                     , "X:0|00|11011|:3|Rm|0|Ra|Rn|Rd"                        , "ARMv8+ GRP42"],
+    ["madd"           , "Xd, Xn, Xm, Xa"                     , "X:1|00|11011|:3|Rm|0|Ra|Rn|Rd"                        , "ARMv8+ GRP42"],
+
+    ["mla"            , "Vd.4H%3, Vn.4H%3, Vm.H%[idx]"       , "X:0|Q|1|01111|sz!=00|L|M|Rm:4|:4|H|0|Rn|Rd"           , "ARMv8+ GRP62"],
+    ["mla.8B%5"       , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|10010|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["mls"            , "Vd.4H%3, Vn.4H%3, Vm.H%[idx]"       , "X:0|Q|1|01111|sz!=00|L|M|Rm:4|0100|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+    ["mls.8B%5"       , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|10010|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["mneg"           , "Wd, Wn, Wm"                         , "X:0|00|11011|:3|Rm|1|11111|Rn|Rd"                     , "ARMv8+ GRP42 ALIAS_OF=msub"],
+    ["mneg"           , "Xd, Xn, Xm"                         , "X:1|00|11011|:3|Rm|1|11111|Rn|Rd"                     , "ARMv8+ GRP42 ALIAS_OF=msub"],
+
+    ["mov"            , "$Wd, $Wn"                           , "X:0|0|0|10001|00|:12|Rn|Rd"                           , "ARMv8+ GRP2 ALIAS_OF=add PREFERRED_IF=Rd==11111||Rn==11111"],
+    ["mov"            , "$Xd, $Xn"                           , "X:1|0|0|10001|00|:12|Rn|Rd"                           , "ARMv8+ GRP2 ALIAS_OF=add PREFERRED_IF=Rd==11111||Rn==11111"],
+    ["mov"            , "$Wd, #bimm12"                       , "X:0|01|100100|0|immr|imms|11111|Rd"                   , "ARMv8+ GRP5 ALIAS_OF=orr PREFERRED_IF=MoveWidePreferred:0:0:imms:immr==0"],
+    ["mov"            , "$Xd, #bimm13"                       , "X:1|01|100100|N|immr|imms|11111|Rd"                   , "ARMv8+ GRP5 ALIAS_OF=orr PREFERRED_IF=MoveWidePreferred:1:N:imms:immr==0"],
+    ["mov"            , "Wd, #nimm16"                        , "X:0|00|100101|shift=00|imm16!=0000000000000000|Rd"    , "ARMv8+ GRP6 ALIAS_OF=movn PREFERRED_IF=imm16!=1111111111111111"],
+    ["mov"            , "Wd, #imm16"                         , "X:0|10|100101|shift=00|imm16!=0000000000000000|Rd"    , "ARMv8+ GRP6 ALIAS_OF=movz"],
+    ["mov"            , "Xd, #nimm16"                        , "X:1|00|100101|shift=00|imm16!=0000000000000000|Rd"    , "ARMv8+ GRP6 ALIAS_OF=movn"],
+    ["mov"            , "Xd, #imm16"                         , "X:1|10|100101|shift=00|imm16!=0000000000000000|Rd"    , "ARMv8+ GRP6 ALIAS_OF=movz"],
+    ["mov"            , "Wd, Wm"                             , "X:0|01|01010|00|0|Rm|:6|11111|Rd"                     , "ARMv8+ GRP43 ALIAS_OF=orr"],
+    ["mov"            , "Xd, Xm"                             , "X:1|01|01010|00|0|Rm|:6|11111|Rd"                     , "ARMv8+ GRP43 ALIAS_OF=orr"],
+    ["mov"            , "Wd, Vn.S[idx]"                      , "X:0|0|0|01110000|imm5=xx100|0|0111|1|Rn|Rd"           , "ARMv8+ GRP46 ALIAS_OF=umov"],
+    ["mov"            , "Vd.B%3[idx], Rn"                    , "X:0|1|0|01110000|imm5|0|0011|1|Rn|Rd"                 , "ARMv8+ GRP46 ALIAS_OF=ins PREFERRED_IF=ALWAYS"],
+    ["mov"            , "Xd, Vn.D[idx]"                      , "X:0|1|0|01110000|imm5=x1000|0|0111|1|Rn|Rd"           , "ARMv8+ GRP46 ALIAS_OF=umov"],
+    ["mov"            , "Bd%3, Vn.B%3[idx]"                  , "X:01|0|11110000|imm5|0|:4|1|Rn|Rd"                    , "ARMv8+ GRP50 ALIAS_OF=dup PREFERRED_IF=ALWAYS"],
+    ["mov"            , "Bd%3, Vn.B%3[idx]"                  , "X:01|0|11110000|imm5|0|:4|1|Rn|Rd"                    , "ARMv8+ GRP50 ALIAS_OF=dup PREFERRED_IF=ALWAYS"],
+    ["mov.B%3"        , "Vd.T[idx1], Vn.T[idx2]"             , "X:0|1|1|01110000|imm5|0|imm4|1|Rn|Rd"                 , "ARMv8+ GRP46 ALIAS_OF=ins PREFERRED_IF=ALWAYS"],
+    ["mov.8B%"        , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|10|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60 ALIAS_OF=orr PREFERRED_IF=Rm==Rn"],
+
+    ["movi"           , "Dd, #imm8"                          , "X:0|0|1|0111100000|a|b|c|1110|0|1|d|e|f|g|h|Rd"       , "ARMv8+ GRP48"],
+    ["movi"           , "Vd.2S%, #imm8{, LSL #0%3:8}"        , "X:0|Q|0|0111100000|a|b|c|cmode=0xx0|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["movi"           , "Vd.4H%, #imm8{, LSL #0|8}"          , "X:0|Q|0|0111100000|a|b|c|cmode=10x0|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["movi"           , "Vd.2S%, #imm8, MSL #8%"             , "X:0|Q|0|0111100000|a|b|c|cmode=110x|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["movi"           , "Vd.8B%, #imm8{, LSL #0}"            , "X:0|Q|0|0111100000|a|b|c|1110|0|1|d|e|f|g|h|Rd"       , "ARMv8+ GRP48"],
+    ["movi"           , "Vd.2D, #imm8"                       , "X:0|1|1|0111100000|a|b|c|1110|0|1|d|e|f|g|h|Rd"       , "ARMv8+ GRP48"],
+
+    ["movk"           , "Wd, #imm16{, LSL #shift*16}"        , "X:0|11|100101|shift|imm16|Rd"                         , "ARMv8+ GRP6"],
+    ["movk"           , "Xd, #imm16{, LSL #shift*16}"        , "X:1|11|100101|shift|imm16|Rd"                         , "ARMv8+ GRP6"],
+
+    ["movn"           , "Wd, #imm16{, LSL #shift*16}"        , "X:0|00|100101|shift|imm16|Rd"                         , "ARMv8+ GRP6"],
+    ["movn"           , "Xd, #imm16{, LSL #shift*16}"        , "X:1|00|100101|shift|imm16|Rd"                         , "ARMv8+ GRP6"],
+
+    ["movz"           , "Wd, #imm16{, LSL #shift*16}"        , "X:0|10|100101|shift|imm16|Rd"                         , "ARMv8+ GRP6"],
+    ["movz"           , "Xd, #imm16{, LSL #shift*16}"        , "X:1|10|100101|shift|imm16|Rd"                         , "ARMv8+ GRP6"],
+
+    ["mrs"            , "Xt, sysreg"                         , "X:1101010100|1|1|o0|op1|CRn|CRm|op2|Rt"               , "ARMv8+ GRP12"],
+
+    ["msr"            , "pstatefield, #imm4"                 , "X:1101010100|0|00|op1|0100|CRm|op2|11111"             , "ARMv8+ GRP12"],
+    ["msr"            , "sysreg, Xt"                         , "X:1101010100|0|1|o0|op1|CRn|CRm|op2|Rt"               , "ARMv8+ GRP12"],
+
+    ["msub"           , "Wd, Wn, Wm, Wa"                     , "X:0|00|11011|:3|Rm|1|Ra|Rn|Rd"                        , "ARMv8+ GRP42"],
+    ["msub"           , "Xd, Xn, Xm, Xa"                     , "X:1|00|11011|:3|Rm|1|Ra|Rn|Rd"                        , "ARMv8+ GRP42"],
+
+    ["mul"            , "Vd.4H%3, Vn.4H%3, Vm.H%[idx]"       , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|1000|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+    ["mul.8B%5"       , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|10011|1|Rn|Rd"                , "ARMv8+ GRP60"],
+    ["mul"            , "Wd, Wn, Wm"                         , "X:0|00|11011|:3|Rm|0|11111|Rn|Rd"                     , "ARMv8+ GRP42 ALIAS_OF=madd"],
+    ["mul"            , "Xd, Xn, Xm"                         , "X:1|00|11011|:3|Rm|0|11111|Rn|Rd"                     , "ARMv8+ GRP42 ALIAS_OF=madd"],
+
+    ["mvn"            , "Wd, Wm{, shift #amount}"            , "X:0|01|01010|shift|1|Rm|imm6|11111|Rd"                , "ARMv8+ GRP43 ALIAS_OF=orn"],
+    ["mvn"            , "Xd, Xm{, shift #amount}"            , "X:1|01|01010|shift|1|Rm|imm6|11111|Rd"                , "ARMv8+ GRP43 ALIAS_OF=orn"],
+    ["mvn.8B%"        , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|00|10000|00101|10|Rn|Rd"                , "ARMv8+ GRP61 ALIAS_OF=not PREFERRED_IF=ALWAYS"],
+
+    ["mvni"           , "Vd.2S%, #imm8{, LSL #0%3:8}"        , "X:0|Q|1|0111100000|a|b|c|cmode=0xx0|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["mvni"           , "Vd.4H%, #imm8{, LSL #0|8}"          , "X:0|Q|1|0111100000|a|b|c|cmode=10x0|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["mvni"           , "Vd.2S%, #imm8, MSL #8%"             , "X:0|Q|1|0111100000|a|b|c|cmode=110x|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+
+    ["neg"            , "Dd, Dn"                             , "X:01|1|11110|11|10000|01011|10|Rn|Rd"                 , "ARMv8+ GRP55"],
+    ["neg.8B%5|2D"    , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|sz:2|10000|01011|10|Rn|Rd"              , "ARMv8+ GRP61"],
+    ["neg"            , "Wd, Wm{, shift #amount}"            , "X:0|1|0|01011|shift|0|Rm|imm6|11111|Rd"               , "ARMv8+ GRP35 ALIAS_OF=sub"],
+    ["neg"            , "Xd, Xm{, shift #amount}"            , "X:1|1|0|01011|shift|0|Rm|imm6|11111|Rd"               , "ARMv8+ GRP35 ALIAS_OF=sub"],
+    ["negS"           , "Wd, Wm{, shift #amount}"            , "X:0|1|1|01011|shift|0|Rm|imm6|11111|Rd"               , "ARMv8+ GRP35 NZCV=W ALIAS_OF=subS"],
+    ["negS"           , "Xd, Xm{, shift #amount}"            , "X:1|1|1|01011|shift|0|Rm|imm6|11111|Rd"               , "ARMv8+ GRP35 NZCV=W ALIAS_OF=subS"],
+
+    ["ngc"            , "Wd, Wm"                             , "X:0|1|0|11010000|Rm|:6|11111|Rd"                      , "ARMv8+ GRP36 NZCV=UURU ALIAS_OF=sbc"],
+    ["ngc"            , "Xd, Xm"                             , "X:1|1|0|11010000|Rm|:6|11111|Rd"                      , "ARMv8+ GRP36 NZCV=UURU ALIAS_OF=sbc"],
+    ["ngcS"           , "Wd, Wm"                             , "X:0|1|1|11010000|Rm|:6|11111|Rd"                      , "ARMv8+ GRP36 NZCV=WWXW ALIAS_OF=sbcS"],
+    ["ngcS"           , "Xd, Xm"                             , "X:1|1|1|11010000|Rm|:6|11111|Rd"                      , "ARMv8+ GRP36 NZCV=WWXW ALIAS_OF=sbcS"],
+
+    ["nop"            , ""                                   , "X:1101010100|0|00|011|0010|:4|:3|11111"               , "ARMv8+ GRP12"],
+
+    ["not.8B%"        , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|00|10000|00101|10|Rn|Rd"                , "ARMv8+ GRP61"],
+
+    ["orn"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|01|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["orn"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|01|01010|shift|1|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["orn.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|11|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["orr"            , "$Wd, Wn, #imm12"                    , "X:0|01|100100|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5"],
+    ["orr"            , "$Xd, Xn, #imm13"                    , "X:1|01|100100|N|immr|imms|Rn|Rd"                      , "ARMv8+ GRP5"],
+    ["orr"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|01|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["orr"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|01|01010|shift|0|Rm|imm6|Rn|Rd"                   , "ARMv8+ GRP43"],
+    ["orr"            , "Vd.2S%, #imm8{, LSL #0%3:8}"        , "X:0|Q|0|0111100000|a|b|c|cmode=0xx1|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["orr"            , "Vd.4H%, #imm8{, LSL #0|8}"          , "X:0|Q|0|0111100000|a|b|c|cmode=10x1|0|1|d|e|f|g|h|Rd" , "ARMv8+ GRP48"],
+    ["orr.8B%"        , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|10|1|Rm|00011|1|Rn|Rd"                  , "ARMv8+ GRP60"],
+
+    ["pmul.8B%"       , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|10011|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["pmull'2"        , "Vd.8H|1Q, Vn.8B%|1D%, Vm.8B%|1D%"   , "X:0|Q|0|01110|sz:2|1|Rm|1110|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["prfm"           , "prfop, offset19*4"                  , "X:11|011|0|00|imm19|Rt"                               , "ARMv8+ GRP21"],
+    ["prfm"           , "prfop, [$Xn, Wm%{, extend {#0|3}}]" , "X:11|111|0|00|10|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["prfm"           , "prfop, [$Xn{, #pimm12*8}]"          , "X:11|111|0|01|10|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["prfum"          , "prfop, [$Xn{, #simm9}]"             , "X:11|111|0|00|10|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["raddhn'2"       , "Vd.8B%5, Vn.8H|4S|2D, Vm.8H|4S|2D"  , "X:0|Q|1|01110|sz:2|1|Rm|0100|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["rbit"           , "Wd, Wn"                             , "X:0|1|0|11010110|:5|:6|Rn|Rd"                         , "ARMv8+ GRP40"],
+    ["rbit"           , "Xd, Xn"                             , "X:1|1|0|11010110|:5|:6|Rn|Rd"                         , "ARMv8+ GRP40"],
+    ["rbit.8B%"       , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|01|10000|00101|10|Rn|Rd"                , "ARMv8+ GRP61"],
+
+    ["ret"            , "{Xn}"                               , "X:1101011|0010|11111|:6|Rn|00000"                     , "ARMv8+ GRP15"],
+
+    ["rev"            , "Wd, Wn"                             , "X:0|1|0|11010110|:5|000010|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["rev"            , "Xd, Xn"                             , "X:1|1|0|11010110|:5|000011|Rn|Rd"                     , "ARMv8+ GRP40"],
+
+    ["rev16"          , "Wd, Wn"                             , "X:0|1|0|11010110|:5|000001|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["rev16"          , "Xd, Xn"                             , "X:1|1|0|11010110|:5|000001|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["rev16.8B%"      , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|sz:2|10000|00001|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["rev32"          , "Xd, Xn"                             , "X:1|1|0|11010110|:5|000010|Rn|Rd"                     , "ARMv8+ GRP40"],
+    ["rev32.8B%3"     , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|sz:2|10000|:5|10|Rn|Rd"                 , "ARMv8+ GRP61"],
+
+    ["rev64.8B%5"     , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|sz:2|10000|:5|10|Rn|Rd"                 , "ARMv8+ GRP61"],
+    ["rev64"          , "Xd, Xn"                             , "X:1|1|0|11010110|:5|000011|Rn|Rd"                     , "ARMv8+ GRP40 PSEUDO_OF=rev PREFERRED_IF=NEVER"],
+
+    ["ror"            , "Wd, Ws, #shift"                     , "X:0|00|100111|0|0|Rm|imms=0xxxxx|Rn|Rd"               , "ARMv8+ GRP4 ALIAS_OF=extr PREFERRED_IF=Rn==Rm"],
+    ["ror"            , "Xd, Xs, #shift"                     , "X:1|00|100111|1|0|Rm|imms|Rn|Rd"                      , "ARMv8+ GRP4 ALIAS_OF=extr PREFERRED_IF=Rn==Rm"],
+    ["ror"            , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001011|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=rorv PREFERRED_IF=ALWAYS"],
+    ["ror"            , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001011|Rn|Rd"                     , "ARMv8+ GRP41 ALIAS_OF=rorv PREFERRED_IF=ALWAYS"],
+
+    ["rorv"           , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|001011|Rn|Rd"                     , "ARMv8+ GRP41"],
+    ["rorv"           , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|001011|Rn|Rd"                     , "ARMv8+ GRP41"],
+
+    ["rshrn'2"        , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|0|011110|immh!=0000|immb|10001|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["rsubhn'2"       , "Vd.8B%5, Vn.8H|4S|2D, Vm.8H|4S|2D"  , "X:0|Q|1|01110|sz:2|1|Rm|0110|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["saba.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01111|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sabal'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|0|01110|sz:2|1|Rm|0101|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["sabd.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01110|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sabdl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|0|01110|sz:2|1|Rm|0111|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["sadalp"         , "Vd.4H%5, Vn.8B%5"                   , "X:0|Q|0|01110|sz:2|10000|00110|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["saddl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|0|01110|sz:2|1|Rm|:4|00|Rn|Rd"                  , "ARMv8+ GRP59"],
+
+    ["saddlp"         , "Vd.4H%5, Vn.8B%5"                   , "X:0|Q|0|01110|sz:2|10000|00010|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["saddlv"         , "Hd%2, Vn.8B%3|4S"                   , "X:0|Q|0|01110|sz:2|11000|00011|10|Rn|Rd"              , "ARMv8+ GRP45"],
+
+    ["saddw'2"        , "Vd.8H|4S|2D, Vn.8H|4S|2D, Vm.8B%5"  , "X:0|Q|0|01110|sz:2|1|Rm|0001|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["sbc"            , "Wd, Wn, Wm"                         , "X:0|1|0|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=UURU"],
+    ["sbc"            , "Xd, Xn, Xm"                         , "X:1|1|0|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=UURU"],
+    ["sbcS"           , "Wd, Wn, Wm"                         , "X:0|1|1|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=WWXW"],
+    ["sbcS"           , "Xd, Xn, Xm"                         , "X:1|1|1|11010000|Rm|:6|Rn|Rd"                         , "ARMv8+ GRP36 NZCV=WWXW"],
+
+    ["sbfiz"          , "Wd, Wn, #lsb, #width"               , "X:0|00|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm PREFERRED_IF=imms<immr"],
+    ["sbfiz"          , "Xd, Xn, #lsb, #width"               , "X:1|00|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm PREFERRED_IF=imms<immr"],
+
+    ["sbfm"           , "Wd, Wn, #immr, #imms"               , "X:0|00|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3"],
+    ["sbfm"           , "Xd, Xn, #immr, #imms"               , "X:1|00|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3"],
+
+    ["sbfx"           , "Wd, Wn, #lsb, #width"               , "X:0|00|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm PREFERRED_IF=BFXPreferred:0:0:imms:immr==1"],
+    ["sbfx"           , "Xd, Xn, #lsb, #width"               , "X:1|00|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm PREFERRED_IF=BFXPreferred:1:0:imms:immr==1"],
+
+    ["scvtf"          , "Sd%, Sn%, #fbits"                   , "X:01|0|111110|immh!=0000|immb|11100|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["scvtf"          , "Sd%, Sn%"                           , "X:01|0|111100|sz|10000|11101|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["scvtf"          , "Sd, Wn, #fbits"                     , "X:0|0|0|11110|00|0|00|010|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["scvtf"          , "Dd, Wn, #fbits"                     , "X:0|0|0|11110|01|0|00|010|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["scvtf"          , "Sd, Xn, #fbits"                     , "X:1|0|0|11110|00|0|00|010|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["scvtf"          , "Dd, Xn, #fbits"                     , "X:1|0|0|11110|01|0|00|010|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["scvtf"          , "Sd, Wn"                             , "X:0|0|0|11110|00|1|00|010|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["scvtf"          , "Dd, Wn"                             , "X:0|0|0|11110|01|1|00|010|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["scvtf"          , "Sd, Xn"                             , "X:1|0|0|11110|00|1|00|010|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["scvtf"          , "Dd, Xn"                             , "X:1|0|0|11110|01|1|00|010|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["scvtf.2S%|2D"   , "Vd.T, Vn.T, #fbits"                 , "X:0|Q|0|011110|immh!=0000|immb|11100|1|Rn|Rd"         , "ARMv8+ GRP57"],
+    ["scvtf.2S%|2D"   , "Vd.T, Vn.T"                         , "X:0|Q|0|011100|sz|10000|11101|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["sdiv"           , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|000011|Rn|Rd"                     , "ARMv8+ GRP41"],
+    ["sdiv"           , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|000011|Rn|Rd"                     , "ARMv8+ GRP41"],
+
+    ["sev"            , ""                                   , "X:1101010100|0|00|011|0010|:4|100|11111"              , "ARMv8+ GRP12"],
+
+    ["sevl"           , ""                                   , "X:1101010100|0|00|011|0010|:4|101|11111"              , "ARMv8+ GRP12"],
+
+    ["sha1c"          , "Qd, Sn, Vm.4S"                      , "X:01011110|00|0|Rm|0|:3|00|Rn|Rd"                     , "ARMv8+ GRP64"],
+
+    ["sha1h"          , "Sd, Sn"                             , "X:01011110|00|10100|:5|10|Rn|Rd"                      , "ARMv8+ GRP65"],
+
+    ["sha1m"          , "Qd, Sn, Vm.4S"                      , "X:01011110|00|0|Rm|0|010|00|Rn|Rd"                    , "ARMv8+ GRP64"],
+
+    ["sha1p"          , "Qd, Sn, Vm.4S"                      , "X:01011110|00|0|Rm|0|001|00|Rn|Rd"                    , "ARMv8+ GRP64"],
+
+    ["sha1su0.4S"     , "Vd.T, Vn.T, Vm.T"                   , "X:01011110|00|0|Rm|0|011|00|Rn|Rd"                    , "ARMv8+ GRP64"],
+
+    ["sha1su1.4S"     , "Vd.T, Vn.T"                         , "X:01011110|00|10100|00001|10|Rn|Rd"                   , "ARMv8+ GRP65"],
+
+    ["sha256h"        , "Qd, Qn, Vm.4S"                      , "X:01011110|00|0|Rm|0|100|00|Rn|Rd"                    , "ARMv8+ GRP64"],
+
+    ["sha256h2"       , "Qd, Qn, Vm.4S"                      , "X:01011110|00|0|Rm|0|101|00|Rn|Rd"                    , "ARMv8+ GRP64"],
+
+    ["sha256su0.4S"   , "Vd.T, Vn.T"                         , "X:01011110|00|10100|00010|10|Rn|Rd"                   , "ARMv8+ GRP65"],
+
+    ["sha256su1.4S"   , "Vd.T, Vn.T, Vm.T"                   , "X:01011110|00|0|Rm|0|110|00|Rn|Rd"                    , "ARMv8+ GRP64"],
+
+    ["shadd.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|:5|1|Rn|Rd"                   , "ARMv8+ GRP60"],
+
+    ["shl"            , "Dd, Dn, #shift"                     , "X:01|0|111110|immh=1xxx|immb|01010|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["shl.8B%5|2D"    , "Vd.T, Vn.T, #shift"                 , "X:0|Q|0|011110|immh!=0000|immb|01010|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["shll'2"         , "Vd.8H|4S|2D, Vn.8B%5, #8%2"         , "X:0|Q|1|01110|sz:2|10000|10011|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["shrn'2"         , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|0|011110|immh!=0000|immb|10000|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["shsub.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|00100|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sli"            , "Dd, Dn, #shift"                     , "X:01|1|111110|immh=1xxx|immb|01010|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["sli.8B%5|2D"    , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|01010|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["smaddl"         , "Xd, Wn, Wm, Xa"                     , "X:1|00|11011|001|Rm|0|Ra|Rn|Rd"                       , "ARMv8+ GRP42"],
+
+    ["smax.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01100|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["smaxp.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|10100|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["smaxv"          , "Bd%2, Vn.8B%3|4S"                   , "X:0|Q|0|01110|sz:2|11000|01010|10|Rn|Rd"              , "ARMv8+ GRP45"],
+
+    ["smc"            , "#imm16"                             , "X:11010100|:3|imm16|:3|11"                            , "ARMv8+ GRP11"],
+
+    ["smin.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01101|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sminp.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|10101|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sminv"          , "Bd%2, Vn.8B%3|4S"                   , "X:0|Q|0|01110|sz:2|11000|11010|10|Rn|Rd"              , "ARMv8+ GRP45"],
+
+    ["smlal'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|0|01110|sz:2|1|Rm|1000|00|Rn|Rd"                , "ARMv8+ GRP59"],
+    ["smlal'2"        , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|0010|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+
+    ["smlsl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|0|01110|sz:2|1|Rm|1010|00|Rn|Rd"                , "ARMv8+ GRP59"],
+    ["smlsl'2"        , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|0110|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+
+    ["smnegl"         , "Xd, Wn, Wm"                         , "X:1|00|11011|001|Rm|1|11111|Rn|Rd"                    , "ARMv8+ GRP42 ALIAS_OF=smsubl"],
+
+    ["smov"           , "Wd, Vn.B%[idx]"                     , "X:0|0|0|01110000|imm5|0|0101|1|Rn|Rd"                 , "ARMv8+ GRP46"],
+    ["smov"           , "Xd, Vn.B%2[idx]"                    , "X:0|1|0|01110000|imm5|0|0101|1|Rn|Rd"                 , "ARMv8+ GRP46"],
+
+    ["smsubl"         , "Xd, Wn, Wm, Xa"                     , "X:1|00|11011|001|Rm|1|Ra|Rn|Rd"                       , "ARMv8+ GRP42"],
+
+    ["smulh"          , "Xd, Xn, Xm"                         , "X:1|00|11011|010|Rm|0|11111|Rn|Rd"                    , "ARMv8+ GRP42"],
+
+    ["smull'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|0|01110|sz:2|1|Rm|1100|00|Rn|Rd"                , "ARMv8+ GRP59"],
+    ["smull'2"        , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|1010|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+    ["smull"          , "Xd, Wn, Wm"                         , "X:1|00|11011|001|Rm|0|11111|Rn|Rd"                    , "ARMv8+ GRP42 ALIAS_OF=smaddl"],
+
+    ["sqabs"          , "Bd%3, Bn%3"                         , "X:01|0|11110|sz:2|10000|00111|10|Rn|Rd"               , "ARMv8+ GRP55"],
+    ["sqabs.8B%5|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|sz:2|10000|00111|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["sqadd"          , "Bd%3, Bn%3, Bm%3"                   , "X:01|0|11110|sz:2|1|Rm|00001|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["sqadd.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|00001|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sqdmlal"        , "Sd%, Hn%, Hm%"                      , "X:01|0|11110|sz!=00|1|Rm|1001|00|Rn|Rd"               , "ARMv8+ GRP53"],
+    ["sqdmlal"        , "Sd%, Hn%, Vm.H%[idx]"               , "X:01|0|11111|sz!=00|L|M|Rm:4|0011|H|0|Rn|Rd"          , "ARMv8+ GRP56"],
+    ["sqdmlal'2"      , "Vd.4S|2D, Vn.4H%3, Vm.4H%3"         , "X:0|Q|0|01110|sz!=00|1|Rm|1001|00|Rn|Rd"              , "ARMv8+ GRP59"],
+    ["sqdmlal'2"      , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|0011|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+
+    ["sqdmlsl"        , "Sd%, Hn%, Hm%"                      , "X:01|0|11110|sz!=00|1|Rm|1011|00|Rn|Rd"               , "ARMv8+ GRP53"],
+    ["sqdmlsl"        , "Sd%, Hn%, Vm.H%[idx]"               , "X:01|0|11111|sz!=00|L|M|Rm:4|0111|H|0|Rn|Rd"          , "ARMv8+ GRP56"],
+    ["sqdmlsl'2"      , "Vd.4S|2D, Vn.4H%3, Vm.4H%3"         , "X:0|Q|0|01110|sz!=00|1|Rm|1011|00|Rn|Rd"              , "ARMv8+ GRP59"],
+    ["sqdmlsl'2"      , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|0111|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+
+    ["sqdmulh"        , "Hd%, Hn%, Hm%"                      , "X:01|0|11110|sz!=00|1|Rm|10110|1|Rn|Rd"               , "ARMv8+ GRP54"],
+    ["sqdmulh"        , "Hd%, Hn%, Vm.H%[idx]"               , "X:01|0|11111|sz!=00|L|M|Rm:4|1100|H|0|Rn|Rd"          , "ARMv8+ GRP56"],
+    ["sqdmulh"        , "Vd.4H%3, Vn.4H%3, Vm.H%[idx]"       , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|1100|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+    ["sqdmulh.4H%3"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz!=00|1|Rm|10110|1|Rn|Rd"              , "ARMv8+ GRP60"],
+
+    ["sqdmull"        , "Sd%, Hn%, Hm%"                      , "X:01|0|11110|sz!=00|1|Rm|1101|00|Rn|Rd"               , "ARMv8+ GRP53"],
+    ["sqdmull"        , "Sd%, Hn%, Vm.H%[idx]"               , "X:01|0|11111|sz!=00|L|M|Rm:4|1011|H|0|Rn|Rd"          , "ARMv8+ GRP56"],
+    ["sqdmull'2"      , "Vd.4S|2D, Vn.4H%3, Vm.4H%3"         , "X:0|Q|0|01110|sz!=00|1|Rm|1101|00|Rn|Rd"              , "ARMv8+ GRP59"],
+    ["sqdmull'2"      , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|1011|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+
+    ["sqneg"          , "Bd%3, Bn%3"                         , "X:01|1|11110|sz:2|10000|00111|10|Rn|Rd"               , "ARMv8+ GRP55"],
+    ["sqneg.8B%5|2D"  , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|sz:2|10000|00111|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["sqrdmulh"       , "Hd%, Hn%, Hm%"                      , "X:01|1|11110|sz!=00|1|Rm|10110|1|Rn|Rd"               , "ARMv8+ GRP54"],
+    ["sqrdmulh"       , "Hd%, Hn%, Vm.H%[idx]"               , "X:01|0|11111|sz!=00|L|M|Rm:4|1101|H|0|Rn|Rd"          , "ARMv8+ GRP56"],
+    ["sqrdmulh"       , "Vd.4H%3, Vn.4H%3, Vm.H%[idx]"       , "X:0|Q|0|01111|sz!=00|L|M|Rm:4|1101|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+    ["sqrdmulh.4H%3"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz!=00|1|Rm|10110|1|Rn|Rd"              , "ARMv8+ GRP60"],
+
+    ["sqrshl"         , "Bd%3, Bn%3, Bm%3"                   , "X:01|0|11110|sz:2|1|Rm|01011|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["sqrshl.8B%5|2D" , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01011|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sqrshrn"        , "Bd%2, Hn%2, #shift"                 , "X:01|0|111110|immh!=0000|immb|10011|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["sqrshrn'2"      , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|0|011110|immh!=0000|immb|10011|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["sqrshrun"       , "Bd%2, Hn%2, #shift"                 , "X:01|1|111110|immh!=0000|immb|10001|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["sqrshrun'2"     , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|1|011110|immh!=0000|immb|10001|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["sqshl"          , "Bd%3, Bn%3, #shift"                 , "X:01|0|111110|immh!=0000|immb|01110|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["sqshl"          , "Bd%3, Bn%3, Bm%3"                   , "X:01|0|11110|sz:2|1|Rm|01001|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["sqshl.8B%5|2D"  , "Vd.T, Vn.T, #shift"                 , "X:0|Q|0|011110|immh!=0000|immb|01110|1|Rn|Rd"         , "ARMv8+ GRP57"],
+    ["sqshl.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01001|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sqshlu"         , "Bd%3, Bn%3, #shift"                 , "X:01|1|111110|immh!=0000|immb|01100|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["sqshlu.8B%5|2D" , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|01100|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["sqshrn"         , "Bd%2, Hn%2, #shift"                 , "X:01|0|111110|immh!=0000|immb|10010|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["sqshrn'2"       , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|0|011110|immh!=0000|immb|10010|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["sqshrun"        , "Bd%2, Hn%2, #shift"                 , "X:01|1|111110|immh!=0000|immb|10000|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["sqshrun'2"      , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|1|011110|immh!=0000|immb|10000|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["sqsub"          , "Bd%3, Bn%3, Bm%3"                   , "X:01|0|11110|sz:2|1|Rm|00101|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["sqsub.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|00101|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sqxtn"          , "Bd%2, Hn%2"                         , "X:01|0|11110|sz:2|10000|10100|10|Rn|Rd"               , "ARMv8+ GRP55"],
+    ["sqxtn'2"        , "Vd.8B%5, Vn.8H|4S|2D"               , "X:0|Q|0|01110|sz:2|10000|10100|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["sqxtun"         , "Bd%2, Hn%2"                         , "X:01|1|11110|sz:2|10000|10010|10|Rn|Rd"               , "ARMv8+ GRP55"],
+    ["sqxtun'2"       , "Vd.8B%5, Vn.8H|4S|2D"               , "X:0|Q|1|01110|sz:2|10000|10010|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["srhadd.8B%5"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|00010|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sri"            , "Dd, Dn, #shift"                     , "X:01|1|111110|immh=1xxx|immb|01000|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["sri.8B%5|2D"    , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|01000|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["srshl"          , "Dd, Dn, Dm"                         , "X:01|0|11110|11|1|Rm|01010|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["srshl.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01010|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["srshr"          , "Dd, Dn, #shift"                     , "X:01|0|111110|immh=1xxx|immb|00100|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["srshr.8B%5|2D"  , "Vd.T, Vn.T, #shift"                 , "X:0|Q|0|011110|immh!=0000|immb|00100|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["srsra"          , "Dd, Dn, #shift"                     , "X:01|0|111110|immh=1xxx|immb|00110|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["srsra.8B%5|2D"  , "Vd.T, Vn.T, #shift"                 , "X:0|Q|0|011110|immh!=0000|immb|00110|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["sshl"           , "Dd, Dn, Dm"                         , "X:01|0|11110|11|1|Rm|01000|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["sshl.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|0|01110|sz:2|1|Rm|01000|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["sshll'2"        , "Vd.8H|4S|2D, Vn.8B%5, #shift"       , "X:0|Q|0|011110|immh!=0000|immb|10100|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["sshr"           , "Dd, Dn, #shift"                     , "X:01|0|111110|immh=1xxx|immb|:5|1|Rn|Rd"              , "ARMv8+ GRP52"],
+    ["sshr.8B%5|2D"   , "Vd.T, Vn.T, #shift"                 , "X:0|Q|0|011110|immh!=0000|immb|:5|1|Rn|Rd"            , "ARMv8+ GRP57"],
+
+    ["ssra"           , "Dd, Dn, #shift"                     , "X:01|0|111110|immh=1xxx|immb|00010|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["ssra.8B%5|2D"   , "Vd.T, Vn.T, #shift"                 , "X:0|Q|0|011110|immh!=0000|immb|00010|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["ssubl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|0|01110|sz:2|1|Rm|0010|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["ssubw'2"        , "Vd.8H|4S|2D, Vn.8H|4S|2D, Vm.8B%5"  , "X:0|Q|0|01110|sz:2|1|Rm|0011|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["st1"            , "{Vt.8B%7}%3, [$Xn]"                 , "X:0|Q|0011000|0|:6|0010|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["st1"            , "{Vt.8B%7}%2, [$Xn]"                 , "X:0|Q|0011000|0|:6|0110|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["st1"            , "{Vt.8B%7}%0, [$Xn]"                 , "X:0|Q|0011000|0|:6|0111|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["st1"            , "{Vt.8B%7}%1, [$Xn]"                 , "X:0|Q|0011000|0|:6|1010|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["st1"            , "{Vt.8B%7}%3, [$Xn], Xm"             , "X:0|Q|0011001|0|0|Rm!=11111|0010|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.8B%7}%2, [$Xn], Xm"             , "X:0|Q|0011001|0|0|Rm!=11111|0110|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.8B%7}%0, [$Xn], Xm"             , "X:0|Q|0011001|0|0|Rm!=11111|0111|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.8B%7}%1, [$Xn], Xm"             , "X:0|Q|0011001|0|0|Rm!=11111|1010|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.B}%0[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|:3|S|sz:2|Rn|Rt"                 , "ARMv8+ GRP19"],
+    ["st1"            , "{Vt.H}%0[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|010|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["st1"            , "{Vt.S}%0[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|100|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st1"            , "{Vt.D}%0[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|100|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st1"            , "{Vt.B}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|:3|S|sz:2|Rn|Rt"          , "ARMv8+ GRP20"],
+    ["st1"            , "{Vt.H}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|010|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["st1"            , "{Vt.S}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|100|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st1"            , "{Vt.D}%0[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|100|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st1"            , "{Vt.8B%7}%3, [$Xn], #32%"           , "X:0|Q|0011001|0|0|11111|0010|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.8B%7}%2, [$Xn], #24%"           , "X:0|Q|0011001|0|0|11111|0110|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.8B%7}%0, [$Xn], #8%"            , "X:0|Q|0011001|0|0|11111|0111|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.8B%7}%1, [$Xn], #16%"           , "X:0|Q|0011001|0|0|11111|1010|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["st1"            , "{Vt.B}%0[idx], [$Xn], #1"           , "X:0|Q|0011011|0|0|11111|:3|S|sz:2|Rn|Rt"              , "ARMv8+ GRP20"],
+    ["st1"            , "{Vt.H}%0[idx], [$Xn], #2"           , "X:0|Q|0011011|0|0|11111|010|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["st1"            , "{Vt.S}%0[idx], [$Xn], #4"           , "X:0|Q|0011011|0|0|11111|100|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["st1"            , "{Vt.D}%0[idx], [$Xn], #8"           , "X:0|Q|0011011|0|0|11111|100|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["st2"            , "{Vt.8B%5|2D}%1, [$Xn]"              , "X:0|Q|0011000|0|:6|1000|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["st2"            , "{Vt.8B%5|2D}%1, [$Xn], Xm"          , "X:0|Q|0011001|0|0|Rm!=11111|1000|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["st2"            , "{Vt.B}%1[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|:3|S|sz:2|Rn|Rt"                 , "ARMv8+ GRP19"],
+    ["st2"            , "{Vt.H}%1[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|010|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["st2"            , "{Vt.S}%1[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|100|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st2"            , "{Vt.D}%1[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|100|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st2"            , "{Vt.B}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|:3|S|sz:2|Rn|Rt"          , "ARMv8+ GRP20"],
+    ["st2"            , "{Vt.H}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|010|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["st2"            , "{Vt.S}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|100|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st2"            , "{Vt.D}%1[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|100|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st2"            , "{Vt.8B%5|2D}%1, [$Xn], #16%"        , "X:0|Q|0011001|0|0|11111|1000|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["st2"            , "{Vt.B}%1[idx], [$Xn], #2"           , "X:0|Q|0011011|0|1|11111|:3|S|sz:2|Rn|Rt"              , "ARMv8+ GRP20"],
+    ["st2"            , "{Vt.H}%1[idx], [$Xn], #4"           , "X:0|Q|0011011|0|1|11111|010|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["st2"            , "{Vt.S}%1[idx], [$Xn], #8"           , "X:0|Q|0011011|0|1|11111|100|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["st2"            , "{Vt.D}%1[idx], [$Xn], #16"          , "X:0|Q|0011011|0|1|11111|100|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["st3"            , "{Vt.8B%5|2D}%2, [$Xn]"              , "X:0|Q|0011000|0|:6|0100|sz:2|Rn|Rt"                   , "ARMv8+ GRP17"],
+    ["st3"            , "{Vt.8B%5|2D}%2, [$Xn], Xm"          , "X:0|Q|0011001|0|0|Rm!=11111|0100|sz:2|Rn|Rt"          , "ARMv8+ GRP18"],
+    ["st3"            , "{Vt.B}%2[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|001|S|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["st3"            , "{Vt.H}%2[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|011|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["st3"            , "{Vt.S}%2[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|101|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st3"            , "{Vt.D}%2[idx], [$Xn]"               , "X:0|Q|0011010|0|0|:5|101|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st3"            , "{Vt.B}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|001|S|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["st3"            , "{Vt.H}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|011|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["st3"            , "{Vt.S}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|101|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st3"            , "{Vt.D}%2[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|0|Rm!=11111|101|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st3"            , "{Vt.8B%5|2D}%2, [$Xn], #24%"        , "X:0|Q|0011001|0|0|11111|0100|sz:2|Rn|Rt"              , "ARMv8+ GRP18"],
+    ["st3"            , "{Vt.B}%2[idx], [$Xn], #3"           , "X:0|Q|0011011|0|0|11111|001|S|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+    ["st3"            , "{Vt.H}%2[idx], [$Xn], #6"           , "X:0|Q|0011011|0|0|11111|011|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["st3"            , "{Vt.S}%2[idx], [$Xn], #12"          , "X:0|Q|0011011|0|0|11111|101|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["st3"            , "{Vt.D}%2[idx], [$Xn], #24"          , "X:0|Q|0011011|0|0|11111|101|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["st4"            , "{Vt.8B%5|2D}%3, [$Xn]"              , "X:0|Q|0011000|0|:6|:4|sz:2|Rn|Rt"                     , "ARMv8+ GRP17"],
+    ["st4"            , "{Vt.8B%5|2D}%3, [$Xn], Xm"          , "X:0|Q|0011001|0|0|Rm!=11111|:4|sz:2|Rn|Rt"            , "ARMv8+ GRP18"],
+    ["st4"            , "{Vt.B}%3[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|001|S|sz:2|Rn|Rt"                , "ARMv8+ GRP19"],
+    ["st4"            , "{Vt.H}%3[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|011|S|sz=x0|Rn|Rt"               , "ARMv8+ GRP19"],
+    ["st4"            , "{Vt.S}%3[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|101|S|00|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st4"            , "{Vt.D}%3[idx], [$Xn]"               , "X:0|Q|0011010|0|1|:5|101|0|01|Rn|Rt"                  , "ARMv8+ GRP19"],
+    ["st4"            , "{Vt.B}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|001|S|sz:2|Rn|Rt"         , "ARMv8+ GRP20"],
+    ["st4"            , "{Vt.H}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|011|S|sz=x0|Rn|Rt"        , "ARMv8+ GRP20"],
+    ["st4"            , "{Vt.S}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|101|S|00|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st4"            , "{Vt.D}%3[idx], [$Xn], Xm"           , "X:0|Q|0011011|0|1|Rm!=11111|101|0|01|Rn|Rt"           , "ARMv8+ GRP20"],
+    ["st4"            , "{Vt.8B%5|2D}%3, [$Xn], #32%"        , "X:0|Q|0011001|0|0|11111|:4|sz:2|Rn|Rt"                , "ARMv8+ GRP18"],
+    ["st4"            , "{Vt.B}%3[idx], [$Xn], #4"           , "X:0|Q|0011011|0|1|11111|001|S|sz:2|Rn|Rt"             , "ARMv8+ GRP20"],
+    ["st4"            , "{Vt.H}%3[idx], [$Xn], #8"           , "X:0|Q|0011011|0|1|11111|011|S|sz=x0|Rn|Rt"            , "ARMv8+ GRP20"],
+    ["st4"            , "{Vt.S}%3[idx], [$Xn], #16"          , "X:0|Q|0011011|0|1|11111|101|S|00|Rn|Rt"               , "ARMv8+ GRP20"],
+    ["st4"            , "{Vt.D}%3[idx], [$Xn], #32"          , "X:0|Q|0011011|0|1|11111|101|0|01|Rn|Rt"               , "ARMv8+ GRP20"],
+
+    ["stlr"           , "Wt, [$Xn{,#0}]"                     , "X:10|001000|1|0|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+    ["stlr"           , "Xt, [$Xn{,#0}]"                     , "X:11|001000|1|0|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["stlrb"          , "Wt, [$Xn{,#0}]"                     , "X:00|001000|1|0|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["stlrh"          , "Wt, [$Xn{,#0}]"                     , "X:01|001000|1|0|0|11111|1|11111|Rn|Rt"                , "ARMv8+ GRP22"],
+
+    ["stlxp"          , "Ws, Wt1, Wt2, [$Xn{,#0}]"           , "X:1|0|001000|0|0|1|Rs|1|Rt2|Rn|Rt"                    , "ARMv8+ GRP22"],
+    ["stlxp"          , "Ws, Xt1, Xt2, [$Xn{,#0}]"           , "X:1|1|001000|0|0|1|Rs|1|Rt2|Rn|Rt"                    , "ARMv8+ GRP22"],
+
+    ["stlxr"          , "Ws, Wt, [$Xn{,#0}]"                 , "X:10|001000|0|0|0|Rs|1|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+    ["stlxr"          , "Ws, Xt, [$Xn{,#0}]"                 , "X:11|001000|0|0|0|Rs|1|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+
+    ["stlxrb"         , "Ws, Wt, [$Xn{,#0}]"                 , "X:00|001000|0|0|0|Rs|1|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+
+    ["stlxrh"         , "Ws, Wt, [$Xn{,#0}]"                 , "X:01|001000|0|0|0|Rs|1|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+
+    ["stnp"           , "Wt1, Wt2, [$Xn{, #imm7*4}]"         , "X:00|101|0|:3|0|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["stnp"           , "St1, St2, [$Xn{, #imm7*4}]"         , "X:00|101|1|:3|0|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["stnp"           , "Dt1, Dt2, [$Xn{, #imm7*8}]"         , "X:01|101|1|:3|0|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["stnp"           , "Xt1, Xt2, [$Xn{, #imm7*8}]"         , "X:10|101|0|:3|0|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+    ["stnp"           , "Qt1, Qt2, [$Xn{, #imm7*16}]"        , "X:10|101|1|:3|0|imm7|Rt2|Rn|Rt"                       , "ARMv8+ GRP23"],
+
+    ["stp"            , "Wt1, Wt2, [$Xn{, #imm7*4}]"         , "X:00|101|0|010|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["stp"            , "St1, St2, [$Xn{, #imm7*4}]"         , "X:00|101|1|010|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["stp"            , "Dt1, Dt2, [$Xn{, #imm7*8}]"         , "X:01|101|1|010|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["stp"            , "Xt1, Xt2, [$Xn{, #imm7*8}]"         , "X:10|101|0|010|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["stp"            , "Qt1, Qt2, [$Xn{, #imm7*16}]"        , "X:10|101|1|010|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP30"],
+    ["stp"            , "Wt1, Wt2, [$Xn], #imm7*4"           , "X:00|101|0|001|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["stp"            , "St1, St2, [$Xn], #imm7*4"           , "X:00|101|1|001|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["stp"            , "Dt1, Dt2, [$Xn], #imm7*8"           , "X:01|101|1|001|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["stp"            , "Xt1, Xt2, [$Xn], #imm7*8"           , "X:10|101|0|001|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["stp"            , "Qt1, Qt2, [$Xn], #imm7*16"          , "X:10|101|1|001|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP31"],
+    ["stp"            , "Wt1, Wt2, [$Xn, #imm7*4]!"          , "X:00|101|0|011|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["stp"            , "St1, St2, [$Xn, #imm7*4]!"          , "X:00|101|1|011|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["stp"            , "Dt1, Dt2, [$Xn, #imm7*8]!"          , "X:01|101|1|011|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["stp"            , "Xt1, Xt2, [$Xn, #imm7*8]!"          , "X:10|101|0|011|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+    ["stp"            , "Qt1, Qt2, [$Xn, #imm7*16]!"         , "X:10|101|1|011|0|imm7|Rt2|Rn|Rt"                      , "ARMv8+ GRP32"],
+
+    ["str"            , "Bt, [$Xn], #simm9"                  , "X:00|111|1|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["str"            , "Qt, [$Xn], #simm9"                  , "X:00|111|1|00|10|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["str"            , "Ht, [$Xn], #simm9"                  , "X:01|111|1|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["str"            , "Wt, [$Xn], #simm9"                  , "X:10|111|0|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["str"            , "St, [$Xn], #simm9"                  , "X:10|111|1|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["str"            , "Xt, [$Xn], #simm9"                  , "X:11|111|0|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["str"            , "Dt, [$Xn], #simm9"                  , "X:11|111|1|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["str"            , "Bt, [$Xn, #simm9]!"                 , "X:00|111|1|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["str"            , "Qt, [$Xn, #simm9]!"                 , "X:00|111|1|00|10|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["str"            , "Ht, [$Xn, #simm9]!"                 , "X:01|111|1|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["str"            , "Wt, [$Xn, #simm9]!"                 , "X:10|111|0|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["str"            , "St, [$Xn, #simm9]!"                 , "X:10|111|1|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["str"            , "Xt, [$Xn, #simm9]!"                 , "X:11|111|0|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["str"            , "Dt, [$Xn, #simm9]!"                 , "X:11|111|1|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["str"            , "Bt, [$Xn, Wm%, extend {amount}]"    , "X:00|111|1|00|00|1|Rm|extend!=011|S|10|Rn|Rt"         , "ARMv8+ GRP26"],
+    ["str"            , "Bt, [$Xn, Xm{, LSL amount}]"        , "X:00|111|1|00|00|1|Rm|011|S|10|Rn|Rt"                 , "ARMv8+ GRP26"],
+    ["str"            , "Qt, [$Xn, Wm%{, extend {#0|4}}]"    , "X:00|111|1|00|10|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["str"            , "Ht, [$Xn, Wm%{, extend {#0|1}}]"    , "X:01|111|1|00|00|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["str"            , "Wt, [$Xn, Wm%{, extend {#0|2}}]"    , "X:10|111|0|00|00|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["str"            , "St, [$Xn, Wm%{, extend {#0|2}}]"    , "X:10|111|1|00|00|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["str"            , "Xt, [$Xn, Wm%{, extend {#0|3}}]"    , "X:11|111|0|00|00|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["str"            , "Dt, [$Xn, Wm%{, extend {#0|3}}]"    , "X:11|111|1|00|00|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["str"            , "Bt, [$Xn{, #pimm12}]"               , "X:00|111|1|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["str"            , "Qt, [$Xn{, #pimm12*16}]"            , "X:00|111|1|01|10|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["str"            , "Ht, [$Xn{, #pimm12*2}]"             , "X:01|111|1|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["str"            , "Wt, [$Xn{, #pimm12*4}]"             , "X:10|111|0|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["str"            , "St, [$Xn{, #pimm12*4}]"             , "X:10|111|1|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["str"            , "Xt, [$Xn{, #pimm12*8}]"             , "X:11|111|0|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+    ["str"            , "Dt, [$Xn{, #pimm12*8}]"             , "X:11|111|1|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["strb"           , "Wt, [$Xn], #simm9"                  , "X:00|111|0|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["strb"           , "Wt, [$Xn, #simm9]!"                 , "X:00|111|0|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["strb"           , "Wt, [$Xn, Wm%, extend {amount}]"    , "X:00|111|0|00|00|1|Rm|extend!=011|S|10|Rn|Rt"         , "ARMv8+ GRP26"],
+    ["strb"           , "Wt, [$Xn, Xm{, LSL amount}]"        , "X:00|111|0|00|00|1|Rm|011|S|10|Rn|Rt"                 , "ARMv8+ GRP26"],
+    ["strb"           , "Wt, [$Xn{, #pimm12}]"               , "X:00|111|0|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["strh"           , "Wt, [$Xn], #simm9"                  , "X:01|111|0|00|00|0|imm9|01|Rn|Rt"                     , "ARMv8+ GRP24"],
+    ["strh"           , "Wt, [$Xn, #simm9]!"                 , "X:01|111|0|00|00|0|imm9|11|Rn|Rt"                     , "ARMv8+ GRP25"],
+    ["strh"           , "Wt, [$Xn, Wm%{, extend {#0|1}}]"    , "X:01|111|0|00|00|1|Rm|extend|S|10|Rn|Rt"              , "ARMv8+ GRP26"],
+    ["strh"           , "Wt, [$Xn{, #pimm12*2}]"             , "X:01|111|0|01|00|imm12|Rn|Rt"                         , "ARMv8+ GRP29"],
+
+    ["sttr"           , "Wt, [$Xn{, #simm9}]"                , "X:10|111|0|00|00|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+    ["sttr"           , "Xt, [$Xn{, #simm9}]"                , "X:11|111|0|00|00|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["sttrb"          , "Wt, [$Xn{, #simm9}]"                , "X:00|111|0|00|00|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["sttrh"          , "Wt, [$Xn{, #simm9}]"                , "X:01|111|0|00|00|0|imm9|10|Rn|Rt"                     , "ARMv8+ GRP27"],
+
+    ["stur"           , "Bt, [$Xn{, #simm9}]"                , "X:00|111|1|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["stur"           , "Qt, [$Xn{, #simm9}]"                , "X:00|111|1|00|10|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["stur"           , "Ht, [$Xn{, #simm9}]"                , "X:01|111|1|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["stur"           , "Wt, [$Xn{, #simm9}]"                , "X:10|111|0|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["stur"           , "St, [$Xn{, #simm9}]"                , "X:10|111|1|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["stur"           , "Xt, [$Xn{, #simm9}]"                , "X:11|111|0|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+    ["stur"           , "Dt, [$Xn{, #simm9}]"                , "X:11|111|1|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["sturb"          , "Wt, [$Xn{, #simm9}]"                , "X:00|111|0|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["sturh"          , "Wt, [$Xn{, #simm9}]"                , "X:01|111|0|00|00|0|imm9|00|Rn|Rt"                     , "ARMv8+ GRP28"],
+
+    ["stxp"           , "Ws, Wt1, Wt2, [$Xn{,#0}]"           , "X:1|0|001000|0|0|1|Rs|0|Rt2|Rn|Rt"                    , "ARMv8+ GRP22"],
+    ["stxp"           , "Ws, Xt1, Xt2, [$Xn{,#0}]"           , "X:1|1|001000|0|0|1|Rs|0|Rt2|Rn|Rt"                    , "ARMv8+ GRP22"],
+
+    ["stxr"           , "Ws, Wt, [$Xn{,#0}]"                 , "X:10|001000|0|0|0|Rs|0|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+    ["stxr"           , "Ws, Xt, [$Xn{,#0}]"                 , "X:11|001000|0|0|0|Rs|0|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+
+    ["stxrb"          , "Ws, Wt, [$Xn{,#0}]"                 , "X:00|001000|0|0|0|Rs|0|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+
+    ["stxrh"          , "Ws, Wt, [$Xn{,#0}]"                 , "X:01|001000|0|0|0|Rs|0|11111|Rn|Rt"                   , "ARMv8+ GRP22"],
+
+    ["sub"            , "$Wd, $Wn, #imm12{, LSL #0|12}"      , "X:0|1|0|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2"],
+    ["sub"            , "$Xd, $Xn, #imm12{, LSL #0|12}"      , "X:1|1|0|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2"],
+    ["sub"            , "$Wd, $Wn, Wm{, extend {#amount}}"   , "X:0|1|0|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34"],
+    ["sub"            , "$Xd, $Xn, Rm{, extend {#amount}}"   , "X:1|1|0|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34"],
+    ["sub"            , "Wd, Wn, Wm{, shift #amount}"        , "X:0|1|0|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35"],
+    ["sub"            , "Xd, Xn, Xm{, shift #amount}"        , "X:1|1|0|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35"],
+    ["sub"            , "Dd, Dn, Dm"                         , "X:01|1|11110|11|1|Rm|10000|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["subS"           , "Wd, $Wn, #imm12{, LSL #0|12}"       , "X:0|1|1|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2 NZCV=W"],
+    ["subS"           , "Xd, $Xn, #imm12{, LSL #0|12}"       , "X:1|1|1|10001|shift|imm12|Rn|Rd"                      , "ARMv8+ GRP2 NZCV=W"],
+    ["subS"           , "Wd, $Wn, Wm{, extend {#amount}}"    , "X:0|1|1|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34 NZCV=W"],
+    ["subS"           , "Xd, $Xn, Rm{, extend {#amount}}"    , "X:1|1|1|01011|00|1|Rm|extend|imm3|Rn|Rd"              , "ARMv8+ GRP34 NZCV=W"],
+    ["subS"           , "Wd, Wn, Wm{, shift #amount}"        , "X:0|1|1|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35 NZCV=W"],
+    ["subS"           , "Xd, Xn, Xm{, shift #amount}"        , "X:1|1|1|01011|shift|0|Rm|imm6|Rn|Rd"                  , "ARMv8+ GRP35 NZCV=W"],
+    ["sub.8B%5|2D"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|10000|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["subhn'2"        , "Vd.8B%5, Vn.8H|4S|2D, Vm.8H|4S|2D"  , "X:0|Q|0|01110|sz:2|1|Rm|0110|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["suqadd"         , "Bd%3, Bn%3"                         , "X:01|0|11110|sz:2|10000|00011|10|Rn|Rd"               , "ARMv8+ GRP55"],
+    ["suqadd.8B%5|2D" , "Vd.T, Vn.T"                         , "X:0|Q|0|01110|sz:2|10000|00011|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["svc"            , "#imm16"                             , "X:11010100|:3|imm16|:3|01"                            , "ARMv8+ GRP11"],
+
+    ["sxtb"           , "Wd, Wn"                             , "X:0|00|100110|0|:6|000111|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm"],
+    ["sxtb"           , "Xd, Wn"                             , "X:1|00|100110|1|:6|000111|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm"],
+
+    ["sxth"           , "Wd, Wn"                             , "X:0|00|100110|0|:6|001111|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm"],
+    ["sxth"           , "Xd, Wn"                             , "X:1|00|100110|1|:6|001111|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm"],
+
+    ["sxtl'2"         , "Vd.8H|4S|2D, Vn.8B%5"               , "X:0|Q|0|011110|immh!=0000|:3|10100|1|Rn|Rd"           , "ARMv8+ GRP57 ALIAS_OF=sshll'2 PREFERRED_IF=BitCount:immh==1"],
+
+    ["sxtw"           , "Xd, Wn"                             , "X:1|00|100110|1|:6|011111|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=sbfm"],
+
+    ["sys"            , "#op1, Cn, Cm, #op2{, Xt}"           , "X:1101010100|0|01|op1|CRn|CRm|op2|Rt"                 , "ARMv8+ GRP12"],
+
+    ["sysl"           , "Xt, #op1, Cn, Cm, #op2"             , "X:1101010100|1|01|op1|CRn|CRm|op2|Rt"                 , "ARMv8+ GRP12"],
+
+    ["tbl.8B%"        , "Vd.T, {Vn.16B}%0, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|00|0|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+    ["tbl.8B%"        , "Vd.T, {Vn.16B}%1, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|01|0|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+    ["tbl.8B%"        , "Vd.T, {Vn.16B}%2, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|10|0|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+    ["tbl.8B%"        , "Vd.T, {Vn.16B}%3, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|11|0|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+
+    ["tbnz"           , "Rt, #imm6, offset14*4"              , "X:b5|011011|1|b40|imm14|Rt"                           , "ARMv8+ GRP13"],
+
+    ["tbx.8B%"        , "Vd.T, {Vn.16B}%0, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|00|1|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+    ["tbx.8B%"        , "Vd.T, {Vn.16B}%1, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|01|1|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+    ["tbx.8B%"        , "Vd.T, {Vn.16B}%2, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|10|1|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+    ["tbx.8B%"        , "Vd.T, {Vn.16B}%3, Vm.T"             , "X:0|Q|001110|00|0|Rm|0|11|1|00|Rn|Rd"                 , "ARMv8+ GRP58"],
+
+    ["tbz"            , "Rt, #imm6, offset14*4"              , "X:b5|011011|0|b40|imm14|Rt"                           , "ARMv8+ GRP13"],
+
+    ["tlbi"           , "tlbi_op{, Xt}"                      , "X:1101010100|0|01|op1|1000|CRm|op2|Rt"                , "ARMv8+ GRP12 ALIAS_OF=sys PREFERRED_IF=SysOp:op1:1000:CRm:op2==Sys_TLBI"],
+
+    ["trn1.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|001110|sz:2|0|Rm|0|010|10|Rn|Rd"                , "ARMv8+ GRP49"],
+
+    ["trn2.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|001110|sz:2|0|Rm|0|110|10|Rn|Rd"                , "ARMv8+ GRP49"],
+
+    ["tst"            , "Wn, #imm12"                         , "X:0|11|100100|0|immr|imms|Rn|11111"                   , "ARMv8+ GRP5 NZCV=WWZZ ALIAS_OF=andS"],
+    ["tst"            , "Xn, #imm13"                         , "X:1|11|100100|N|immr|imms|Rn|11111"                   , "ARMv8+ GRP5 NZCV=WWZZ ALIAS_OF=andS"],
+    ["tst"            , "Wn, Wm{, shift #amount}"            , "X:0|11|01010|shift|0|Rm|imm6|Rn|11111"                , "ARMv8+ GRP43 NZCV=WWZZ ALIAS_OF=andS"],
+    ["tst"            , "Xn, Xm{, shift #amount}"            , "X:1|11|01010|shift|0|Rm|imm6|Rn|11111"                , "ARMv8+ GRP43 NZCV=WWZZ ALIAS_OF=andS"],
+
+    ["uaba.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01111|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uabal'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|1|01110|sz:2|1|Rm|0101|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["uabd.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01110|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uabdl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|1|01110|sz:2|1|Rm|0111|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["uadalp"         , "Vd.4H%5, Vn.8B%5"                   , "X:0|Q|1|01110|sz:2|10000|00110|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["uaddl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|1|01110|sz:2|1|Rm|:4|00|Rn|Rd"                  , "ARMv8+ GRP59"],
+
+    ["uaddlp"         , "Vd.4H%5, Vn.8B%5"                   , "X:0|Q|1|01110|sz:2|10000|00010|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["uaddlv"         , "Hd%2, Vn.8B%3|4S"                   , "X:0|Q|1|01110|sz:2|11000|00011|10|Rn|Rd"              , "ARMv8+ GRP45"],
+
+    ["uaddw'2"        , "Vd.8H|4S|2D, Vn.8H|4S|2D, Vm.8B%5"  , "X:0|Q|1|01110|sz:2|1|Rm|0001|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["ubfiz"          , "Wd, Wn, #lsb, #width"               , "X:0|10|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=ubfm PREFERRED_IF=imms<immr"],
+    ["ubfiz"          , "Xd, Xn, #lsb, #width"               , "X:1|10|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=ubfm PREFERRED_IF=imms<immr"],
+
+    ["ubfm"           , "Wd, Wn, #immr, #imms"               , "X:0|10|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3"],
+    ["ubfm"           , "Xd, Xn, #immr, #imms"               , "X:1|10|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3"],
+
+    ["ubfx"           , "Wd, Wn, #lsb, #width"               , "X:0|10|100110|0|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=ubfm PREFERRED_IF=BFXPreferred:0:1:imms:immr==1"],
+    ["ubfx"           , "Xd, Xn, #lsb, #width"               , "X:1|10|100110|1|immr|imms|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=ubfm PREFERRED_IF=BFXPreferred:1:1:imms:immr==1"],
+
+    ["ucvtf"          , "Sd%, Sn%, #fbits"                   , "X:01|1|111110|immh!=0000|immb|11100|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["ucvtf"          , "Sd%, Sn%"                           , "X:01|1|111100|sz|10000|11101|10|Rn|Rd"                , "ARMv8+ GRP55"],
+    ["ucvtf"          , "Sd, Wn, #fbits"                     , "X:0|0|0|11110|00|0|00|011|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["ucvtf"          , "Dd, Wn, #fbits"                     , "X:0|0|0|11110|01|0|00|011|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["ucvtf"          , "Sd, Xn, #fbits"                     , "X:1|0|0|11110|00|0|00|011|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["ucvtf"          , "Dd, Xn, #fbits"                     , "X:1|0|0|11110|01|0|00|011|scale|Rn|Rd"                , "ARMv8+ GRP73"],
+    ["ucvtf"          , "Sd, Wn"                             , "X:0|0|0|11110|00|1|00|011|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["ucvtf"          , "Dd, Wn"                             , "X:0|0|0|11110|01|1|00|011|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["ucvtf"          , "Sd, Xn"                             , "X:1|0|0|11110|00|1|00|011|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["ucvtf"          , "Dd, Xn"                             , "X:1|0|0|11110|01|1|00|011|:6|Rn|Rd"                   , "ARMv8+ GRP74"],
+    ["ucvtf.2S%|2D"   , "Vd.T, Vn.T, #fbits"                 , "X:0|Q|1|011110|immh!=0000|immb|11100|1|Rn|Rd"         , "ARMv8+ GRP57"],
+    ["ucvtf.2S%|2D"   , "Vd.T, Vn.T"                         , "X:0|Q|1|011100|sz|10000|11101|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["udiv"           , "Wd, Wn, Wm"                         , "X:0|0|0|11010110|Rm|000010|Rn|Rd"                     , "ARMv8+ GRP41"],
+    ["udiv"           , "Xd, Xn, Xm"                         , "X:1|0|0|11010110|Rm|000010|Rn|Rd"                     , "ARMv8+ GRP41"],
+
+    ["uhadd.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|:5|1|Rn|Rd"                   , "ARMv8+ GRP60"],
+
+    ["uhsub.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|00100|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["umaddl"         , "Xd, Wn, Wm, Xa"                     , "X:1|00|11011|101|Rm|0|Ra|Rn|Rd"                       , "ARMv8+ GRP42"],
+
+    ["umax.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01100|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["umaxp.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|10100|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["umaxv"          , "Bd%2, Vn.8B%3|4S"                   , "X:0|Q|1|01110|sz:2|11000|01010|10|Rn|Rd"              , "ARMv8+ GRP45"],
+
+    ["umin.8B%5"      , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01101|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uminp.8B%5"     , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|10101|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uminv"          , "Bd%2, Vn.8B%3|4S"                   , "X:0|Q|1|01110|sz:2|11000|11010|10|Rn|Rd"              , "ARMv8+ GRP45"],
+
+    ["umlal'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|1|01110|sz:2|1|Rm|1000|00|Rn|Rd"                , "ARMv8+ GRP59"],
+    ["umlal'2"        , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|1|01111|sz!=00|L|M|Rm:4|0010|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+
+    ["umlsl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|1|01110|sz:2|1|Rm|1010|00|Rn|Rd"                , "ARMv8+ GRP59"],
+    ["umlsl'2"        , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|1|01111|sz!=00|L|M|Rm:4|0110|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+
+    ["umnegl"         , "Xd, Wn, Wm"                         , "X:1|00|11011|101|Rm|1|11111|Rn|Rd"                    , "ARMv8+ GRP42 ALIAS_OF=umsubl"],
+
+    ["umov"           , "Wd, Vn.B%2[idx]"                    , "X:0|0|0|01110000|imm5|0|0111|1|Rn|Rd"                 , "ARMv8+ GRP46"],
+    ["umov"           , "Xd, Vn.D[idx]"                      , "X:0|1|0|01110000|imm5=x1000|0|0111|1|Rn|Rd"           , "ARMv8+ GRP46"],
+
+    ["umsubl"         , "Xd, Wn, Wm, Xa"                     , "X:1|00|11011|101|Rm|1|Ra|Rn|Rd"                       , "ARMv8+ GRP42"],
+
+    ["umulh"          , "Xd, Xn, Xm"                         , "X:1|00|11011|110|Rm|0|11111|Rn|Rd"                    , "ARMv8+ GRP42"],
+
+    ["umull'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|1|01110|sz:2|1|Rm|1100|00|Rn|Rd"                , "ARMv8+ GRP59"],
+    ["umull'2"        , "Vd.4S|2D, Vn.4H%3, Vm.H%[idx]"      , "X:0|Q|1|01111|sz!=00|L|M|Rm:4|1010|H|0|Rn|Rd"         , "ARMv8+ GRP62"],
+    ["umull"          , "Xd, Wn, Wm"                         , "X:1|00|11011|101|Rm|0|11111|Rn|Rd"                    , "ARMv8+ GRP42 ALIAS_OF=umaddl"],
+
+    ["uqadd"          , "Bd%3, Bn%3, Bm%3"                   , "X:01|1|11110|sz:2|1|Rm|00001|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["uqadd.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|00001|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uqrshl"         , "Bd%3, Bn%3, Bm%3"                   , "X:01|1|11110|sz:2|1|Rm|01011|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["uqrshl.8B%5|2D" , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01011|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uqrshrn"        , "Bd%2, Hn%2, #shift"                 , "X:01|1|111110|immh!=0000|immb|10011|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["uqrshrn'2"      , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|1|011110|immh!=0000|immb|10011|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["uqshl"          , "Bd%3, Bn%3, #shift"                 , "X:01|1|111110|immh!=0000|immb|01110|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["uqshl"          , "Bd%3, Bn%3, Bm%3"                   , "X:01|1|11110|sz:2|1|Rm|01001|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["uqshl.8B%5|2D"  , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|01110|1|Rn|Rd"         , "ARMv8+ GRP57"],
+    ["uqshl.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01001|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uqshrn"         , "Bd%2, Hn%2, #shift"                 , "X:01|1|111110|immh!=0000|immb|10010|1|Rn|Rd"          , "ARMv8+ GRP52"],
+    ["uqshrn'2"       , "Vd.8B%5, Vn.8H|4S|2D, #shift"       , "X:0|Q|1|011110|immh!=0000|immb|10010|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["uqsub"          , "Bd%3, Bn%3, Bm%3"                   , "X:01|1|11110|sz:2|1|Rm|00101|1|Rn|Rd"                 , "ARMv8+ GRP54"],
+    ["uqsub.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|00101|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["uqxtn"          , "Bd%2, Hn%2"                         , "X:01|1|11110|sz:2|10000|10100|10|Rn|Rd"               , "ARMv8+ GRP55"],
+    ["uqxtn'2"        , "Vd.8B%5, Vn.8H|4S|2D"               , "X:0|Q|1|01110|sz:2|10000|10100|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["urecpe.2S%"     , "Vd.T, Vn.T"                         , "X:0|Q|0|011101|sz|10000|11100|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["urhadd.8B%5"    , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|00010|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["urshl"          , "Dd, Dn, Dm"                         , "X:01|1|11110|11|1|Rm|01010|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["urshl.8B%5|2D"  , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01010|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["urshr"          , "Dd, Dn, #shift"                     , "X:01|1|111110|immh=1xxx|immb|00100|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["urshr.8B%5|2D"  , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|00100|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["ursqrte.2S%"    , "Vd.T, Vn.T"                         , "X:0|Q|1|011101|sz|10000|11100|10|Rn|Rd"               , "ARMv8+ GRP61"],
+
+    ["ursra"          , "Dd, Dn, #shift"                     , "X:01|1|111110|immh=1xxx|immb|00110|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["ursra.8B%5|2D"  , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|00110|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["ushl"           , "Dd, Dn, Dm"                         , "X:01|1|11110|11|1|Rm|01000|1|Rn|Rd"                   , "ARMv8+ GRP54"],
+    ["ushl.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|1|01110|sz:2|1|Rm|01000|1|Rn|Rd"                , "ARMv8+ GRP60"],
+
+    ["ushll'2"        , "Vd.8H|4S|2D, Vn.8B%5, #shift"       , "X:0|Q|1|011110|immh!=0000|immb|10100|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["ushr"           , "Dd, Dn, #shift"                     , "X:01|1|111110|immh=1xxx|immb|:5|1|Rn|Rd"              , "ARMv8+ GRP52"],
+    ["ushr.8B%5|2D"   , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|:5|1|Rn|Rd"            , "ARMv8+ GRP57"],
+
+    ["usqadd"         , "Bd%3, Bn%3"                         , "X:01|1|11110|sz:2|10000|00011|10|Rn|Rd"               , "ARMv8+ GRP55"],
+    ["usqadd.8B%5|2D" , "Vd.T, Vn.T"                         , "X:0|Q|1|01110|sz:2|10000|00011|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["usra"           , "Dd, Dn, #shift"                     , "X:01|1|111110|immh=1xxx|immb|00010|1|Rn|Rd"           , "ARMv8+ GRP52"],
+    ["usra.8B%5|2D"   , "Vd.T, Vn.T, #shift"                 , "X:0|Q|1|011110|immh!=0000|immb|00010|1|Rn|Rd"         , "ARMv8+ GRP57"],
+
+    ["usubl'2"        , "Vd.8H|4S|2D, Vn.8B%5, Vm.8B%5"      , "X:0|Q|1|01110|sz:2|1|Rm|0010|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["usubw'2"        , "Vd.8H|4S|2D, Vn.8H|4S|2D, Vm.8B%5"  , "X:0|Q|1|01110|sz:2|1|Rm|0011|00|Rn|Rd"                , "ARMv8+ GRP59"],
+
+    ["uxtb"           , "Wd, Wn"                             , "X:0|10|100110|0|:6|000111|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=ubfm"],
+
+    ["uxth"           , "Wd, Wn"                             , "X:0|10|100110|0|:6|001111|Rn|Rd"                      , "ARMv8+ GRP3 ALIAS_OF=ubfm"],
+
+    ["uxtl'2"         , "Vd.8H|4S|2D, Vn.8B%5"               , "X:0|Q|1|011110|immh!=0000|:3|10100|1|Rn|Rd"           , "ARMv8+ GRP57 ALIAS_OF=ushll'2 PREFERRED_IF=BitCount:immh==1"],
+
+    ["uzp1.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|001110|sz:2|0|Rm|0|001|10|Rn|Rd"                , "ARMv8+ GRP49"],
+
+    ["uzp2.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|001110|sz:2|0|Rm|0|101|10|Rn|Rd"                , "ARMv8+ GRP49"],
+
+    ["wfe"            , ""                                   , "X:1101010100|0|00|011|0010|:4|010|11111"              , "ARMv8+ GRP12"],
+
+    ["wfi"            , ""                                   , "X:1101010100|0|00|011|0010|:4|011|11111"              , "ARMv8+ GRP12"],
+
+    ["xtn'2"          , "Vd.8B%5, Vn.8H|4S|2D"               , "X:0|Q|0|01110|sz:2|10000|10010|10|Rn|Rd"              , "ARMv8+ GRP61"],
+
+    ["yield"          , ""                                   , "X:1101010100|0|00|011|0010|:4|001|11111"              , "ARMv8+ GRP12"],
+
+    ["zip1.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|001110|sz:2|0|Rm|0|011|10|Rn|Rd"                , "ARMv8+ GRP49"],
+
+    ["zip2.8B%5|2D"   , "Vd.T, Vn.T, Vm.T"                   , "X:0|Q|001110|sz:2|0|Rm|0|111|10|Rn|Rd"                , "ARMv8+ GRP49"]
+
+  ]
+}
