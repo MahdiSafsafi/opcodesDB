@@ -5,6 +5,14 @@ This project is a fruit of many years of development and a lot of attempts ([Par
 
 Currently, only two architecture are supported (x86 and x64).
 
+# Statut:
+## x86-64: Mostly completed.
+## ARM: Work in progress.
+* AArch32.Base = 80%.
+* AArch32.SIMD = 0%.
+* AArch64.Base = 50%.
+* AArch64.SIMD = 50%.
+
 # Using opcodesDB:
 If you’re a Perl developer, you can directly start exploring x86 environment by calling ```getEnvironment``` function:
 ```pl
