@@ -1,4 +1,4 @@
-# ===> ARM instruction set <===
+# ===>        ARM instruction set        <===
 
 warn "Work still in progress and data may contain some bugs.\n";
 
