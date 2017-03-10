@@ -44,8 +44,8 @@ my @instructions = (
 
   ['add%c{q}'          , 'Rd, Rn, Rm'                            , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , 'IT:IN'  ],
   ['adds{q}'           , '{Rd}, Rn, Rm'                          , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , 'IT:OUT'  ],
-  ['add%c{q}'          , 'Rdn, Rm'                               , 'T16: 010001|00|Rm!=1101|Rdn.B!=101'                                            , 'IT:IN FORM=PREFERRED'  ],
-  ['add{c}{q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 010001|00|Rm!=1101|Rdn.B!=101'                                            , ''  ],
+  ['add%c{q}'          , 'Rdn, Rm'                               , 'T16: 010001|00|Rdn:1|Rm!=1101|Rdn!=101'                                        , 'IT:IN FORM=PREFERRED'  ],
+  ['add{c}{q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 010001|00|Rdn:1|Rm!=1101|Rdn!=101'                                        , ''  ],
   ['add{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1000|0|Rn!=1101|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
   ['add%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1000|0|Rn!=1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , 'IT:IN'  ],
   ['add{c}.w'          , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1000|0|Rn!=1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , ''  ],
@@ -71,7 +71,7 @@ my @instructions = (
   ['add{c}{q}'         , '{Rd}, SP, #ImmX'                       , 'A32: Cond!=1111|0010|100|0|1101|Rd:4|ImmX:12'                                  , ''  ],
   ['adds{c}{q}'        , '{Rd}, SP, #ImmX'                       , 'A32: Cond!=1111|0010|100|1|1101|Rd:4|ImmX:12'                                  , ''  ],
 
-  ['add{c}{q}'         , '{Rdm}, SP, Rdm'                        , 'T16: 010001|00|1|101|Rdm:4'                                                    , ''  ],
+  ['add{c}{q}'         , '{Rdm}, SP, Rdm'                        , 'T16: 010001|00|x|1101|Rdm:3'                                                   , ''  ],
   ['add{c}{q}'         , '{SP}, SP, Rm'                          , 'T16: 010001|00|1|Rm!=1101|101'                                                 , ''  ],
   ['add{c}{q}'         , '{Rd}, SP, Rm, RRX'                     , 'T32: 1110101|1000|0|1101|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
   ['add{c}.w'          , '{Rd}, SP, Rm'                          , 'T32: 1110101|1000|0|1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , ''  ],
@@ -556,11 +556,11 @@ my @instructions = (
   ['lsrs{c}{q}'        , '{Rd}, Rm, Rs'                          , 'T32: 111110100|01|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['lsrs{c}{q}'        , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|01|1|Rm:4'                         , ''  ],
 
-  ['mcr{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'T32: 111|0|1110|Opc10|0|CRn0|Rt:4|111|Opc20|1|CRm0'                            , ''  ],
-  ['mcr{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'A32: Cond!=1111|1110|Opc10|0|CRn0|Rt:4|111|Opc20|1|CRm0'                       , ''  ],
+  ['mcr{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'T32: 111|0|1110|Opc1:3|0|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                       , ''  ],
+  ['mcr{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'A32: Cond!=1111|1110|Opc1:3|0|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                  , ''  ],
 
-  ['mcrr{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|0|Rt2:4|Rt:4|111|Opc10|CRm0'                              , ''  ],
-  ['mcrr{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'A32: Cond!=1111|11000|1|0|0|Rt2:4|Rt:4|111|Opc10|CRm0'                         , ''  ],
+  ['mcrr{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|0|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                           , ''  ],
+  ['mcrr{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'A32: Cond!=1111|11000|1|0|0|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                      , ''  ],
 
   ['mla{c}{q}'         , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|000|Rn:4|Ra!=1111|Rd:4|00|00|Rm:4'                              , ''  ],
   ['mlas{c}{q}'        , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|0000|001|1|Rd:4|Ra:4|Rm:4|1001|Rn:4'                           , ''  ],
@@ -615,11 +615,11 @@ my @instructions = (
   ['movt{c}{q}'        , 'Rd, #Imm'                              , 'T32: 11110|Imm.B:1|10|1|100|Imm.A:4|0|Imm.C:3|Rd:4|Imm.D:8'                    , ''  ],
   ['movt{c}{q}'        , 'Rd, #Imm'                              , 'A32: Cond!=1111|00110|1|00|Imm:4|Rd:4|Imm:12'                                  , ''  ],
 
-  ['mrc{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'T32: 111|0|1110|Opc10|1|CRn0|Rt:4|111|Opc20|1|CRm0'                            , ''  ],
-  ['mrc{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'A32: Cond!=1111|1110|Opc10|1|CRn0|Rt:4|111|Opc20|1|CRm0'                       , ''  ],
+  ['mrc{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'T32: 111|0|1110|Opc1:3|1|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                       , ''  ],
+  ['mrc{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'A32: Cond!=1111|1110|Opc1:3|1|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                  , ''  ],
 
-  ['mrrc{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|1|Rt2:4|Rt:4|111|Opc10|CRm0'                              , ''  ],
-  ['mrrc{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'A32: Cond!=1111|11000|1|0|1|Rt2:4|Rt:4|111|Opc10|CRm0'                         , ''  ],
+  ['mrrc{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|1|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                           , ''  ],
+  ['mrrc{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'A32: Cond!=1111|11000|1|0|1|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                      , ''  ],
 
   ['mrs{c}{q}'         , 'Rd, Spec_reg'                          , 'T32: 11110011111|Spec_reg:1|1|1|1|1|10|0|0|Rd:4|0|0|0|0|0|0|0|0'               , ''  ],
   ['mrs{c}{q}'         , 'Rd, Spec_reg'                          , 'A32: Cond!=1111|00010|Spec_reg:1|0|0|1111|Rd:4|0|0|0|0|0000|0000'              , ''  ],
