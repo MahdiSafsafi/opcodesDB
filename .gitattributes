@@ -1,1 +1,2 @@
+$ cat .gitattributes
 *.pl linguist-language=Perl
