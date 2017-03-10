@@ -44,7 +44,7 @@ my @instructions = (
 
   ['add%c{q}'          , 'Rd, Rn, Rm'                            , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , 'IT:IN'  ],
   ['adds{q}'           , '{Rd}, Rn, Rm'                          , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , 'IT:OUT'  ],
-  ['add%c{q}'          , 'Rdn, Rm'                               , 'T16: 010001|00|Rm!=1101|Rdn.B!=101'                                            , 'IT:IN FORM=IN'  ],
+  ['add%c{q}'          , 'Rdn, Rm'                               , 'T16: 010001|00|Rm!=1101|Rdn.B!=101'                                            , 'IT:IN FORM=PREFERRED'  ],
   ['add{c}{q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 010001|00|Rm!=1101|Rdn.B!=101'                                            , ''  ],
   ['add{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1000|0|Rn!=1101|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
   ['add%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1000|0|Rn!=1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , 'IT:IN'  ],
@@ -335,29 +335,29 @@ my @instructions = (
   ['ldc{c}{q}'         , 'p14, c5, [PC, #{+/-}ImmZ*4]'           , 'A32: Cond!=1111|110|1|U=1|0|1|1|1111|0101|111|0|ImmZ:8'                        , ''  ],
   ['ldc{c}{q}'         , 'p14, c5, [PC], Option'                 , 'A32: Cond!=1111|110|1|1|0|1|1|1111|0101|111|0|Option:8'                        , ''  ],
 
-  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T16: 1100|1|Rn:3|List.I:8'                                                     , 'FORM='  ],
-  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'T16: 1100|1|Rn:3|List.I:8'                                                     , 'FORM='  ],
-  ['ldm{ia}{c}.w'      , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM='  ],
-  ['ldmfd{c}.w'        , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM='  ],
-  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM='  ],
-  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM='  ],
-  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
-  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
+  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T16: 1100|1|Rn:3|List.I:8'                                                     , 'FORM=PREFERRED'  ],
+  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'T16: 1100|1|Rn:3|List.I:8'                                                     , 'FORM=ALTERNATIVE'  ],
+  ['ldm{ia}{c}.w'      , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=PREFERRED'  ],
+  ['ldmfd{c}.w'        , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=ALTERNATIVE'  ],
+  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=PREFERRED'  ],
+  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=ALTERNATIVE'  ],
+  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
   ['ldm{<amode>}{c}{q}', 'Rn{!}, List^'                          , 'A32: Cond!=1111|100|x|x|1|W|1|Rn:4|1|List:15'                                  , ''  ],
 
   ['ldm{<amode>}{c}{q}', 'Rn, List^'                             , 'A32: Cond!=1111|100|x|x|1|0|1|Rn:4|0|List:15'                                  , ''  ],
 
-  ['ldmda{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
-  ['ldmfa{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
+  ['ldmda{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['ldmfa{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
-  ['ldmdb{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM='  ],
-  ['ldmea{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM='  ],
-  ['ldmdb{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
-  ['ldmea{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
+  ['ldmdb{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=PREFERRED'  ],
+  ['ldmea{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=ALTERNATIVE'  ],
+  ['ldmdb{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['ldmea{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
-  ['ldmib{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
-  ['ldmed{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|1|Rn:4|List:16'                                    , 'FORM='  ],
+  ['ldmib{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['ldmed{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
   ['ldr{c}{q}'         , 'Rt, [Rn ,{#{+}ImmZ*4}]'                , 'T16: 011|0|1|ImmZ:5|Rn:3|Rt:3'                                                 , ''  ],
   ['ldr{c}{q}'         , 'Rt, [SP,{#{+}ImmZ*4}]'                 , 'T16: 1001|1|Rt:3|ImmZ:8'                                                       , ''  ],
@@ -371,11 +371,11 @@ my @instructions = (
   ['ldr{c}{q}'         , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|010|1|U|0|1|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
 
   ['ldr{c}{q}'         , 'Rt, RelZ*4'                            , 'T16: 01001|Rt:3|RelZ:8'                                                        , ''  ],
-  ['ldr{c}.w'          , 'Rt, RelZ'                              , 'T32: 1111100|0|x|10|1|1111|Rt:4|RelZ:12'                                       , 'FORM='  ],
-  ['ldr{c}{q}'         , 'Rt, RelZ'                              , 'T32: 1111100|0|x|10|1|1111|Rt:4|RelZ:12'                                       , 'FORM='  ],
-  ['ldr{c}{q}'         , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|10|1|1111|Rt:4|ImmZ:12'                                       , 'FORM='  ],
+  ['ldr{c}.w'          , 'Rt, RelZ'                              , 'T32: 1111100|0|x|10|1|1111|Rt:4|RelZ:12'                                       , 'FORM=PREFERRED'  ],
+  ['ldr{c}{q}'         , 'Rt, RelZ'                              , 'T32: 1111100|0|x|10|1|1111|Rt:4|RelZ:12'                                       , 'FORM=PREFERRED'  ],
+  ['ldr{c}{q}'         , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|10|1|1111|Rt:4|ImmZ:12'                                       , 'FORM=ALTERNATIVE'  ],
   ['ldr{c}{q}'         , 'Rt, RelZ'                              , 'A32: Cond!=1111|010|1|x|0|x|1|1111|Rt:4|RelZ:12'                               , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|010|1|U|0|x|1|1111|Rt:4|ImmZ:12'                               , 'FORM='  ],
+  ['ldr{c}{q}'         , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|010|1|U|0|x|1|1111|Rt:4|ImmZ:12'                               , 'FORM=ALTERNATIVE'  ],
 
   ['ldr{c}{q}'         , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|0|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
   ['ldr{c}.w'          , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|000000|xx|Rm:4'                            , ''  ],
@@ -394,10 +394,10 @@ my @instructions = (
   ['ldrb{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|010|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
   ['ldrb{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|010|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
 
-  ['ldrb{c}{q}'        , 'Rt, RelZ'                              , 'T32: 1111100|0|x|00|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM='  ],
-  ['ldrb{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|00|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM='  ],
+  ['ldrb{c}{q}'        , 'Rt, RelZ'                              , 'T32: 1111100|0|x|00|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
+  ['ldrb{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|00|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
   ['ldrb{c}{q}'        , 'Rt, RelZ'                              , 'A32: Cond!=1111|010|1|x|1|x|1|1111|Rt:4|RelZ:12'                               , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|010|1|U|1|x|1|1111|Rt:4|ImmZ:12'                               , 'FORM='  ],
+  ['ldrb{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|010|1|U|1|x|1|1111|Rt:4|ImmZ:12'                               , 'FORM=ALTERNATIVE'  ],
 
   ['ldrb{c}{q}'        , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|1|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
   ['ldrb{c}.w'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
@@ -418,9 +418,9 @@ my @instructions = (
   ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, #{+/-}ImmZ]!'       , 'A32: Cond!=1111|000|1|U|1|1|0|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
 
   ['ldrd{c}{q}'        , 'Rt, Rt2, RelZ*4'                       , 'T32: 1110100|1|x|1|1|1|1111|Rt:4|Rt2:4|RelZ:8'                                 , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2, [PC, #{+/-}ImmZ*4]'           , 'T32: 1110100|1|U|1|1|1|1111|Rt:4|Rt2:4|ImmZ:8'                                 , 'FORM='  ],
+  ['ldrd{c}{q}'        , 'Rt, Rt2, [PC, #{+/-}ImmZ*4]'           , 'T32: 1110100|1|U|1|1|1|1111|Rt:4|Rt2:4|ImmZ:8'                                 , 'FORM=ALTERNATIVE'  ],
   ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, RelZ'                    , 'A32: Cond!=1111|000|1|x|1|0|0|1111|Rt:4|RelZ:4|1|10|1|RelZ:4'                  , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [PC, #{+/-}ImmZ]'        , 'A32: Cond!=1111|000|1|U|1|0|0|1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'                  , 'FORM='  ],
+  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [PC, #{+/-}ImmZ]'        , 'A32: Cond!=1111|000|1|U|1|0|0|1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
 
   ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, {+/-}Rm]'           , 'A32: Cond!=1111|000|1|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
   ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn], {+/-}Rm'           , 'A32: Cond!=1111|000|0|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
@@ -448,10 +448,10 @@ my @instructions = (
   ['ldrh{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'              , ''  ],
   ['ldrh{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'              , ''  ],
 
-  ['ldrh{c}{q}'        , 'Rt, RelZ'                              , 'T32: 1111100|0|x|01|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM='  ],
-  ['ldrh{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|01|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM='  ],
+  ['ldrh{c}{q}'        , 'Rt, RelZ'                              , 'T32: 1111100|0|x|01|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
+  ['ldrh{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|01|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
   ['ldrh{c}{q}'        , 'Rt, RelZ'                              , 'A32: Cond!=1111|000|1|x|1|x|1|1111|Rt:4|RelZ:4|1|01|1|RelZ:4'                  , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , 'FORM='  ],
+  ['ldrh{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
 
   ['ldrh{c}{q}'        , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|0|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
   ['ldrh{c}.w'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
@@ -472,10 +472,10 @@ my @instructions = (
   ['ldrsb{c}{q}'       , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
   ['ldrsb{c}{q}'       , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
 
-  ['ldrsb{c}{q}'       , 'Rt, RelZ'                              , 'T32: 1111100|1|x|00|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM='  ],
-  ['ldrsb{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|1|U|00|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM='  ],
+  ['ldrsb{c}{q}'       , 'Rt, RelZ'                              , 'T32: 1111100|1|x|00|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
+  ['ldrsb{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|1|U|00|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
   ['ldrsb{c}{q}'       , 'Rt, RelZ'                              , 'A32: Cond!=1111|000|1|x|1|x|1|1111|Rt:4|RelZ:4|1|10|1|RelZ:4'                  , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'                  , 'FORM='  ],
+  ['ldrsb{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
 
   ['ldrsb{c}{q}'       , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|1|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
   ['ldrsb{c}.w'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
@@ -496,10 +496,10 @@ my @instructions = (
   ['ldrsh{c}{q}'       , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'              , ''  ],
   ['ldrsh{c}{q}'       , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'              , ''  ],
 
-  ['ldrsh{c}{q}'       , 'Rt, RelZ'                              , 'T32: 1111100|1|x|01|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM='  ],
-  ['ldrsh{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|1|U|01|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM='  ],
+  ['ldrsh{c}{q}'       , 'Rt, RelZ'                              , 'T32: 1111100|1|x|01|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
+  ['ldrsh{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|1|U|01|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
   ['ldrsh{c}{q}'       , 'Rt, RelZ'                              , 'A32: Cond!=1111|000|1|x|1|x|1|1111|Rt:4|RelZ:4|1|11|1|RelZ:4'                  , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'                  , 'FORM='  ],
+  ['ldrsh{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
 
   ['ldrsh{c}{q}'       , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|1|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
   ['ldrsh{c}.w'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
@@ -708,10 +708,10 @@ my @instructions = (
   ['pld{c}{q}'         , '[Rn ,{#{+/-}ImmZ}]'                    , 'A32: 1111010|1|U|1|01|Rn!=1111|1|1|1|1|ImmZ:12'                                , ''  ],
   ['pldw{c}{q}'        , '[Rn ,{#{+/-}ImmZ}]'                    , 'A32: 1111010|1|U|0|01|Rn!=1111|1|1|1|1|ImmZ:12'                                , ''  ],
 
-  ['pld{c}{q}'         , 'RelZ'                                  , 'T32: 1111100|0|x|0|0|1|1111|1111|RelZ:12'                                      , 'FORM='  ],
-  ['pld{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'T32: 1111100|0|U|0|0|1|1111|1111|ImmZ:12'                                      , 'FORM='  ],
+  ['pld{c}{q}'         , 'RelZ'                                  , 'T32: 1111100|0|x|0|0|1|1111|1111|RelZ:12'                                      , 'FORM=PREFERRED'  ],
+  ['pld{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'T32: 1111100|0|U|0|0|1|1111|1111|ImmZ:12'                                      , 'FORM=ALTERNATIVE'  ],
   ['pld{c}{q}'         , 'RelZ'                                  , 'A32: 1111010|1|x|1|01|1111|1|1|1|1|RelZ:12'                                    , ''  ],
-  ['pld{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'A32: 1111010|1|U|1|01|1111|1|1|1|1|ImmZ:12'                                    , 'FORM='  ],
+  ['pld{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'A32: 1111010|1|U|1|01|1111|1|1|1|1|ImmZ:12'                                    , 'FORM=ALTERNATIVE'  ],
 
   ['pld{c}{q}'         , '[Rn, {+}Rm ,{LSL #Amount}]'            , 'T32: 1111100|0|0|0|0|1|Rn!=1111|1111|000000|Amount:2|Rm:4'                     , ''  ],
   ['pldw{c}{q}'        , '[Rn, {+}Rm ,{LSL #Amount}]'            , 'T32: 1111100|0|0|0|1|1|Rn!=1111|1111|000000|Amount:2|Rm:4'                     , ''  ],
@@ -722,18 +722,18 @@ my @instructions = (
 
   ['pli{c}{q}'         , '[Rn ,{#{+}ImmZ}]'                      , 'T32: 1111100|1|1|00|1|Rn!=1111|1111|ImmZ:12'                                   , ''  ],
   ['pli{c}{q}'         , '[Rn ,{#-ImmZ}]'                        , 'T32: 1111100|1|0|00|1|Rn!=1111|1111|1100|ImmZ:8'                               , ''  ],
-  ['pli{c}{q}'         , 'RelZ'                                  , 'T32: 1111100|1|x|00|1|1111|1111|RelZ:12'                                       , 'FORM='  ],
-  ['pli{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'T32: 1111100|1|U|00|1|1111|1111|ImmZ:12'                                       , 'FORM='  ],
+  ['pli{c}{q}'         , 'RelZ'                                  , 'T32: 1111100|1|x|00|1|1111|1111|RelZ:12'                                       , 'FORM=PREFERRED'  ],
+  ['pli{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'T32: 1111100|1|U|00|1|1111|1111|ImmZ:12'                                       , 'FORM=ALTERNATIVE'  ],
   ['pli{c}{q}'         , '[Rn ,{#{+/-}ImmZ}]'                    , 'A32: 1111010|0|U|1|01|Rn:4|1|1|1|1|ImmZ:12'                                    , ''  ],
   ['pli{c}{q}'         , 'RelZ'                                  , 'A32: 1111010|0|x|1|01|xxxx|1|1|1|1|RelZ:12'                                    , ''  ],
-  ['pli{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'A32: 1111010|0|U|1|01|xxxx|1|1|1|1|ImmZ:12'                                    , 'FORM='  ],
+  ['pli{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'A32: 1111010|0|U|1|01|xxxx|1|1|1|1|ImmZ:12'                                    , 'FORM=ALTERNATIVE'  ],
 
   ['pli{c}{q}'         , '[Rn, {+}Rm ,{LSL #Amount}]'            , 'T32: 1111100|1|0|00|1|Rn!=1111|1111|000000|Amount:2|Rm:4'                      , ''  ],
   ['pli{c}{q}'         , '[Rn, {+/-}Rm , RRX]'                   , 'A32: 1111011|0|U|1|01|Rn:4|1|1|1|1|00000|11|0|Rm:4'                            , ''  ],
   ['pli{c}{q}'         , '[Rn, {+/-}Rm ,{Shift #Amount}]'        , 'A32: 1111011|0|U|1|01|Rn:4|1|1|1|1|Amount!=00000|Shift!=11|0|Rm:4'             , ''  ],
 
-  ['pop{c}{q}'         , 'List'                                  , 'T16: 1011|1|10|List.A:1|List.I:8'                                              , 'FORM='  ],
-  ['ldm{c}{q}'         , 'SP!, List'                             , 'T16: 1011|1|10|List.A:1|List.I:8'                                              , 'FORM='  ],
+  ['pop{c}{q}'         , 'List'                                  , 'T16: 1011|1|10|List.A:1|List.I:8'                                              , 'FORM=PREFERRED'  ],
+  ['ldm{c}{q}'         , 'SP!, List'                             , 'T16: 1011|1|10|List.A:1|List.I:8'                                              , 'FORM=ALTERNATIVE'  ],
 
   ['pop{c}.w'          , 'List'                                  , 'T32: 1110100|01|0|1|1|1101|List:1|List:1|0|List:13'                            , ''  ],
   ['pop{c}{q}'         , 'List'                                  , 'T32: 1110100|01|0|1|1|1101|List:1|List:1|0|List:13'                            , ''  ],
@@ -742,8 +742,8 @@ my @instructions = (
   ['pop{c}{q}'         , 'Single_register_list'                  , 'T32: 1111100|0|0|10|1|1101|xxxx|1|0|1|1|00000100'                              , ''  ],
   ['pop{c}{q}'         , 'Single_register_list'                  , 'A32: Cond!=1111|010|0|1|0|0|1|1101|xxxx|000000000100'                          , ''  ],
 
-  ['push{c}{q}'        , 'List'                                  , 'T16: 1011|0|10|List.B:1|List.I:8'                                              , 'FORM='  ],
-  ['stmdb{c}{q}'       , 'SP!, List'                             , 'T16: 1011|0|10|List.B:1|List.I:8'                                              , 'FORM='  ],
+  ['push{c}{q}'        , 'List'                                  , 'T16: 1011|0|10|List.B:1|List.I:8'                                              , 'FORM=PREFERRED'  ],
+  ['stmdb{c}{q}'       , 'SP!, List'                             , 'T16: 1011|0|10|List.B:1|List.I:8'                                              , 'FORM=ALTERNATIVE'  ],
 
   ['push{c}.w'         , 'List'                                  , 'T32: 1110100|10|0|1|0|1101|0|List.B:1|0|List.C:13'                             , ''  ],
   ['push{c}{q}'        , 'List'                                  , 'T32: 1110100|10|0|1|0|1101|0|List.B:1|0|List.C:13'                             , ''  ],
@@ -1076,27 +1076,27 @@ my @instructions = (
   ['stlh{c}{q}'        , 'Rt, [Rn]'                              , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|0|01|1111'                                 , ''  ],
   ['stlh{c}{q}'        , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|11|0|Rn:4|1111|1|1|0|0|1001|Rt:4'                        , ''  ],
 
-  ['stm{ia}{c}{q}'     , 'Rn!, List'                             , 'T16: 1100|0|Rn:3|List.I:8'                                                     , 'FORM='  ],
-  ['stmea{c}{q}'       , 'Rn!, List'                             , 'T16: 1100|0|Rn:3|List.I:8'                                                     , 'FORM='  ],
-  ['stm{ia}{c}.w'      , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM='  ],
-  ['stmea{c}.w'        , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM='  ],
-  ['stm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM='  ],
-  ['stmea{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM='  ],
-  ['stm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
-  ['stmea{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
+  ['stm{ia}{c}{q}'     , 'Rn!, List'                             , 'T16: 1100|0|Rn:3|List.I:8'                                                     , 'FORM=PREFERRED'  ],
+  ['stmea{c}{q}'       , 'Rn!, List'                             , 'T16: 1100|0|Rn:3|List.I:8'                                                     , 'FORM=ALTERNATIVE'  ],
+  ['stm{ia}{c}.w'      , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=PREFERRED'  ],
+  ['stmea{c}.w'        , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=ALTERNATIVE'  ],
+  ['stm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=PREFERRED'  ],
+  ['stmea{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=ALTERNATIVE'  ],
+  ['stm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['stmea{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
   ['stm{<amode>}{c}{q}', 'Rn, List^'                             , 'A32: Cond!=1111|100|x|x|1|0|0|Rn:4|List:16'                                    , ''  ],
 
-  ['stmda{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
-  ['stmed{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
+  ['stmda{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['stmed{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
-  ['stmdb{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM='  ],
-  ['stmfd{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM='  ],
-  ['stmdb{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
-  ['stmfd{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
+  ['stmdb{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=PREFERRED'  ],
+  ['stmfd{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=ALTERNATIVE'  ],
+  ['stmdb{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['stmfd{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
-  ['stmib{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
-  ['stmfa{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|0|Rn:4|List:16'                                    , 'FORM='  ],
+  ['stmib{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
+  ['stmfa{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
 
   ['str{c}{q}'         , 'Rt, [Rn ,{#{+}ImmZ*4}]'                , 'T16: 011|0|0|ImmZ:5|Rn:3|Rt:3'                                                 , ''  ],
   ['str{c}{q}'         , 'Rt, [SP,{#{+}ImmZ*4}]'                 , 'T16: 1001|0|Rt:3|ImmZ:8'                                                       , ''  ],
