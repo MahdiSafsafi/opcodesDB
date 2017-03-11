@@ -28,6 +28,8 @@
 #   - .s = SignExtend.
 #   - .x = ExpandImm.
 #   - .z = ZeroExtend.
+#
+#   - width.w = DecodeWidth => width = width + 1 - lsb.
 
 # OPCODE
 # ======
@@ -218,12 +220,12 @@ my @instructions = (
   ['b{%c}{%q}'         , 'rel.s*4'                               , 'A32: cond!=1111|101|0|rel:24'                                                  , ''  ],
 
   # BFC
-  ['bfc{%c}{%q}'       , 'Rd, #lsb, #width'                      , 'T32: 11110|0|11|01|1|0|1111|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
-  ['bfc{%c}{%q}'       , 'Rd, #lsb, #width'                      , 'A32: cond!=1111|0111110|width:5|Rd:4|lsb:5|001|1111'                           , ''  ],
+  ['bfc{%c}{%q}'       , 'Rd, #lsb, #width.w'                    , 'T32: 11110|0|11|01|1|0|1111|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
+  ['bfc{%c}{%q}'       , 'Rd, #lsb, #width.w'                    , 'A32: cond!=1111|0111110|width:5|Rd:4|lsb:5|001|1111'                           , ''  ],
 
   # BFI
-  ['bfi{%c}{%q}'       , 'Rd, Rn, #lsb, #width'                  , 'T32: 11110|0|11|01|1|0|Rn!=1111|0|lsb:3|Rd:4|lsb:2|0|width:5'                  , ''  ],
-  ['bfi{%c}{%q}'       , 'Rd, Rn, #lsb, #width'                  , 'A32: cond!=1111|0111110|width:5|Rd:4|lsb:5|001|Rn!=1111'                       , ''  ],
+  ['bfi{%c}{%q}'       , 'Rd, Rn, #lsb, #width.w'                , 'T32: 11110|0|11|01|1|0|Rn!=1111|0|lsb:3|Rd:4|lsb:2|0|width:5'                  , ''  ],
+  ['bfi{%c}{%q}'       , 'Rd, Rn, #lsb, #width.w'                , 'A32: cond!=1111|0111110|width:5|Rd:4|lsb:5|001|Rn!=1111'                       , ''  ],
 
   # BIC, BICS (immediate)
   ['bic{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0001|0|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
@@ -1119,8 +1121,8 @@ my @instructions = (
   ['sbc{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|110|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
 
   # SBFX
-  ['sbfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'T32: 11110|0|11|01|0|0|Rn:4|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
-  ['sbfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'A32: cond!=1111|01111|0|1|width:5|Rd:4|lsb:5|101|Rn:4'                         , ''  ],
+  ['sbfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width+1'                , 'T32: 11110|0|11|01|0|0|Rn:4|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
+  ['sbfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width+1'                , 'A32: cond!=1111|01111|0|1|width:5|Rd:4|lsb:5|101|Rn:4'                         , ''  ],
 
   # SDIV
   ['sdiv{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110111|001|Rn:4|1111|Rd:4|1111|Rm:4'                                   , ''  ],
@@ -1287,14 +1289,14 @@ my @instructions = (
   ['srsib{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111100|1|1|1|W|0|1101|00000101000|mode:5'                                , ''  ],
 
   # SSAT
-  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'T32: 11110|0|11|00|1|0|Rn:4|0|amount!=000|Rd:4|amount!=00|0|imm:5'             , ''  ],
-  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'T32: 11110|0|11|00|0|0|Rn:4|0|amount:3|Rd:4|amount:2|0|imm:5'                  , ''  ],
-  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'A32: cond!=1111|01101|0|1|imm:5|Rd:4|amount:5|1|01|Rn:4'                       , ''  ],
-  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'A32: cond!=1111|01101|0|1|imm:5|Rd:4|amount:5|0|01|Rn:4'                       , ''  ],
+  ['ssat{%c}{%q}'      , 'Rd, #sat+1, Rn, ASR #amount'           , 'T32: 11110|0|11|00|1|0|Rn:4|0|amount!=000|Rd:4|amount!=00|0|sat:5'             , ''  ],
+  ['ssat{%c}{%q}'      , 'Rd, #sat+1, Rn {, LSL #amount}'        , 'T32: 11110|0|11|00|0|0|Rn:4|0|amount:3|Rd:4|amount:2|0|sat:5'                  , ''  ],
+  ['ssat{%c}{%q}'      , 'Rd, #sat+1, Rn, ASR #amount'           , 'A32: cond!=1111|01101|0|1|sat:5|Rd:4|amount:5|1|01|Rn:4'                       , ''  ],
+  ['ssat{%c}{%q}'      , 'Rd, #sat+1, Rn {, LSL #amount}'        , 'A32: cond!=1111|01101|0|1|sat:5|Rd:4|amount:5|0|01|Rn:4'                       , ''  ],
 
   # SSAT16
-  ['ssat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'T32: 11110|0|11|00|1|0|Rn:4|0|000|Rd:4|00|0|0|imm:4'                           , ''  ],
-  ['ssat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'A32: cond!=1111|01101|0|10|imm:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
+  ['ssat16{%c}{%q}'    , 'Rd, #sat+1, Rn'                        , 'T32: 11110|0|11|00|1|0|Rn:4|0|000|Rd:4|00|0|0|sat:4'                           , ''  ],
+  ['ssat16{%c}{%q}'    , 'Rd, #sat+1, Rn'                        , 'A32: cond!=1111|01101|0|10|sat:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
 
   # SSAX
   ['ssax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
@@ -1612,8 +1614,8 @@ my @instructions = (
   ['uasx{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
 
   # UBFX
-  ['ubfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'T32: 11110|0|11|11|0|0|Rn:4|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
-  ['ubfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'A32: cond!=1111|01111|1|1|width:5|Rd:4|lsb:5|101|Rn:4'                         , ''  ],
+  ['ubfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width+1'                , 'T32: 11110|0|11|11|0|0|Rn:4|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
+  ['ubfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width+1'                , 'A32: cond!=1111|01111|1|1|width:5|Rd:4|lsb:5|101|Rn:4'                         , ''  ],
 
   # UDF
   ['udf{%c}{%q}'       , '{#}imm.z'                              , 'T16: 1101111|0|imm:8'                                                          , ''  ],
@@ -1696,14 +1698,14 @@ my @instructions = (
   ['usada8{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01111000|Rd:4|Ra!=1111|Rm:4|0001|Rn:4'                         , ''  ],
 
   # USAT
-  ['usat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'T32: 11110|0|11|10|1|0|Rn:4|0|amount!=000|Rd:4|amount!=00|0|imm:5'             , ''  ],
-  ['usat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'T32: 11110|0|11|10|0|0|Rn:4|0|amount:3|Rd:4|amount:2|0|imm:5'                  , ''  ],
-  ['usat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'A32: cond!=1111|01101|1|1|imm:5|Rd:4|amount:5|1|01|Rn:4'                       , ''  ],
-  ['usat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'A32: cond!=1111|01101|1|1|imm:5|Rd:4|amount:5|0|01|Rn:4'                       , ''  ],
+  ['usat{%c}{%q}'      , 'Rd, #sat, Rn, ASR #amount'             , 'T32: 11110|0|11|10|1|0|Rn:4|0|amount!=000|Rd:4|amount!=00|0|sat:5'             , ''  ],
+  ['usat{%c}{%q}'      , 'Rd, #sat, Rn {, LSL #amount}'          , 'T32: 11110|0|11|10|0|0|Rn:4|0|amount:3|Rd:4|amount:2|0|sat:5'                  , ''  ],
+  ['usat{%c}{%q}'      , 'Rd, #sat, Rn, ASR #amount'             , 'A32: cond!=1111|01101|1|1|sat:5|Rd:4|amount:5|1|01|Rn:4'                       , ''  ],
+  ['usat{%c}{%q}'      , 'Rd, #sat, Rn {, LSL #amount}'          , 'A32: cond!=1111|01101|1|1|sat:5|Rd:4|amount:5|0|01|Rn:4'                       , ''  ],
 
   # USAT16
-  ['usat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'T32: 11110|0|11|10|1|0|Rn:4|0|000|Rd:4|00|0|0|imm:4'                           , ''  ],
-  ['usat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'A32: cond!=1111|01101|1|10|imm:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
+  ['usat16{%c}{%q}'    , 'Rd, #sat, Rn'                          , 'T32: 11110|0|11|10|1|0|Rn:4|0|000|Rd:4|00|0|0|sat:4'                           , ''  ],
+  ['usat16{%c}{%q}'    , 'Rd, #sat, Rn'                          , 'A32: cond!=1111|01101|1|10|sat:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
 
   # USAX
   ['usax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
