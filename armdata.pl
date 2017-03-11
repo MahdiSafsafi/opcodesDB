@@ -1,1416 +1,1712 @@
 # ===>        ARM instruction set        <===
-
+    
 warn "Work still in progress and data may contain some bugs.\n";
 
+# page title was added just for track ! 
+
+my $locked = 1;  # Don't edit instructions until ($locked == 0) !
+	
 my @instructions = (
 
   # ===>                     AArch32.Base instructions                     <===
 
-  ['adc{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1010|0|Rn:4|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['adcs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1010|1|Rn:4|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['adc{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|101|0|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
-  ['adcs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|101|1|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
+  # ADC, ADCS (immediate)
+  ['adc{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1010|0|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['adcs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1010|1|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['adc{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|101|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['adcs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|101|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
 
-  ['adc%c{q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0101|Rm:3|Rdn:3'                                                   , 'IT:IN'  ],
-  ['adcs{q}'           , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0101|Rm:3|Rdn:3'                                                   , 'IT:OUT'  ],
-  ['adc{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1010|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['adc%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1010|0|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:IN'  ],
-  ['adc{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1010|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['adcs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1010|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['adcs.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1010|1|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:OUT'  ],
-  ['adcs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1010|1|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['adc{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|101|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['adc{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|101|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['adcs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|101|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['adcs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|101|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
+  # ADC, ADCS (register)
+  ['adc%c{%q}'         , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0101|Rm:3|Rdn:3'                                                   , ''  ],
+  ['adcs{%q}'          , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0101|Rm:3|Rdn:3'                                                   , ''  ],
+  ['adc{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1010|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['adc%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1010|0|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['adc{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1010|0|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['adcs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1010|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['adcs.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1010|1|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['adcs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1010|1|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['adc{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|101|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['adc{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|101|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['adcs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|101|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['adcs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|101|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
 
-  ['adcs{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|101|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['adc{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|101|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  # ADC, ADCS (register-shifted register)
+  ['adcs{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|101|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['adc{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|101|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
 
-  ['add%c{q}'          , 'Rd, Rn, #ImmZ'                         , 'T16: 000111|0|ImmZ:3|Rn:3|Rd:3'                                                , 'IT:IN'  ],
-  ['adds{q}'           , 'Rd, Rn, #ImmZ'                         , 'T16: 000111|0|ImmZ:3|Rn:3|Rd:3'                                                , 'IT:OUT'  ],
-  ['add%c{q}'          , 'Rdn, #ImmZ'                            , 'T16: 001|10|Rdn:3|ImmZ:8'                                                      , 'IT:IN'  ],
-  ['add%c{q}'          , '{Rdn}, Rdn, #ImmZ'                     , 'T16: 001|10|Rdn:3|ImmZ:8'                                                      , 'IT:IN'  ],
-  ['adds{q}'           , 'Rdn, #ImmZ'                            , 'T16: 001|10|Rdn:3|ImmZ:8'                                                      , 'IT:OUT'  ],
-  ['adds{q}'           , '{Rdn}, Rdn, #ImmZ'                     , 'T16: 001|10|Rdn:3|ImmZ:8'                                                      , 'IT:OUT'  ],
-  ['add%c.w'           , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1000|0|Rn!=1101|0|ImmX:3|Rd:4|ImmX:8'                      , 'IT:IN'  ],
-  ['add{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1000|0|Rn!=1101|0|ImmX:3|Rd:4|ImmX:8'                      , ''  ],
-  ['adds.w'            , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1000|1|Rn!=1101|0|ImmX:3|Rd!=1111|ImmX:8'                  , 'IT:OUT'  ],
-  ['adds{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1000|1|Rn!=1101|0|ImmX:3|Rd!=1111|ImmX:8'                  , ''  ],
-  ['add{c}{q}'         , '{Rd}, Rn, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|0|0|0|0|Rn!=11x1|0|ImmZ:3|Rd:4|ImmZ:8'                    , ''  ],
-  ['addw{c}{q}'        , '{Rd}, Rn, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|0|0|0|0|Rn!=11x1|0|ImmZ:3|Rd:4|ImmZ:8'                    , ''  ],
-  ['add{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|100|0|Rn!=11x1|Rd:4|ImmX:12'                              , ''  ],
-  ['adds{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|100|1|Rn!=1101|Rd:4|ImmX:12'                              , ''  ],
+  # ADD, ADDS (immediate)
+  ['add%c{%q}'         , 'Rd, Rn, #imm.z'                        , 'T16: 000111|0|imm:3|Rn:3|Rd:3'                                                 , ''  ],
+  ['adds{%q}'          , 'Rd, Rn, #imm.z'                        , 'T16: 000111|0|imm:3|Rn:3|Rd:3'                                                 , ''  ],
+  ['add%c{%q}'         , 'Rdn, #imm.z'                           , 'T16: 001|10|Rdn:3|imm:8'                                                       , ''  ],
+  ['add%c{%q}'         , '{Rdn,} Rdn, #imm.z'                    , 'T16: 001|10|Rdn:3|imm:8'                                                       , ''  ],
+  ['adds{%q}'          , 'Rdn, #imm.z'                           , 'T16: 001|10|Rdn:3|imm:8'                                                       , ''  ],
+  ['adds{%q}'          , '{Rdn,} Rdn, #imm.z'                    , 'T16: 001|10|Rdn:3|imm:8'                                                       , ''  ],
+  ['add%c.W'           , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1000|0|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1000|0|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['adds.W'            , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1000|1|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1000|1|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, #imm.z'                      , 'T32: 11110|imm:1|10|0|0|0|0|Rn!=11x1|0|imm:3|Rd:4|imm:8'                       , ''  ],
+  ['addw{%c}{%q}'      , '{Rd,} Rn, #imm.z'                      , 'T32: 11110|imm:1|10|0|0|0|0|Rn!=11x1|0|imm:3|Rd:4|imm:8'                       , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|100|0|Rn!=11x1|Rd:4|cnst:12'                              , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|100|1|Rn!=1101|Rd:4|cnst:12'                              , ''  ],
 
-  ['add%c{q}'          , 'Rd, Rn, Rm'                            , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , 'IT:IN'  ],
-  ['adds{q}'           , '{Rd}, Rn, Rm'                          , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , 'IT:OUT'  ],
-  ['add%c{q}'          , 'Rdn, Rm'                               , 'T16: 010001|00|Rdn:1|Rm!=1101|Rdn!=101'                                        , 'IT:IN FORM=PREFERRED'  ],
-  ['add{c}{q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 010001|00|Rdn:1|Rm!=1101|Rdn!=101'                                        , ''  ],
-  ['add{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1000|0|Rn!=1101|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
-  ['add%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1000|0|Rn!=1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , 'IT:IN'  ],
-  ['add{c}.w'          , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1000|0|Rn!=1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , ''  ],
-  ['add{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1000|0|Rn!=1101|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['adds{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1000|1|Rn!=1101|0|000|Rd!=1111|00|11|Rm:4'                        , ''  ],
-  ['adds.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1000|1|Rn!=1101|0|!=000|Rd!=1111|!=00|!=11|Rm:4'                  , 'IT:OUT'  ],
-  ['adds{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1000|1|Rn!=1101|0|Amount!=000|Rd!=1111|Amount!=00|Shift!=11|Rm:4' , ''  ],
-  ['add{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|100|0|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
-  ['add{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|100|0|Rn!=1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'       , ''  ],
-  ['adds{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|100|1|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
-  ['adds{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|100|1|Rn!=1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'       , ''  ],
+  # ADD, ADDS (register)
+  ['add%c{%q}'         , 'Rd, Rn, Rm'                            , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
+  ['adds{%q}'          , '{Rd,} Rn, Rm'                          , 'T16: 000110|0|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
+  ['add%c{%q}'         , 'Rdn, Rm'                               , 'T16: 010001|00|Rdn!=1|Rm!=1101|Rdn!=101'                                       , ''  ],
+  ['add{%c}{%q}'       , '{Rdn,} Rdn, Rm'                        , 'T16: 010001|00|Rdn!=1|Rm!=1101|Rdn!=101'                                       , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1000|0|Rn!=1101|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
+  ['add%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1000|0|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['add{%c}.W'         , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1000|0|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1000|0|Rn!=1101|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1000|1|Rn!=1101|0|000|Rd!=1111|00|11|Rm:4'                        , ''  ],
+  ['adds.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1000|1|Rn!=1101|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'      , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1000|1|Rn!=1101|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4' , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|100|0|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|100|0|Rn!=1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'       , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|100|1|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|100|1|Rn!=1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'       , ''  ],
 
-  ['adds{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|100|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['add{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|100|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  # ADD, ADDS (register-shifted register)
+  ['adds{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|100|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|100|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
 
-  ['add{c}{q}'         , 'Rd, SP, #ImmZ*4'                       , 'T16: 1010|1|Rd:3|ImmZ:8'                                                       , ''  ],
-  ['add{c}{q}'         , '{SP}, SP, #ImmZ*4'                     , 'T16: 10110000|0|ImmZ:7'                                                        , ''  ],
-  ['add{c}.w'          , '{Rd}, SP, #ImmX'                       , 'T32: 11110|ImmX:1|0|1000|0|1101|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['add{c}{q}'         , '{Rd}, SP, #ImmX'                       , 'T32: 11110|ImmX:1|0|1000|0|1101|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['adds{c}{q}'        , '{Rd}, SP, #ImmX'                       , 'T32: 11110|ImmX:1|0|1000|1|1101|0|ImmX:3|Rd!=1111|ImmX:8'                      , ''  ],
-  ['add{c}{q}'         , '{Rd}, SP, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|0|0|0|0|1101|0|ImmZ:3|Rd:4|ImmZ:8'                        , ''  ],
-  ['addw{c}{q}'        , '{Rd}, SP, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|0|0|0|0|1101|0|ImmZ:3|Rd:4|ImmZ:8'                        , ''  ],
-  ['add{c}{q}'         , '{Rd}, SP, #ImmX'                       , 'A32: Cond!=1111|0010|100|0|1101|Rd:4|ImmX:12'                                  , ''  ],
-  ['adds{c}{q}'        , '{Rd}, SP, #ImmX'                       , 'A32: Cond!=1111|0010|100|1|1101|Rd:4|ImmX:12'                                  , ''  ],
+  # ADD, ADDS (SP plus immediate)
+  ['add{%c}{%q}'       , 'Rd, SP, #imm.z*4'                      , 'T16: 1010|1|Rd:3|imm:8'                                                        , ''  ],
+  ['add{%c}{%q}'       , '{SP,} SP, #imm.z*4'                    , 'T16: 10110000|0|imm:7'                                                         , ''  ],
+  ['add{%c}.W'         , '{Rd,} SP, #cnst.x'                     , 'T32: 11110|cnst:1|0|1000|0|1101|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} SP, #cnst.x'                     , 'T32: 11110|cnst:1|0|1000|0|1101|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} SP, #cnst.x'                     , 'T32: 11110|cnst:1|0|1000|1|1101|0|cnst:3|Rd!=1111|cnst:8'                      , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} SP, #imm.z'                      , 'T32: 11110|imm:1|10|0|0|0|0|1101|0|imm:3|Rd:4|imm:8'                           , ''  ],
+  ['addw{%c}{%q}'      , '{Rd,} SP, #imm.z'                      , 'T32: 11110|imm:1|10|0|0|0|0|1101|0|imm:3|Rd:4|imm:8'                           , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} SP, #cnst.x'                     , 'A32: cond!=1111|0010|100|0|1101|Rd:4|cnst:12'                                  , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} SP, #cnst.x'                     , 'A32: cond!=1111|0010|100|1|1101|Rd:4|cnst:12'                                  , ''  ],
 
-  ['add{c}{q}'         , '{Rdm}, SP, Rdm'                        , 'T16: 010001|00|x|1101|Rdm:3'                                                   , ''  ],
-  ['add{c}{q}'         , '{SP}, SP, Rm'                          , 'T16: 010001|00|1|Rm!=1101|101'                                                 , ''  ],
-  ['add{c}{q}'         , '{Rd}, SP, Rm, RRX'                     , 'T32: 1110101|1000|0|1101|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['add{c}.w'          , '{Rd}, SP, Rm'                          , 'T32: 1110101|1000|0|1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , ''  ],
-  ['add{c}{q}'         , '{Rd}, SP, Rm, {Shift #Amount}'         , 'T32: 1110101|1000|0|1101|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['adds{c}{q}'        , '{Rd}, SP, Rm, RRX'                     , 'T32: 1110101|1000|1|1101|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
-  ['adds{c}{q}'        , '{Rd}, SP, Rm, {Shift #Amount}'         , 'T32: 1110101|1000|1|1101|0|Amount!=000|Rd!=1111|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['add{c}{q}'         , '{Rd}, SP, Rm, RRX'                     , 'A32: Cond!=1111|0000|100|0|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['add{c}{q}'         , '{Rd}, SP, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|100|0|1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['adds{c}{q}'        , '{Rd}, SP, Rm, RRX'                     , 'A32: Cond!=1111|0000|100|1|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['adds{c}{q}'        , '{Rd}, SP, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|100|1|1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
+  # ADD, ADDS (SP plus register)
+  ['add{%c}{%q}'       , '{Rdm,} SP, Rdm'                        , 'T16: 010001|00|DM:1|1101|Rdm:3'                                                , ''  ],
+  ['add{%c}{%q}'       , '{SP,} SP, Rm'                          , 'T16: 010001|00|1|Rm!=1101|101'                                                 , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} SP, Rm, RRX'                     , 'T32: 1110101|1000|0|1101|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['add{%c}.W'         , '{Rd,} SP, Rm'                          , 'T32: 1110101|1000|0|1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} SP, Rm {, shift #amount}'        , 'T32: 1110101|1000|0|1101|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} SP, Rm, RRX'                     , 'T32: 1110101|1000|1|1101|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} SP, Rm {, shift #amount}'        , 'T32: 1110101|1000|1|1101|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} SP, Rm , RRX'                    , 'A32: cond!=1111|0000|100|0|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['add{%c}{%q}'       , '{Rd,} SP, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|100|0|1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} SP, Rm , RRX'                    , 'A32: cond!=1111|0000|100|1|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['adds{%c}{%q}'      , '{Rd,} SP, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|100|1|1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
 
-  ['add{c}{q}'         , 'Rd, PC, #ImmZ*4'                       , 'T16: 1010|0|Rd:3|ImmZ:8'                                                       , ''  ],
-  ['addw{c}{q}'        , 'Rd, PC, #ImmZ'                         , 'T32: 11110|ImmZ:1|10|0|0|0|0|1111|0|ImmZ:3|Rd:4|ImmZ:8'                        , ''  ],
-  ['add{c}{q}'         , 'Rd, PC, #ImmZ'                         , 'T32: 11110|ImmZ:1|10|0|0|0|0|1111|0|ImmZ:3|Rd:4|ImmZ:8'                        , ''  ],
-  ['add{c}{q}'         , 'Rd, PC, #ImmX'                         , 'A32: Cond!=1111|0010|100|0|1111|Rd:4|ImmX:12'                                  , ''  ],
+  # ADD (immediate, to PC)
+  ['add{%c}{%q}'       , 'Rd, PC, #imm.z*4'                      , 'T16: 1010|0|Rd:3|imm:8'                                                        , ''  ],
+  ['addw{%c}{%q}'      , 'Rd, PC, #imm.z'                        , 'T32: 11110|imm:1|10|0|0|0|0|1111|0|imm:3|Rd:4|imm:8'                           , ''  ],
+  ['add{%c}{%q}'       , 'Rd, PC, #imm.z'                        , 'T32: 11110|imm:1|10|0|0|0|0|1111|0|imm:3|Rd:4|imm:8'                           , ''  ],
+  ['add{%c}{%q}'       , 'Rd, PC, #cnst.x'                       , 'A32: cond!=1111|0010|100|0|1111|Rd:4|cnst:12'                                  , ''  ],
 
-  ['adr{c}{q}'         , 'Rd, RelZ*4'                            , 'T16: 1010|0|Rd:3|RelZ:8'                                                       , ''  ],
-  ['adr{c}{q}'         , 'Rd, RelZ'                              , 'T32: 11110|RelZ:1|10|1|0|1|0|1111|0|RelZ:3|Rd:4|RelZ:8'                        , ''  ],
-  ['adr{c}.w'          , 'Rd, RelZ'                              , 'T32: 11110|RelZ:1|10|0|0|0|0|1111|0|RelZ:3|Rd:4|RelZ:8'                        , ''  ],
-  ['adr{c}{q}'         , 'Rd, RelZ'                              , 'T32: 11110|RelZ:1|10|0|0|0|0|1111|0|RelZ:3|Rd:4|RelZ:8'                        , ''  ],
-  ['adr{c}{q}'         , 'Rd, RelX'                              , 'A32: Cond!=1111|0010|100|0|1111|Rd:4|RelX:12'                                  , ''  ],
-  ['adr{c}{q}'         , 'Rd, RelX'                              , 'A32: Cond!=1111|0010|010|0|1111|Rd:4|RelX:12'                                  , ''  ],
+  # ADR
+  ['adr{%c}{%q}'       , 'Rd, rel.z*4'                           , 'T16: 1010|0|Rd:3|rel:8'                                                        , ''  ],
+  ['adr{%c}{%q}'       , 'Rd, rel.z'                             , 'T32: 11110|rel:1|10|1|0|1|0|1111|0|rel:3|Rd:4|rel:8'                           , ''  ],
+  ['adr{%c}.W'         , 'Rd, rel.z'                             , 'T32: 11110|rel:1|10|0|0|0|0|1111|0|rel:3|Rd:4|rel:8'                           , ''  ],
+  ['adr{%c}{%q}'       , 'Rd, rel.z'                             , 'T32: 11110|rel:1|10|0|0|0|0|1111|0|rel:3|Rd:4|rel:8'                           , ''  ],
+  ['adr{%c}{%q}'       , 'Rd, rel.x'                             , 'A32: cond!=1111|0010|100|0|1111|Rd:4|rel:12'                                   , ''  ],
+  ['adr{%c}{%q}'       , 'Rd, rel.x'                             , 'A32: cond!=1111|0010|010|0|1111|Rd:4|rel:12'                                   , ''  ],
 
-  ['and{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0000|0|Rn:4|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['ands{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0000|1|Rn:4|0|ImmC:3|Rd!=1111|ImmC:8'                      , ''  ],
-  ['and{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|0010|000|0|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
-  ['ands{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|0010|000|1|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
+  # AND, ANDS (immediate)
+  ['and{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0000|0|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['ands{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0000|1|Rn:4|0|cnst:3|Rd!=1111|cnst:8'                      , ''  ],
+  ['and{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|0010|000|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['ands{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|0010|000|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
 
-  ['and%c{q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0000|Rm:3|Rdn:3'                                                   , 'IT:IN'  ],
-  ['ands{q}'           , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0000|Rm:3|Rdn:3'                                                   , 'IT:OUT'  ],
-  ['and{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0000|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['and%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0000|0|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:IN'  ],
-  ['and{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0000|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['ands{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0000|1|Rn:4|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
-  ['ands.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0000|1|Rn:4|0|!=000|Rd!=1111|!=00|!=11|Rm:4'                      , 'IT:OUT'  ],
-  ['ands{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0000|1|Rn:4|0|Amount!=000|Rd!=1111|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['and{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|000|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['and{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|000|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['ands{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|000|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['ands{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|000|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
+  # AND, ANDS (register)
+  ['and%c{%q}'         , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0000|Rm:3|Rdn:3'                                                   , ''  ],
+  ['ands{%q}'          , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0000|Rm:3|Rdn:3'                                                   , ''  ],
+  ['and{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0000|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['and%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0000|0|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['and{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0000|0|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['ands{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0000|1|Rn:4|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
+  ['ands.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0000|1|Rn:4|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['ands{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0000|1|Rn:4|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['and{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|000|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['and{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|000|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['ands{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|000|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['ands{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|000|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
 
-  ['ands{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|000|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['and{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|000|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  # AND, ANDS (register-shifted register)
+  ['ands{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|000|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['and{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|000|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
 
-  ['asr%c{q}'          , '{Rd}, Rm, #Imm'                        , 'T16: 000|10|Imm:5|Rm:3|Rd:3'                                                   , 'IT:IN'  ],
-  ['asr%c.w'           , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|0|1111|0|Imm:3|Rd:4|Imm:2|10|Rm:4'                           , 'IT:IN'  ],
-  ['asr{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|0|1111|0|Imm:3|Rd:4|Imm:2|10|Rm:4'                           , ''  ],
-  ['asr{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Imm:5|10|0|Rm:4'                          , ''  ],
+  # ASR (immediate)
+  ['asr%c{%q}'         , '{Rd,} Rm, #imm'                        , 'T16: 000|10|imm:5|Rm:3|Rd:3'                                                   , ''  ],
+  ['asr%c.W'           , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|0|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
+  ['asr{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|0|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
+  ['asr{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|0|0000|Rd:4|imm:5|10|0|Rm:4'                          , ''  ],
 
-  ['asr%c{q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['asr%c.w'           , '{Rd}, Rm, Rs'                          , 'T32: 111110100|10|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
-  ['asr{c}{q}'         , '{Rd}, Rm, Rs'                          , 'T32: 111110100|10|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['asr{c}{q}'         , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|10|1|Rm:4'                         , ''  ],
+  # ASR (register)
+  ['asr%c{%q}'         , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , ''  ],
+  ['asr%c.W'           , '{Rd,} Rm, Rs'                          , 'T32: 111110100|10|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['asr{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'T32: 111110100|10|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['asr{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|10|1|Rm:4'                         , ''  ],
 
-  ['asrs{q}'           , '{Rd}, Rm, #Imm'                        , 'T16: 000|10|Imm:5|Rm:3|Rd:3'                                                   , 'IT:OUT'  ],
-  ['asrs.w'            , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|1|1111|0|Imm:3|Rd:4|Imm:2|10|Rm:4'                           , 'IT:OUT'  ],
-  ['asrs{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|1|1111|0|Imm:3|Rd:4|Imm:2|10|Rm:4'                           , ''  ],
-  ['asrs{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Imm:5|10|0|Rm:4'                          , ''  ],
+  # ASRS (immediate)
+  ['asrs{%q}'          , '{Rd,} Rm, #imm'                        , 'T16: 000|10|imm:5|Rm:3|Rd:3'                                                   , ''  ],
+  ['asrs.W'            , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|1|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
+  ['asrs{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|1|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
+  ['asrs{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|1|0000|Rd:4|imm:5|10|0|Rm:4'                          , ''  ],
 
-  ['asrs{q}'           , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['asrs.w'            , '{Rd}, Rm, Rs'                          , 'T32: 111110100|10|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
-  ['asrs{c}{q}'        , '{Rd}, Rm, Rs'                          , 'T32: 111110100|10|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['asrs{c}{q}'        , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|10|1|Rm:4'                         , ''  ],
+  # ASRS (register)
+  ['asrs{%q}'          , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , ''  ],
+  ['asrs.W'            , '{Rd,} Rm, Rs'                          , 'T32: 111110100|10|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['asrs{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'T32: 111110100|10|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['asrs{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|10|1|Rm:4'                         , ''  ],
 
-  ['b%c{q}'            , 'RelS*2'                                , 'T16: 1101|Cond!=111x|RelS:8'                                                   , ''  ],
-  ['b{c}{q}'           , 'RelS*2'                                , 'T16: 11100|RelS:11'                                                            , 'IT:OUT:LAST'  ],
-  ['b%c.w'             , 'RelS*2'                                , 'T32: 11110|RelS.A:1|Cond!=111x|RelS.D:6|10|RelS.C:1|0|RelS.B:1|RelS.E:11'      , ''  ],
-  ['b%c{q}'            , 'RelS*2'                                , 'T32: 11110|RelS.A:1|Cond!=111x|RelS.D:6|10|RelS.C:1|0|RelS.B:1|RelS.E:11'      , ''  ],
-  ['b{c}.w'            , 'RelS*2'                                , 'T32: 11110|RelS.A:1|RelS.D:10|10|RelS.B:1|1|RelS.C:1|RelS.E:11'                , ''  ],
-  ['b{c}{q}'           , 'RelS*2'                                , 'T32: 11110|RelS.A:1|RelS.D:10|10|RelS.B:1|1|RelS.C:1|RelS.E:11'                , ''  ],
-  ['b{c}{q}'           , 'RelS*4'                                , 'A32: Cond!=1111|101|0|RelS:24'                                                 , ''  ],
+  # B
+  ['b%c{%q}'           , 'rel.s*2'                               , 'T16: 1101|cond!=111x|rel:8'                                                    , ''  ],
+  ['b{%c}{%q}'         , 'rel.s*2'                               , 'T16: 11100|rel:11'                                                             , ''  ],
+  ['b%c.W'             , 'rel.s*2'                               , 'T32: 11110|rel.A:1|cond!=111x|rel.D:6|10|rel.C:1|0|rel.B:1|rel.E:11'           , ''  ],
+  ['b%c{%q}'           , 'rel.s*2'                               , 'T32: 11110|rel.A:1|cond!=111x|rel.D:6|10|rel.C:1|0|rel.B:1|rel.E:11'           , ''  ],
+  ['b{%c}.W'           , 'rel.s*2'                               , 'T32: 11110|rel.A:1|rel.D:10|10|J1:1|1|J2:1|rel.E:11'                           , ''  ],
+  ['b{%c}{%q}'         , 'rel.s*2'                               , 'T32: 11110|rel.A:1|rel.D:10|10|J1:1|1|J2:1|rel.E:11'                           , ''  ],
+  ['b{%c}{%q}'         , 'rel.s*4'                               , 'A32: cond!=1111|101|0|rel:24'                                                  , ''  ],
 
-  ['bfc{c}{q}'         , 'Rd, #Lsb, #Width'                      , 'T32: 11110|0|11|01|1|0|1111|0|Lsb:3|Rd:4|Lsb:2|0|Width:5'                      , ''  ],
-  ['bfc{c}{q}'         , 'Rd, #Lsb, #Width'                      , 'A32: Cond!=1111|0111110|Width:5|Rd:4|Lsb:5|001|1111'                           , ''  ],
+  # BFC
+  ['bfc{%c}{%q}'       , 'Rd, #lsb, #width'                      , 'T32: 11110|0|11|01|1|0|1111|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
+  ['bfc{%c}{%q}'       , 'Rd, #lsb, #width'                      , 'A32: cond!=1111|0111110|width:5|Rd:4|lsb:5|001|1111'                           , ''  ],
 
-  ['bfi{c}{q}'         , 'Rd, Rn, #Lsb, #Width'                  , 'T32: 11110|0|11|01|1|0|Rn!=1111|0|Lsb:3|Rd:4|Lsb:2|0|Width:5'                  , ''  ],
-  ['bfi{c}{q}'         , 'Rd, Rn, #Lsb, #Width'                  , 'A32: Cond!=1111|0111110|Width:5|Rd:4|Lsb:5|001|Rn!=1111'                       , ''  ],
+  # BFI
+  ['bfi{%c}{%q}'       , 'Rd, Rn, #lsb, #width'                  , 'T32: 11110|0|11|01|1|0|Rn!=1111|0|lsb:3|Rd:4|lsb:2|0|width:5'                  , ''  ],
+  ['bfi{%c}{%q}'       , 'Rd, Rn, #lsb, #width'                  , 'A32: cond!=1111|0111110|width:5|Rd:4|lsb:5|001|Rn!=1111'                       , ''  ],
 
-  ['bic{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0001|0|Rn:4|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['bics{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0001|1|Rn:4|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['bic{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|00111|10|0|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
-  ['bics{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|00111|10|1|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
+  # BIC, BICS (immediate)
+  ['bic{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0001|0|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['bics{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0001|1|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['bic{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|00111|10|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['bics{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|00111|10|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
 
-  ['bic%c{q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|1110|Rm:3|Rdn:3'                                                   , 'IT:IN'  ],
-  ['bics{q}'           , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|1110|Rm:3|Rdn:3'                                                   , 'IT:OUT'  ],
-  ['bic{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0001|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['bic%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0001|0|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:IN'  ],
-  ['bic{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0001|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['bics{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0001|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['bics.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0001|1|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:OUT'  ],
-  ['bics{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0001|1|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['bic{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|00011|10|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['bic{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|00011|10|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['bics{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|00011|10|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['bics{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|00011|10|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
+  # BIC, BICS (register)
+  ['bic%c{%q}'         , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|1110|Rm:3|Rdn:3'                                                   , ''  ],
+  ['bics{%q}'          , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|1110|Rm:3|Rdn:3'                                                   , ''  ],
+  ['bic{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0001|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['bic%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0001|0|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['bic{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0001|0|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['bics{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0001|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['bics.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0001|1|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['bics{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0001|1|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['bic{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|00011|10|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['bic{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|00011|10|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['bics{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|00011|10|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['bics{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|00011|10|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
 
-  ['bics{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|00011|10|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['bic{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|00011|10|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  # BIC, BICS (register-shifted register)
+  ['bics{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|00011|10|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['bic{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|00011|10|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
 
-  ['bkpt{q}'           , '{#}ImmZ'                               , 'T16: 10111110|ImmZ:8'                                                          , ''  ],
-  ['bkpt{q}'           , '{#}Imm'                                , 'A32: Cond!=1111|00010|01|0|Imm:12|0111|Imm:4'                                  , ''  ],
+  # BKPT
+  ['bkpt{%q}'          , '{#}imm.z'                              , 'T16: 10111110|imm:8'                                                           , ''  ],
+  ['bkpt{%q}'          , '{#}imm'                                , 'A32: cond!=1111|00010|01|0|imm:12|0111|imm:4'                                  , ''  ],
 
-  ['bl{c}{q}'          , 'RelS*2'                                , 'T32: 11110|RelS.A:1|RelS.D:10|11|RelS.B:1|1|RelS.C:1|RelS.E:11'                , ''  ],
-  ['blx{c}{q}'         , 'RelS*4'                                , 'T32: 11110|RelS.A:1|RelS.D:10|11|RelS.B:1|0|RelS.C:1|RelS.E:10|x'              , ''  ],
-  ['bl{c}{q}'          , 'RelS*4'                                , 'A32: Cond!=1111|101|1|RelS:24'                                                 , ''  ],
-  ['blx{c}{q}'         , 'RelS*2'                                , 'A32: 1111|101|RelS.B:1|RelS.A:24'                                              , ''  ],
+  # BL, BLX (immediate)
+  ['bl{%c}{%q}'        , 'rel.s*2'                               , 'T32: 11110|rel.A:1|rel.D:10|11|J1:1|1|J2:1|rel.E:11'                           , ''  ],
+  ['blx{%c}{%q}'       , 'rel.s*4'                               , 'T32: 11110|rel.A:1|rel.D:10|11|J1:1|0|J2:1|rel.E:10|H'                         , ''  ],
+  ['bl{%c}{%q}'        , 'rel.s*4'                               , 'A32: cond!=1111|101|1|rel:24'                                                  , ''  ],
+  ['blx{%c}{%q}'       , 'rel.s*2'                               , 'A32: 1111|101|rel.B:1|rel.A:24'                                                , ''  ],
 
-  ['blx{c}{q}'         , 'Rm'                                    , 'T16: 01000111|1|Rm:4|0|0|0'                                                    , ''  ],
-  ['blx{c}{q}'         , 'Rm'                                    , 'A32: Cond!=1111|00010010|1|1|1|1|1|1|1|1|1|1|1|1|0011|Rm:4'                    , ''  ],
+  # BLX (register)
+  ['blx{%c}{%q}'       , 'Rm'                                    , 'T16: 01000111|1|Rm:4|0|0|0'                                                    , ''  ],
+  ['blx{%c}{%q}'       , 'Rm'                                    , 'A32: cond!=1111|00010010|1|1|1|1|1|1|1|1|1|1|1|1|0011|Rm:4'                    , ''  ],
 
-  ['bx{c}{q}'          , 'Rm'                                    , 'T16: 01000111|0|Rm:4|0|0|0'                                                    , ''  ],
-  ['bx{c}{q}'          , 'Rm'                                    , 'A32: Cond!=1111|00010010|1|1|1|1|1|1|1|1|1|1|1|1|0001|Rm:4'                    , ''  ],
+  # BX
+  ['bx{%c}{%q}'        , 'Rm'                                    , 'T16: 01000111|0|Rm:4|0|0|0'                                                    , ''  ],
+  ['bx{%c}{%q}'        , 'Rm'                                    , 'A32: cond!=1111|00010010|1|1|1|1|1|1|1|1|1|1|1|1|0001|Rm:4'                    , ''  ],
 
-  ['bxj{c}{q}'         , 'Rm'                                    , 'T32: 111100111100|Rm:4|10|0|0|1|1|1|1|0|0|0|0|0|0|0|0'                         , ''  ],
-  ['bxj{c}{q}'         , 'Rm'                                    , 'A32: Cond!=1111|00010010|1|1|1|1|1|1|1|1|1|1|1|1|0010|Rm:4'                    , ''  ],
+  # BXJ
+  ['bxj{%c}{%q}'       , 'Rm'                                    , 'T32: 111100111100|Rm:4|10|0|0|1|1|1|1|0|0|0|0|0|0|0|0'                         , ''  ],
+  ['bxj{%c}{%q}'       , 'Rm'                                    , 'A32: cond!=1111|00010010|1|1|1|1|1|1|1|1|1|1|1|1|0010|Rm:4'                    , ''  ],
 
-  ['cbnz{q}'           , 'Rn, RelZ*2'                            , 'T16: 1011|1|0|RelZ:1|1|RelZ:5|Rn:3'                                            , ''  ],
-  ['cbz{q}'            , 'Rn, RelZ*2'                            , 'T16: 1011|0|0|RelZ:1|1|RelZ:5|Rn:3'                                            , ''  ],
+  # CBNZ, CBZ
+  ['cbnz{%q}'          , 'Rn, rel.z*2'                           , 'T16: 1011|1|0|rel:1|1|rel:5|Rn:3'                                              , ''  ],
+  ['cbz{%q}'           , 'Rn, rel.z*2'                           , 'T16: 1011|0|0|rel:1|1|rel:5|Rn:3'                                              , ''  ],
 
-  ['clrex{c}{q}'       , ''                                      , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0010|1111'                            , ''  ],
-  ['clrex{c}{q}'       , ''                                      , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0001|1111'                           , ''  ],
+  # CLREX
+  ['clrex{%c}{%q}'     , ''                                      , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0010|1111'                            , ''  ],
+  ['clrex{%c}{%q}'     , ''                                      , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0001|1111'                           , ''  ],
 
-  ['clz{c}{q}'         , 'Rd, Rm'                                , 'T32: 111110101|011|xxxx|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
-  ['clz{c}{q}'         , 'Rd, Rm'                                , 'A32: Cond!=1111|00010110|1|1|1|1|Rd:4|1|1|1|1|0001|Rm:4'                       , ''  ],
+  # CLZ
+  ['clz{%c}{%q}'       , 'Rd, Rm'                                , 'T32: 111110101|011|Rn:4|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
+  ['clz{%c}{%q}'       , 'Rd, Rm'                                , 'A32: cond!=1111|00010110|1|1|1|1|Rd:4|1|1|1|1|0001|Rm:4'                       , ''  ],
 
-  ['cmn{c}{q}'         , 'Rn, #ImmX'                             , 'T32: 11110|ImmX:1|0|1000|1|Rn:4|0|ImmX:3|1111|ImmX:8'                          , ''  ],
-  ['cmn{c}{q}'         , 'Rn, #ImmX'                             , 'A32: Cond!=1111|00110|11|1|Rn:4|0|0|0|0|ImmX:12'                               , ''  ],
+  # CMN (immediate)
+  ['cmn{%c}{%q}'       , 'Rn, #cnst.x'                           , 'T32: 11110|cnst:1|0|1000|1|Rn:4|0|cnst:3|1111|cnst:8'                          , ''  ],
+  ['cmn{%c}{%q}'       , 'Rn, #cnst.x'                           , 'A32: cond!=1111|00110|11|1|Rn:4|0|0|0|0|cnst:12'                               , ''  ],
 
-  ['cmn{c}{q}'         , 'Rn, Rm'                                , 'T16: 010000|1011|Rm:3|Rn:3'                                                    , ''  ],
-  ['cmn{c}{q}'         , 'Rn, Rm, RRX'                           , 'T32: 1110101|1000|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
-  ['cmn{c}.w'          , 'Rn, Rm'                                , 'T32: 1110101|1000|1|Rn:4|0|!=000|1111|!=00|!=11|Rm:4'                          , ''  ],
-  ['cmn{c}{q}'         , 'Rn, Rm, {Shift #Amount}'               , 'T32: 1110101|1000|1|Rn:4|0|Amount!=000|1111|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['cmn{c}{q}'         , 'Rn, Rm, RRX'                           , 'A32: Cond!=1111|00010|11|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
-  ['cmn{c}{q}'         , 'Rn, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00010|11|1|Rn:4|0|0|0|0|Amount!=00000|Shift!=11|0|Rm:4'        , ''  ],
+  # CMN (register)
+  ['cmn{%c}{%q}'       , 'Rn, Rm'                                , 'T16: 010000|1011|Rm:3|Rn:3'                                                    , ''  ],
+  ['cmn{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'T32: 1110101|1000|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
+  ['cmn{%c}.W'         , 'Rn, Rm'                                , 'T32: 1110101|1000|1|Rn:4|0|imm3!=000|1111|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['cmn{%c}{%q}'       , 'Rn, Rm {, shift #amount}'              , 'T32: 1110101|1000|1|Rn:4|0|amount!=000|1111|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['cmn{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'A32: cond!=1111|00010|11|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
+  ['cmn{%c}{%q}'       , 'Rn, Rm {, shift #amount}'              , 'A32: cond!=1111|00010|11|1|Rn:4|0|0|0|0|amount!=00000|shift!=11|0|Rm:4'        , ''  ],
 
-  ['cmn{c}{q}'         , 'Rn, Rm, type Rs'                       , 'A32: Cond!=1111|00010|11|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
+  # CMN (register-shifted register)
+  ['cmn{%c}{%q}'       , 'Rn, Rm, type Rs'                       , 'A32: cond!=1111|00010|11|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
 
-  ['cmp{c}{q}'         , 'Rn, #ImmZ'                             , 'T16: 001|01|Rn:3|ImmZ:8'                                                       , ''  ],
-  ['cmp{c}.w'          , 'Rn, #ImmX'                             , 'T32: 11110|ImmX:1|0|1101|1|Rn:4|0|ImmX:3|1111|ImmX:8'                          , ''  ],
-  ['cmp{c}{q}'         , 'Rn, #ImmX'                             , 'T32: 11110|ImmX:1|0|1101|1|Rn:4|0|ImmX:3|1111|ImmX:8'                          , ''  ],
-  ['cmp{c}{q}'         , 'Rn, #ImmX'                             , 'A32: Cond!=1111|00110|10|1|Rn:4|0|0|0|0|ImmX:12'                               , ''  ],
+  # CMP (immediate)
+  ['cmp{%c}{%q}'       , 'Rn, #imm.z'                            , 'T16: 001|01|Rn:3|imm:8'                                                        , ''  ],
+  ['cmp{%c}.W'         , 'Rn, #cnst.x'                           , 'T32: 11110|cnst:1|0|1101|1|Rn:4|0|cnst:3|1111|cnst:8'                          , ''  ],
+  ['cmp{%c}{%q}'       , 'Rn, #cnst.x'                           , 'T32: 11110|cnst:1|0|1101|1|Rn:4|0|cnst:3|1111|cnst:8'                          , ''  ],
+  ['cmp{%c}{%q}'       , 'Rn, #cnst.x'                           , 'A32: cond!=1111|00110|10|1|Rn:4|0|0|0|0|cnst:12'                               , ''  ],
 
-  ['cmp{c}{q}'         , 'Rn, Rm'                                , 'T16: 010000|1010|Rm:3|Rn:3'                                                    , ''  ],
-  ['cmp{c}{q}'         , 'Rn, Rm'                                , 'T16: 010001|01|Rn:1|Rm:3|Rn:4'                                                 , ''  ],
-  ['cmp{c}{q}'         , 'Rn, Rm, RRX'                           , 'T32: 1110101|1101|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
-  ['cmp{c}.w'          , 'Rn, Rm'                                , 'T32: 1110101|1101|1|Rn:4|0|!=000|1111|!=00|!=11|Rm:4'                          , ''  ],
-  ['cmp{c}{q}'         , 'Rn, Rm, Shift #Amount'                 , 'T32: 1110101|1101|1|Rn:4|0|Amount!=000|1111|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['cmp{c}{q}'         , 'Rn, Rm, RRX'                           , 'A32: Cond!=1111|00010|10|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
-  ['cmp{c}{q}'         , 'Rn, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00010|10|1|Rn:4|0|0|0|0|Amount!=00000|Shift!=11|0|Rm:4'        , ''  ],
+  # CMP (register)
+  ['cmp{%c}{%q}'       , 'Rn, Rm'                                , 'T16: 010000|1010|Rm:3|Rn:3'                                                    , ''  ],
+  ['cmp{%c}{%q}'       , 'Rn, Rm'                                , 'T16: 010001|01|Rn:1|Rm:3|Rn:4'                                                 , ''  ],
+  ['cmp{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'T32: 1110101|1101|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
+  ['cmp{%c}.W'         , 'Rn, Rm'                                , 'T32: 1110101|1101|1|Rn:4|0|imm3!=000|1111|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['cmp{%c}{%q}'       , 'Rn, Rm, shift #amount'                 , 'T32: 1110101|1101|1|Rn:4|0|amount!=000|1111|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['cmp{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'A32: cond!=1111|00010|10|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
+  ['cmp{%c}{%q}'       , 'Rn, Rm {, shift #amount}'              , 'A32: cond!=1111|00010|10|1|Rn:4|0|0|0|0|amount!=00000|shift!=11|0|Rm:4'        , ''  ],
 
-  ['cmp{c}{q}'         , 'Rn, Rm, type Rs'                       , 'A32: Cond!=1111|00010|10|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
+  # CMP (register-shifted register)
+  ['cmp{%c}{%q}'       , 'Rn, Rm, type Rs'                       , 'A32: cond!=1111|00010|10|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
 
-  ['cpsid{q}'          , 'Iflags'                                , 'T16: 1011011001|1|1|0|A|I|F'                                                   , ''  ],
-  ['cpsie{q}'          , 'Iflags'                                , 'T16: 1011011001|1|0|0|A|I|F'                                                   , ''  ],
-  ['cps{q}'            , '#Mode'                                 , 'T32: 111100111010|1|1|1|1|10|0|0|0|00|1|x|x|x|Mode:5'                          , ''  ],
-  ['cpsid.w'           , 'Iflags'                                , 'T32: 111100111010|1|1|1|1|10|0|0|0|11|0|A|I|F|xxxxx'                           , ''  ],
-  ['cpsid{q}'          , 'Iflags, #Mode'                         , 'T32: 111100111010|1|1|1|1|10|0|0|0|11|1|A|I|F|Mode:5'                          , ''  ],
-  ['cpsie.w'           , 'Iflags'                                , 'T32: 111100111010|1|1|1|1|10|0|0|0|10|0|A|I|F|xxxxx'                           , ''  ],
-  ['cpsie{q}'          , 'Iflags, #Mode'                         , 'T32: 111100111010|1|1|1|1|10|0|0|0|10|1|A|I|F|Mode:5'                          , ''  ],
-  ['cps{q}'            , '#Mode'                                 , 'A32: 111100010000|00|1|0|0|0|0|0|0|0|0|x|x|x|0|Mode:5'                         , ''  ],
-  ['cpsid{q}'          , 'Iflags'                                , 'A32: 111100010000|11|0|0|0|0|0|0|0|0|0|A|I|F|0|xxxxx'                          , ''  ],
-  ['cpsid{q}'          , 'Iflags, #Mode'                         , 'A32: 111100010000|11|1|0|0|0|0|0|0|0|0|A|I|F|0|Mode:5'                         , ''  ],
-  ['cpsie{q}'          , 'Iflags'                                , 'A32: 111100010000|10|0|0|0|0|0|0|0|0|0|A|I|F|0|xxxxx'                          , ''  ],
-  ['cpsie{q}'          , 'Iflags, #Mode'                         , 'A32: 111100010000|10|1|0|0|0|0|0|0|0|0|A|I|F|0|Mode:5'                         , ''  ],
+  # CPS, CPSID, CPSIE
+  ['cpsid{%q}'         , 'iflags'                                , 'T16: 1011011001|1|1|0|A|I|F'                                                   , ''  ],
+  ['cpsie{%q}'         , 'iflags'                                , 'T16: 1011011001|1|0|0|A|I|F'                                                   , ''  ],
+  ['cps{%q}'           , '#mode'                                 , 'T32: 111100111010|1|1|1|1|10|0|0|0|00|1|A|I|F|mode:5'                          , ''  ],
+  ['cpsid.W'           , 'iflags'                                , 'T32: 111100111010|1|1|1|1|10|0|0|0|11|0|A|I|F|mode:5'                          , ''  ],
+  ['cpsid{%q}'         , 'iflags, #mode'                         , 'T32: 111100111010|1|1|1|1|10|0|0|0|11|1|A|I|F|mode:5'                          , ''  ],
+  ['cpsie.W'           , 'iflags'                                , 'T32: 111100111010|1|1|1|1|10|0|0|0|10|0|A|I|F|mode:5'                          , ''  ],
+  ['cpsie{%q}'         , 'iflags, #mode'                         , 'T32: 111100111010|1|1|1|1|10|0|0|0|10|1|A|I|F|mode:5'                          , ''  ],
+  ['cps{%q}'           , '#mode'                                 , 'A32: 111100010000|00|1|0|0|0|0|0|0|0|0|A|I|F|0|mode:5'                         , ''  ],
+  ['cpsid{%q}'         , 'iflags'                                , 'A32: 111100010000|11|0|0|0|0|0|0|0|0|0|A|I|F|0|mode:5'                         , ''  ],
+  ['cpsid{%q}'         , 'iflags , #mode'                        , 'A32: 111100010000|11|1|0|0|0|0|0|0|0|0|A|I|F|0|mode:5'                         , ''  ],
+  ['cpsie{%q}'         , 'iflags'                                , 'A32: 111100010000|10|0|0|0|0|0|0|0|0|0|A|I|F|0|mode:5'                         , ''  ],
+  ['cpsie{%q}'         , 'iflags , #mode'                        , 'A32: 111100010000|10|1|0|0|0|0|0|0|0|0|A|I|F|0|mode:5'                         , ''  ],
 
-  ['crc32b{q}'         , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|0|Rn:4|1111|Rd:4|10|00|Rm:4'                                 , ''  ],
-  ['crc32h{q}'         , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|0|Rn:4|1111|Rd:4|10|01|Rm:4'                                 , ''  ],
-  ['crc32w{q}'         , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|0|Rn:4|1111|Rd:4|10|10|Rm:4'                                 , ''  ],
-  ['crc32b{q}'         , 'Rd, Rn, Rm'                            , 'A32: Cond!=1111|00010|00|0|Rn:4|Rd:4|0|0|0|0|0100|Rm:4'                        , ''  ],
-  ['crc32h{q}'         , 'Rd, Rn, Rm'                            , 'A32: Cond!=1111|00010|01|0|Rn:4|Rd:4|0|0|0|0|0100|Rm:4'                        , ''  ],
-  ['crc32w{q}'         , 'Rd, Rn, Rm'                            , 'A32: Cond!=1111|00010|10|0|Rn:4|Rd:4|0|0|0|0|0100|Rm:4'                        , ''  ],
+  # CRC32
+  ['crc32b{%q}'        , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|0|Rn:4|1111|Rd:4|10|00|Rm:4'                                 , ''  ],
+  ['crc32h{%q}'        , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|0|Rn:4|1111|Rd:4|10|01|Rm:4'                                 , ''  ],
+  ['crc32w{%q}'        , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|0|Rn:4|1111|Rd:4|10|10|Rm:4'                                 , ''  ],
+  ['crc32b{%q}'        , 'Rd, Rn, Rm'                            , 'A32: cond!=1111|00010|00|0|Rn:4|Rd:4|0|0|0|0|0100|Rm:4'                        , ''  ],
+  ['crc32h{%q}'        , 'Rd, Rn, Rm'                            , 'A32: cond!=1111|00010|01|0|Rn:4|Rd:4|0|0|0|0|0100|Rm:4'                        , ''  ],
+  ['crc32w{%q}'        , 'Rd, Rn, Rm'                            , 'A32: cond!=1111|00010|10|0|Rn:4|Rd:4|0|0|0|0|0100|Rm:4'                        , ''  ],
 
-  ['crc32cb{q}'        , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|1|Rn:4|1111|Rd:4|10|00|Rm:4'                                 , ''  ],
-  ['crc32ch{q}'        , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|1|Rn:4|1111|Rd:4|10|01|Rm:4'                                 , ''  ],
-  ['crc32cw{q}'        , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|1|Rn:4|1111|Rd:4|10|10|Rm:4'                                 , ''  ],
-  ['crc32cb{q}'        , 'Rd, Rn, Rm'                            , 'A32: Cond!=1111|00010|00|0|Rn:4|Rd:4|0|0|1|0|0100|Rm:4'                        , ''  ],
-  ['crc32ch{q}'        , 'Rd, Rn, Rm'                            , 'A32: Cond!=1111|00010|01|0|Rn:4|Rd:4|0|0|1|0|0100|Rm:4'                        , ''  ],
-  ['crc32cw{q}'        , 'Rd, Rn, Rm'                            , 'A32: Cond!=1111|00010|10|0|Rn:4|Rd:4|0|0|1|0|0100|Rm:4'                        , ''  ],
+  # CRC32C
+  ['crc32cb{%q}'       , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|1|Rn:4|1111|Rd:4|10|00|Rm:4'                                 , ''  ],
+  ['crc32ch{%q}'       , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|1|Rn:4|1111|Rd:4|10|01|Rm:4'                                 , ''  ],
+  ['crc32cw{%q}'       , 'Rd, Rn, Rm'                            , 'T32: 111110101|10|1|Rn:4|1111|Rd:4|10|10|Rm:4'                                 , ''  ],
+  ['crc32cb{%q}'       , 'Rd, Rn, Rm'                            , 'A32: cond!=1111|00010|00|0|Rn:4|Rd:4|0|0|1|0|0100|Rm:4'                        , ''  ],
+  ['crc32ch{%q}'       , 'Rd, Rn, Rm'                            , 'A32: cond!=1111|00010|01|0|Rn:4|Rd:4|0|0|1|0|0100|Rm:4'                        , ''  ],
+  ['crc32cw{%q}'       , 'Rd, Rn, Rm'                            , 'A32: cond!=1111|00010|10|0|Rn:4|Rd:4|0|0|1|0|0100|Rm:4'                        , ''  ],
 
-  ['dbg{c}{q}'         , '#Option'                               , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|1111|Option:4'                          , ''  ],
-  ['dbg{c}{q}'         , '#Option'                               , 'A32: Cond!=1111|00110|0|10|00|00|1|1|1|1|00001111|Option:4'                    , ''  ],
+  # DBG
+  ['dbg{%c}{%q}'       , '#option'                               , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|1111|option:4'                          , ''  ],
+  ['dbg{%c}{%q}'       , '#option'                               , 'A32: cond!=1111|00110|0|10|00|00|1|1|1|1|00001111|option:4'                    , ''  ],
 
+  # DCPS1, DCPS2, DCPS3
   ['dcps1'             , ''                                      , 'T32: 111101111000|1111|1000|0000000000|01'                                     , ''  ],
   ['dcps2'             , ''                                      , 'T32: 111101111000|1111|1000|0000000000|10'                                     , ''  ],
   ['dcps3'             , ''                                      , 'T32: 111101111000|1111|1000|0000000000|11'                                     , ''  ],
 
-  ['dmb{c}{q}'         , '{Option}'                              , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0101|Option:4'                        , ''  ],
-  ['dmb{c}{q}'         , '{Option}'                              , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0101|Option:4'                       , ''  ],
-
-  ['dsb{c}{q}'         , '{Option}'                              , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0100|Option:4'                        , ''  ],
-  ['dsb{c}{q}'         , '{Option}'                              , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0100|Option:4'                       , ''  ],
-
-  ['eor{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0100|0|Rn:4|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['eors{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0100|1|Rn:4|0|ImmC:3|Rd!=1111|ImmC:8'                      , ''  ],
-  ['eor{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|0010|001|0|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
-  ['eors{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|0010|001|1|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
-
-  ['eor%c{q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0001|Rm:3|Rdn:3'                                                   , 'IT:IN'  ],
-  ['eors{q}'           , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0001|Rm:3|Rdn:3'                                                   , 'IT:OUT'  ],
-  ['eor{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0100|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['eor%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0100|0|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:IN'  ],
-  ['eor{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0100|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['eors{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0100|1|Rn:4|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
-  ['eors.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0100|1|Rn:4|0|!=000|Rd!=1111|!=00|!=11|Rm:4'                      , 'IT:OUT'  ],
-  ['eors{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0100|1|Rn:4|0|Amount!=000|Rd!=1111|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['eor{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|001|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['eor{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|001|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['eors{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|001|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['eors{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|001|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['eors{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|001|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['eor{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|001|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['eret{c}{q}'        , ''                                      , 'T32: 111100111101|1110|10|0|0|1|1|1|1|00000000'                                , ''  ],
-  ['eret{c}{q}'        , ''                                      , 'A32: Cond!=1111|00010110|0|0|0|0|0|0|0|0|0|0|0|0|0110|1|1|1|0'                 , ''  ],
-
-  ['hlt{q}'            , '{#}Imm'                                , 'T16: 1011101010|Imm:6'                                                         , ''  ],
-  ['hlt{q}'            , '{#}Imm'                                , 'A32: Cond!=1111|00010|00|0|Imm:12|0111|Imm:4'                                  , ''  ],
-
-  ['hvc{q}'            , '{#}Imm'                                , 'T32: 11110111111|0|Imm:4|10|0|0|Imm:12'                                        , ''  ],
-  ['hvc{q}'            , '{#}Imm'                                , 'A32: Cond!=1111|00010|10|0|Imm:12|0111|Imm:4'                                  , ''  ],
-
-  ['isb{c}{q}'         , '{Option}'                              , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0110|Option:4'                        , ''  ],
-  ['isb{c}{q}'         , '{Option}'                              , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0110|Option:4'                       , ''  ],
-
-  ['it{<x>{<y>{<z>}}}{q}', 'Cond'                                  , 'T16: 10111111|Cond:4|Z!=0000'                                                  , ''  ],
-
-  ['lda{c}{q}'         , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|0|10|1111'                                 , ''  ],
-  ['lda{c}{q}'         , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|00|1|Rn:4|Rt:4|1|1|0|0|1001|1111'                        , ''  ],
-
-  ['ldab{c}{q}'        , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|0|00|1111'                                 , ''  ],
-  ['ldab{c}{q}'        , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|10|1|Rn:4|Rt:4|1|1|0|0|1001|1111'                        , ''  ],
-
-  ['ldaex{c}{q}'       , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|1|10|1111'                                 , ''  ],
-  ['ldaex{c}{q}'       , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|00|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
-
-  ['ldaexb{c}{q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|1|00|1111'                                 , ''  ],
-  ['ldaexb{c}{q}'      , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|10|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
-
-  ['ldaexd{c}{q}'      , 'Rt, Rt2, [Rn]'                         , 'T32: 11101000110|1|Rn:4|Rt:4|Rt2:4|1|1|11|1111'                                , ''  ],
-  ['ldaexd{c}{q}'      , 'Rt, Rt2=Rt+1, [Rn]'                    , 'A32: Cond!=1111|00011|01|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
-
-  ['ldaexh{c}{q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|1|01|1111'                                 , ''  ],
-  ['ldaexh{c}{q}'      , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|11|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
-
-  ['ldah{c}{q}'        , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|0|01|1111'                                 , ''  ],
-  ['ldah{c}{q}'        , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|11|1|Rn:4|Rt:4|1|1|0|0|1001|1111'                        , ''  ],
-
-  ['ldc{c}{q}'         , 'p14, c5, [Rn,{#{+/-}ImmZ*4}]'          , 'T32: 111|0|110|1|U|0|0|1|Rn!=1111|0101|111|0|ImmZ:8'                           , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [Rn], #{+/-}ImmZ*4'           , 'T32: 111|0|110|0|U|0|1|1|Rn!=1111|0101|111|0|ImmZ:8'                           , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [Rn, #{+/-}ImmZ*4]!'          , 'T32: 111|0|110|1|U|0|1|1|Rn!=1111|0101|111|0|ImmZ:8'                           , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [Rn], Option'                 , 'T32: 111|0|110|0|1|0|0|1|Rn!=1111|0101|111|0|Option:8'                         , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [Rn,{#{+/-}ImmZ*4}]'          , 'A32: Cond!=1111|110|1|U|0|0|1|Rn!=1111|0101|111|0|ImmZ:8'                      , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [Rn], #{+/-}ImmZ*4'           , 'A32: Cond!=1111|110|0|U|0|1|1|Rn!=1111|0101|111|0|ImmZ:8'                      , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [Rn, #{+/-}ImmZ*4]!'          , 'A32: Cond!=1111|110|1|U|0|1|1|Rn!=1111|0101|111|0|ImmZ:8'                      , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [Rn], Option'                 , 'A32: Cond!=1111|110|0|1|0|0|1|Rn!=1111|0101|111|0|Option:8'                    , ''  ],
-
-  ['ldc{c}{q}'         , 'p14, c5, RelZ*4'                       , 'T32: 111|0|110|1|1|0|1|1|1111|0101|111|0|RelZ:8'                               , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [PC, #{+/-}ImmZ*4]'           , 'T32: 111|0|110|1|U=1|0|1|1|1111|0101|111|0|ImmZ:8'                             , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, RelZ*4'                       , 'A32: Cond!=1111|110|1|1|0|1|1|1111|0101|111|0|RelZ:8'                          , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [PC, #{+/-}ImmZ*4]'           , 'A32: Cond!=1111|110|1|U=1|0|1|1|1111|0101|111|0|ImmZ:8'                        , ''  ],
-  ['ldc{c}{q}'         , 'p14, c5, [PC], Option'                 , 'A32: Cond!=1111|110|1|1|0|1|1|1111|0101|111|0|Option:8'                        , ''  ],
-
-  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T16: 1100|1|Rn:3|List.I:8'                                                     , 'FORM=PREFERRED'  ],
-  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'T16: 1100|1|Rn:3|List.I:8'                                                     , 'FORM=ALTERNATIVE'  ],
-  ['ldm{ia}{c}.w'      , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=PREFERRED'  ],
-  ['ldmfd{c}.w'        , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=ALTERNATIVE'  ],
-  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=PREFERRED'  ],
-  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=ALTERNATIVE'  ],
-  ['ldm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['ldmfd{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['ldm{<amode>}{c}{q}', 'Rn{!}, List^'                          , 'A32: Cond!=1111|100|x|x|1|W|1|Rn:4|1|List:15'                                  , ''  ],
-
-  ['ldm{<amode>}{c}{q}', 'Rn, List^'                             , 'A32: Cond!=1111|100|x|x|1|0|1|Rn:4|0|List:15'                                  , ''  ],
-
-  ['ldmda{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['ldmfa{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['ldmdb{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=PREFERRED'  ],
-  ['ldmea{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|1|Rn:4|List:1|List:1|0|List:13'                            , 'FORM=ALTERNATIVE'  ],
-  ['ldmdb{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['ldmea{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['ldmib{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|1|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['ldmed{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|1|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['ldr{c}{q}'         , 'Rt, [Rn ,{#{+}ImmZ*4}]'                , 'T16: 011|0|1|ImmZ:5|Rn:3|Rt:3'                                                 , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [SP,{#{+}ImmZ*4}]'                 , 'T16: 1001|1|Rt:3|ImmZ:8'                                                       , ''  ],
-  ['ldr{c}.w'          , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|10|1|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|10|1|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1|1|0|0|ImmZ:8'                            , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|010|1|U|0|0|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|010|0|U|0|0|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|010|1|U|0|1|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
-
-  ['ldr{c}{q}'         , 'Rt, RelZ*4'                            , 'T16: 01001|Rt:3|RelZ:8'                                                        , ''  ],
-  ['ldr{c}.w'          , 'Rt, RelZ'                              , 'T32: 1111100|0|x|10|1|1111|Rt:4|RelZ:12'                                       , 'FORM=PREFERRED'  ],
-  ['ldr{c}{q}'         , 'Rt, RelZ'                              , 'T32: 1111100|0|x|10|1|1111|Rt:4|RelZ:12'                                       , 'FORM=PREFERRED'  ],
-  ['ldr{c}{q}'         , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|10|1|1111|Rt:4|ImmZ:12'                                       , 'FORM=ALTERNATIVE'  ],
-  ['ldr{c}{q}'         , 'Rt, RelZ'                              , 'A32: Cond!=1111|010|1|x|0|x|1|1111|Rt:4|RelZ:12'                               , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|010|1|U|0|x|1|1111|Rt:4|ImmZ:12'                               , 'FORM=ALTERNATIVE'  ],
-
-  ['ldr{c}{q}'         , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|0|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['ldr{c}.w'          , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|000000|xx|Rm:4'                            , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|000000|Imm:2|Rm:4'                         , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn, {+/-}Rm,{Shift}]'             , 'A32: Cond!=1111|011|1|U|0|0|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|0|0|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['ldr{c}{q}'         , 'Rt, [Rn, {+/-}Rm,{Shift}]!'            , 'A32: Cond!=1111|011|1|U|0|1|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['ldrb{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T16: 011|1|1|ImmZ:5|Rn:3|Rt:3'                                                 , ''  ],
-  ['ldrb{c}.w'         , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|00|1|Rn!=1111|Rt!=1111|ImmZ:12'                               , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|00|1|Rn!=1111|Rt!=1111|ImmZ:12'                               , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt!=1111|1|1|0|0|ImmZ:8'                        , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|010|1|U|1|0|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|010|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|010|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:12'                           , ''  ],
-
-  ['ldrb{c}{q}'        , 'Rt, RelZ'                              , 'T32: 1111100|0|x|00|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
-  ['ldrb{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|00|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
-  ['ldrb{c}{q}'        , 'Rt, RelZ'                              , 'A32: Cond!=1111|010|1|x|1|x|1|1111|Rt:4|RelZ:12'                               , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|010|1|U|1|x|1|1111|Rt:4|ImmZ:12'                               , 'FORM=ALTERNATIVE'  ],
-
-  ['ldrb{c}{q}'        , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|1|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['ldrb{c}.w'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt!=1111|000000|Imm:2|Rm:4'                     , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn, {+/-}Rm,{Shift}]'             , 'A32: Cond!=1111|011|1|U|1|0|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|1|0|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['ldrb{c}{q}'        , 'Rt, [Rn, {+/-}Rm,{Shift}]!'            , 'A32: Cond!=1111|011|1|U|1|1|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['ldrbt{c}{q}'       , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['ldrbt{c}{q}'       , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|010|0|U|1|1|1|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['ldrbt{c}{q}'       , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|1|1|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['ldrd{c}{q}'        , 'Rt, Rt2, [Rn ,{#{+/-}ImmZ*4}]'         , 'T32: 1110100|1|U|1|0|1|Rn!=1111|Rt:4|Rt2:4|ImmZ:8'                             , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2, [Rn], #{+/-}ImmZ*4'           , 'T32: 1110100|0|U|1|1|1|Rn!=1111|Rt:4|Rt2:4|ImmZ:8'                             , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2, [Rn, #{+/-}ImmZ*4]!'          , 'T32: 1110100|1|U|1|1|1|Rn!=1111|Rt:4|Rt2:4|ImmZ:8'                             , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn ,{#{+/-}ImmZ}]'      , 'A32: Cond!=1111|000|1|U|1|0|0|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn], #{+/-}ImmZ'        , 'A32: Cond!=1111|000|0|U|1|0|0|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, #{+/-}ImmZ]!'       , 'A32: Cond!=1111|000|1|U|1|1|0|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
-
-  ['ldrd{c}{q}'        , 'Rt, Rt2, RelZ*4'                       , 'T32: 1110100|1|x|1|1|1|1111|Rt:4|Rt2:4|RelZ:8'                                 , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2, [PC, #{+/-}ImmZ*4]'           , 'T32: 1110100|1|U|1|1|1|1111|Rt:4|Rt2:4|ImmZ:8'                                 , 'FORM=ALTERNATIVE'  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, RelZ'                    , 'A32: Cond!=1111|000|1|x|1|0|0|1111|Rt:4|RelZ:4|1|10|1|RelZ:4'                  , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [PC, #{+/-}ImmZ]'        , 'A32: Cond!=1111|000|1|U|1|0|0|1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
-
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, {+/-}Rm]'           , 'A32: Cond!=1111|000|1|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn], {+/-}Rm'           , 'A32: Cond!=1111|000|0|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
-  ['ldrd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, {+/-}Rm]!'          , 'A32: Cond!=1111|000|1|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
-
-  ['ldrex{c}{q}'       , 'Rt, [Rn ,{#ImmZ*4}]'                   , 'T32: 11101000010|1|Rn:4|Rt:4|1111|ImmZ:8'                                      , ''  ],
-  ['ldrex{c}{q}'       , 'Rt, [Rn ,{{#}0}]'                      , 'A32: Cond!=1111|00011|00|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
-
-  ['ldrexb{c}{q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|01|00|1111'                                  , ''  ],
-  ['ldrexb{c}{q}'      , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|10|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
-
-  ['ldrexd{c}{q}'      , 'Rt, Rt2, [Rn]'                         , 'T32: 11101000110|1|Rn:4|Rt:4|Rt2:4|01|11|1111'                                 , ''  ],
-  ['ldrexd{c}{q}'      , 'Rt, Rt2=Rt+1, [Rn]'                    , 'A32: Cond!=1111|00011|01|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
-
-  ['ldrexh{c}{q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|01|01|1111'                                  , ''  ],
-  ['ldrexh{c}{q}'      , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|11|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
-
-  ['ldrh{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ*2}]'                , 'T16: 1000|1|ImmZ:5|Rn:3|Rt:3'                                                  , ''  ],
-  ['ldrh{c}.w'         , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|01|1|Rn!=1111|Rt!=1111|ImmZ:12'                               , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|01|1|Rn!=1111|Rt!=1111|ImmZ:12'                               , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt!=1111|1|1|0|0|ImmZ:8'                        , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|000|1|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'              , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'              , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'              , ''  ],
-
-  ['ldrh{c}{q}'        , 'Rt, RelZ'                              , 'T32: 1111100|0|x|01|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
-  ['ldrh{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|0|U|01|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
-  ['ldrh{c}{q}'        , 'Rt, RelZ'                              , 'A32: Cond!=1111|000|1|x|1|x|1|1111|Rt:4|RelZ:4|1|01|1|RelZ:4'                  , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
-
-  ['ldrh{c}{q}'        , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|0|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['ldrh{c}.w'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt!=1111|000000|Imm:2|Rm:4'                     , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: Cond!=1111|000|1|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-  ['ldrh{c}{q}'        , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: Cond!=1111|000|1|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-
-  ['ldrht{c}{q}'       , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['ldrht{c}{q}'       , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|000|0|U|1|1|1|Rn:4|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , ''  ],
-  ['ldrht{c}{q}'       , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-
-  ['ldrsb{c}{q}'       , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|1|1|00|1|Rn!=1111|Rt!=1111|ImmZ:12'                               , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1|1|0|0|ImmZ:8'                            , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|000|1|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'              , ''  ],
-
-  ['ldrsb{c}{q}'       , 'Rt, RelZ'                              , 'T32: 1111100|1|x|00|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
-  ['ldrsb{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|1|U|00|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
-  ['ldrsb{c}{q}'       , 'Rt, RelZ'                              , 'A32: Cond!=1111|000|1|x|1|x|1|1111|Rt:4|RelZ:4|1|10|1|RelZ:4'                  , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|10|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
-
-  ['ldrsb{c}{q}'       , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|1|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['ldrsb{c}.w'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt!=1111|000000|Imm:2|Rm:4'                     , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: Cond!=1111|000|1|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
-  ['ldrsb{c}{q}'       , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: Cond!=1111|000|1|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
-
-  ['ldrsbt{c}{q}'      , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['ldrsbt{c}{q}'      , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|000|0|U|1|1|1|Rn:4|Rt:4|ImmZ:4|1|10|1|ImmZ:4'                  , ''  ],
-  ['ldrsbt{c}{q}'      , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
-
-  ['ldrsh{c}{q}'       , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|1|1|01|1|Rn!=1111|Rt!=1111|ImmZ:12'                               , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt!=1111|1|1|0|0|ImmZ:8'                        , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|000|1|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'              , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'              , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'              , ''  ],
-
-  ['ldrsh{c}{q}'       , 'Rt, RelZ'                              , 'T32: 1111100|1|x|01|1|1111|Rt!=1111|RelZ:12'                                   , 'FORM=PREFERRED'  ],
-  ['ldrsh{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'T32: 1111100|1|U|01|1|1111|Rt!=1111|ImmZ:12'                                   , 'FORM=ALTERNATIVE'  ],
-  ['ldrsh{c}{q}'       , 'Rt, RelZ'                              , 'A32: Cond!=1111|000|1|x|1|x|1|1111|Rt:4|RelZ:4|1|11|1|RelZ:4'                  , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [PC, #{+/-}ImmZ]'                  , 'A32: Cond!=1111|000|1|U|1|x|1|1111|Rt:4|ImmZ:4|1|11|1|ImmZ:4'                  , 'FORM=ALTERNATIVE'  ],
-
-  ['ldrsh{c}{q}'       , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|1|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['ldrsh{c}.w'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt!=1111|000000|xx|Rm:4'                        , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt!=1111|000000|Imm:2|Rm:4'                     , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: Cond!=1111|000|1|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
-  ['ldrsh{c}{q}'       , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: Cond!=1111|000|1|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
-
-  ['ldrsht{c}{q}'      , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['ldrsht{c}{q}'      , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|000|0|U|1|1|1|Rn:4|Rt:4|ImmZ:4|1|11|1|ImmZ:4'                  , ''  ],
-  ['ldrsht{c}{q}'      , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
-
-  ['ldrt{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['ldrt{c}{q}'        , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|010|0|U|0|1|1|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['ldrt{c}{q}'        , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|0|1|1|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['lsl%c{q}'          , '{Rd}, Rm, #Imm'                        , 'T16: 000|00|Imm!=00000|Rm:3|Rd:3'                                              , 'IT:IN'  ],
-  ['lsl%c.w'           , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|0|1111|0|Imm:3|Rd:4|Imm:2|00|Rm:4'                           , 'IT:IN'  ],
-  ['lsl{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|0|1111|0|Imm:3|Rd:4|Imm:2|00|Rm:4'                           , ''  ],
-  ['lsl{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Imm!=00000|00|0|Rm:4'                     , ''  ],
-
-  ['lsl%c{q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['lsl%c.w'           , '{Rd}, Rm, Rs'                          , 'T32: 111110100|00|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
-  ['lsl{c}{q}'         , '{Rd}, Rm, Rs'                          , 'T32: 111110100|00|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['lsl{c}{q}'         , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|00|1|Rm:4'                         , ''  ],
-
-  ['lsls{q}'           , '{Rd}, Rm, #Imm'                        , 'T16: 000|00|Imm!=00000|Rm:3|Rd:3'                                              , 'IT:OUT'  ],
-  ['lsls.w'            , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|1|1111|0|Imm:3|Rd:4|Imm:2|00|Rm:4'                           , 'IT:OUT'  ],
-  ['lsls{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|1|1111|0|Imm:3|Rd:4|Imm:2|00|Rm:4'                           , ''  ],
-  ['lsls{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Imm!=00000|00|0|Rm:4'                     , ''  ],
-
-  ['lsls{q}'           , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['lsls.w'            , '{Rd}, Rm, Rs'                          , 'T32: 111110100|00|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
-  ['lsls{c}{q}'        , '{Rd}, Rm, Rs'                          , 'T32: 111110100|00|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['lsls{c}{q}'        , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|00|1|Rm:4'                         , ''  ],
-
-  ['lsr%c{q}'          , '{Rd}, Rm, #Imm'                        , 'T16: 000|01|Imm:5|Rm:3|Rd:3'                                                   , 'IT:IN'  ],
-  ['lsr%c.w'           , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|0|1111|0|Imm:3|Rd:4|Imm:2|01|Rm:4'                           , 'IT:IN'  ],
-  ['lsr{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|0|1111|0|Imm:3|Rd:4|Imm:2|01|Rm:4'                           , ''  ],
-  ['lsr{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Imm:5|01|0|Rm:4'                          , ''  ],
-
-  ['lsr%c{q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['lsr%c.w'           , '{Rd}, Rm, Rs'                          , 'T32: 111110100|01|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
-  ['lsr{c}{q}'         , '{Rd}, Rm, Rs'                          , 'T32: 111110100|01|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['lsr{c}{q}'         , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|01|1|Rm:4'                         , ''  ],
-
-  ['lsrs{q}'           , '{Rd}, Rm, #Imm'                        , 'T16: 000|01|Imm:5|Rm:3|Rd:3'                                                   , 'IT:OUT'  ],
-  ['lsrs.w'            , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|1|1111|0|Imm:3|Rd:4|Imm:2|01|Rm:4'                           , 'IT:OUT'  ],
-  ['lsrs{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|1|1111|0|Imm:3|Rd:4|Imm:2|01|Rm:4'                           , ''  ],
-  ['lsrs{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Imm:5|01|0|Rm:4'                          , ''  ],
-
-  ['lsrs{q}'           , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['lsrs.w'            , '{Rd}, Rm, Rs'                          , 'T32: 111110100|01|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
-  ['lsrs{c}{q}'        , '{Rd}, Rm, Rs'                          , 'T32: 111110100|01|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['lsrs{c}{q}'        , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|01|1|Rm:4'                         , ''  ],
-
-  ['mcr{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'T32: 111|0|1110|Opc1:3|0|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                       , ''  ],
-  ['mcr{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'A32: Cond!=1111|1110|Opc1:3|0|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                  , ''  ],
-
-  ['mcrr{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|0|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                           , ''  ],
-  ['mcrr{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'A32: Cond!=1111|11000|1|0|0|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                      , ''  ],
-
-  ['mla{c}{q}'         , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|000|Rn:4|Ra!=1111|Rd:4|00|00|Rm:4'                              , ''  ],
-  ['mlas{c}{q}'        , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|0000|001|1|Rd:4|Ra:4|Rm:4|1001|Rn:4'                           , ''  ],
-  ['mla{c}{q}'         , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|0000|001|0|Rd:4|Ra:4|Rm:4|1001|Rn:4'                           , ''  ],
-
-  ['mls{c}{q}'         , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|000|Rn:4|Ra:4|Rd:4|00|01|Rm:4'                                  , ''  ],
-  ['mls{c}{q}'         , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|0000|011|0|Rd:4|Ra:4|Rm:4|1001|Rn:4'                           , ''  ],
-
-  ['mov%c{q}'          , 'Rd, #ImmZ'                             , 'T16: 001|00|Rd:3|ImmZ:8'                                                       , 'IT:IN'  ],
-  ['movs{q}'           , 'Rd, #ImmZ'                             , 'T16: 001|00|Rd:3|ImmZ:8'                                                       , 'IT:OUT'  ],
-  ['mov%c.w'           , 'Rd, #ImmC'                             , 'T32: 11110|ImmC:1|0|0010|0|1111|0|ImmC:3|Rd:4|ImmC:8'                          , 'IT:IN'  ],
-  ['mov{c}{q}'         , 'Rd, #ImmC'                             , 'T32: 11110|ImmC:1|0|0010|0|1111|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['movs.w'            , 'Rd, #ImmC'                             , 'T32: 11110|ImmC:1|0|0010|1|1111|0|ImmC:3|Rd:4|ImmC:8'                          , 'IT:OUT'  ],
-  ['movs{c}{q}'        , 'Rd, #ImmC'                             , 'T32: 11110|ImmC:1|0|0010|1|1111|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['mov{c}{q}'         , 'Rd, #ImmZ'                             , 'T32: 11110|ImmZ.B:1|10|0|100|ImmZ.A:4|0|ImmZ.C:3|Rd:4|ImmZ.D:8'                , ''  ],
-  ['movw{c}{q}'        , 'Rd, #ImmZ'                             , 'T32: 11110|ImmZ.B:1|10|0|100|ImmZ.A:4|0|ImmZ.C:3|Rd:4|ImmZ.D:8'                , ''  ],
-  ['mov{c}{q}'         , 'Rd, #ImmC'                             , 'A32: Cond!=1111|00111|01|0|0000|Rd:4|ImmC:12'                                  , ''  ],
-  ['movs{c}{q}'        , 'Rd, #ImmC'                             , 'A32: Cond!=1111|00111|01|1|0000|Rd:4|ImmC:12'                                  , ''  ],
-  ['mov{c}{q}'         , 'Rd, #ImmZ'                             , 'A32: Cond!=1111|00110|0|00|ImmZ:4|Rd:4|ImmZ:12'                                , ''  ],
-  ['movw{c}{q}'        , 'Rd, #ImmZ'                             , 'A32: Cond!=1111|00110|0|00|ImmZ:4|Rd:4|ImmZ:12'                                , ''  ],
-
-  ['mov{c}{q}'         , 'Rd, Rm'                                , 'T16: 010001|10|Rd:1|Rm:3|Rd:4'                                                 , ''  ],
-  ['mov%c{q}'          , 'Rd, Rm, {Shift #Amount}'               , 'T16: 000|Shift!=11|Amount:5|Rm:3|Rd:3'                                         , 'IT:IN'  ],
-  ['movs{q}'           , 'Rd, Rm, {Shift #Amount}'               , 'T16: 000|Shift!=11|Amount:5|Rm:3|Rd:3'                                         , 'IT:OUT'  ],
-  ['mov{c}{q}'         , 'Rd, Rm, RRX'                           , 'T32: 1110101|0010|0|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['mov{c}.w'          , 'Rd, Rm, {LSL #0}'                      , 'T32: 1110101|0010|0|1111|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , ''  ],
-  ['mov%c.w'           , 'Rd, Rm, {Shift #Amount}'               , 'T32: 1110101|0010|0|1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , 'IT:IN'  ],
-  ['mov{c}{q}'         , 'Rd, Rm, {Shift #Amount}'               , 'T32: 1110101|0010|0|1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['movs{c}{q}'        , 'Rd, Rm, RRX'                           , 'T32: 1110101|0010|1|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['movs.w'            , 'Rd, Rm, {Shift #Amount}'               , 'T32: 1110101|0010|1|1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , 'IT:OUT'  ],
-  ['movs{c}{q}'        , 'Rd, Rm, {Shift #Amount}'               , 'T32: 1110101|0010|1|1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['mov{c}{q}'         , 'Rd, Rm, RRX'                           , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['mov{c}{q}'         , 'Rd, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['movs{c}{q}'        , 'Rd, Rm, RRX'                           , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['movs{c}{q}'        , 'Rd, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['mov%c{q}'          , 'Rdm, Rdm, ASR Rs'                      , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['movs{q}'           , 'Rdm, Rdm, ASR Rs'                      , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['mov%c{q}'          , 'Rdm, Rdm, LSL Rs'                      , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['movs{q}'           , 'Rdm, Rdm, LSL Rs'                      , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['mov%c{q}'          , 'Rdm, Rdm, LSR Rs'                      , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['movs{q}'           , 'Rdm, Rdm, LSR Rs'                      , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['mov%c{q}'          , 'Rdm, Rdm, ROR Rs'                      , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['movs{q}'           , 'Rdm, Rdm, ROR Rs'                      , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['movs.w'            , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|1|Rm:4|1111|Rd:4|0000|Rs:4'                              , 'IT:OUT'  ],
-  ['movs{c}{q}'        , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|1|Rm:4|1111|Rd:4|0000|Rs:4'                              , ''  ],
-  ['mov%c.w'           , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|0|Rm:4|1111|Rd:4|0000|Rs:4'                              , 'IT:IN'  ],
-  ['mov{c}{q}'         , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|0|Rm:4|1111|Rd:4|0000|Rs:4'                              , ''  ],
-  ['movs{c}{q}'        , 'Rd, Rm, type Rs'                       , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['mov{c}{q}'         , 'Rd, Rm, type Rs'                       , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['movt{c}{q}'        , 'Rd, #Imm'                              , 'T32: 11110|Imm.B:1|10|1|100|Imm.A:4|0|Imm.C:3|Rd:4|Imm.D:8'                    , ''  ],
-  ['movt{c}{q}'        , 'Rd, #Imm'                              , 'A32: Cond!=1111|00110|1|00|Imm:4|Rd:4|Imm:12'                                  , ''  ],
-
-  ['mrc{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'T32: 111|0|1110|Opc1:3|1|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                       , ''  ],
-  ['mrc{c}{q}'         , 'Coproc, {#}Opc1, Rt, CRn, CRm, {{#}Opc2}', 'A32: Cond!=1111|1110|Opc1:3|1|CRn:4|Rt:4|111x|Opc2:3|1|CRm:4'                  , ''  ],
-
-  ['mrrc{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|1|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                           , ''  ],
-  ['mrrc{c}{q}'        , 'Coproc, {#}Opc1, Rt, Rt2, CRm'         , 'A32: Cond!=1111|11000|1|0|1|Rt2:4|Rt:4|111x|Opc1:4|CRm:4'                      , ''  ],
-
-  ['mrs{c}{q}'         , 'Rd, Spec_reg'                          , 'T32: 11110011111|Spec_reg:1|1|1|1|1|10|0|0|Rd:4|0|0|0|0|0|0|0|0'               , ''  ],
-  ['mrs{c}{q}'         , 'Rd, Spec_reg'                          , 'A32: Cond!=1111|00010|Spec_reg:1|0|0|1111|Rd:4|0|0|0|0|0000|0000'              , ''  ],
-
-  ['mrs{c}{q}'         , 'Rd, Banked_reg'                        , 'T32: 11110011111|Banked_reg.A:1|Banked_reg.C:4|10|0|0|Rd:4|0|0|1|Banked_reg.B:1|0|0|0|0', ''  ],
-  ['mrs{c}{q}'         , 'Rd, Banked_reg'                        , 'A32: Cond!=1111|00010|Banked_reg.A:1|0|0|Banked_reg.C:4|Rd:4|0|0|1|Banked_reg.B:1|0000|0000', ''  ],
-
-  ['msr{c}{q}'         , 'Banked_reg, Rn'                        , 'T32: 11110011100|Banked_reg.A:1|Rn:4|10|0|0|Banked_reg.C:4|0|0|1|Banked_reg.B:1|0|0|0|0', ''  ],
-  ['msr{c}{q}'         , 'Banked_reg, Rn'                        , 'A32: Cond!=1111|00010|Banked_reg.A:1|1|0|Banked_reg.C:4|1111|0|0|1|Banked_reg.B:1|0000|Rn:4', ''  ],
-
-  ['msr{c}{q}'         , 'Spec_reg, #ImmX'                       , 'A32: Cond!=1111|00110|1|10|!=0000|1|1|1|1|ImmX:12'                             , ''  ],
-
-  ['msr{c}{q}'         , 'Spec_reg, Rn'                          , 'T32: 11110011100|x|Rn:4|10|0|0|xxxx|0|0|0|0|0|0|0|0'                           , ''  ],
-  ['msr{c}{q}'         , 'Spec_reg, Rn'                          , 'A32: Cond!=1111|00010|x|1|0|xxxx|1111|0|0|0|0|0000|Rn:4'                       , ''  ],
-
-  ['mul%c{q}'          , 'Rdm, Rn, {Rdm}'                        , 'T16: 010000|1101|Rn:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['muls{q}'           , 'Rdm, Rn, {Rdm}'                        , 'T16: 010000|1101|Rn:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['mul%c.w'           , 'Rd, Rn, {Rm}'                          , 'T32: 111110110|000|Rn:4|1111|Rd:4|00|00|Rm:4'                                  , 'IT:IN'  ],
-  ['mul{c}{q}'         , 'Rd, Rn, {Rm}'                          , 'T32: 111110110|000|Rn:4|1111|Rd:4|00|00|Rm:4'                                  , ''  ],
-  ['muls{c}{q}'        , 'Rd, Rn, {Rm}'                          , 'A32: Cond!=1111|0000|000|1|Rd:4|0000|Rm:4|1001|Rn:4'                           , ''  ],
-  ['mul{c}{q}'         , 'Rd, Rn, {Rm}'                          , 'A32: Cond!=1111|0000|000|0|Rd:4|0000|Rm:4|1001|Rn:4'                           , ''  ],
-
-  ['mvn{c}{q}'         , 'Rd, #ImmC'                             , 'T32: 11110|ImmC:1|0|0011|0|1111|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['mvns{c}{q}'        , 'Rd, #ImmC'                             , 'T32: 11110|ImmC:1|0|0011|1|1111|0|ImmC:3|Rd:4|ImmC:8'                          , ''  ],
-  ['mvn{c}{q}'         , 'Rd, #ImmC'                             , 'A32: Cond!=1111|00111|11|0|0000|Rd:4|ImmC:12'                                  , ''  ],
-  ['mvns{c}{q}'        , 'Rd, #ImmC'                             , 'A32: Cond!=1111|00111|11|1|0000|Rd:4|ImmC:12'                                  , ''  ],
-
-  ['mvn%c{q}'          , 'Rd, Rm'                                , 'T16: 010000|1111|Rm:3|Rd:3'                                                    , 'IT:IN'  ],
-  ['mvns{q}'           , 'Rd, Rm'                                , 'T16: 010000|1111|Rm:3|Rd:3'                                                    , 'IT:OUT'  ],
-  ['mvn{c}{q}'         , 'Rd, Rm, RRX'                           , 'T32: 1110101|0011|0|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['mvn%c.w'           , 'Rd, Rm'                                , 'T32: 1110101|0011|0|1111|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:IN'  ],
-  ['mvn{c}{q}'         , 'Rd, Rm, {Shift #Amount}'               , 'T32: 1110101|0011|0|1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['mvns{c}{q}'        , 'Rd, Rm, RRX'                           , 'T32: 1110101|0011|1|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['mvns.w'            , 'Rd, Rm'                                , 'T32: 1110101|0011|1|1111|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:OUT'  ],
-  ['mvns{c}{q}'        , 'Rd, Rm, {Shift #Amount}'               , 'T32: 1110101|0011|1|1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['mvn{c}{q}'         , 'Rd, Rm, RRX'                           , 'A32: Cond!=1111|00011|11|0|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['mvn{c}{q}'         , 'Rd, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00011|11|0|0000|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['mvns{c}{q}'        , 'Rd, Rm, RRX'                           , 'A32: Cond!=1111|00011|11|1|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['mvns{c}{q}'        , 'Rd, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00011|11|1|0000|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['mvns{c}{q}'        , 'Rd, Rm, type Rs'                       , 'A32: Cond!=1111|00011|11|1|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['mvn{c}{q}'         , 'Rd, Rm, type Rs'                       , 'A32: Cond!=1111|00011|11|0|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['nop{c}{q}'         , ''                                      , 'T16: 10111111|0000|0000'                                                       , ''  ],
-  ['nop{c}.w'          , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0000'                              , ''  ],
-  ['nop{c}{q}'         , ''                                      , 'A32: Cond!=1111|00110|0|10|00|00|1|1|1|1|000000000000'                         , ''  ],
-
-  ['orns{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0011|1|Rn!=1111|0|ImmC:3|Rd:4|ImmC:8'                      , ''  ],
-  ['orn{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0011|0|Rn!=1111|0|ImmC:3|Rd:4|ImmC:8'                      , ''  ],
-
-  ['orn{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0011|0|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
-  ['orn{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0011|0|Rn!=1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['orns{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0011|1|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
-  ['orns{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0011|1|Rn!=1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-
-  ['orr{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0010|0|Rn!=1111|0|ImmC:3|Rd:4|ImmC:8'                      , ''  ],
-  ['orrs{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'T32: 11110|ImmC:1|0|0010|1|Rn!=1111|0|ImmC:3|Rd:4|ImmC:8'                      , ''  ],
-  ['orr{c}{q}'         , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|00111|00|0|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
-  ['orrs{c}{q}'        , '{Rd}, Rn, #ImmC'                       , 'A32: Cond!=1111|00111|00|1|Rn:4|Rd:4|ImmC:12'                                  , ''  ],
-
-  ['orr%c{q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|1100|Rm:3|Rdn:3'                                                   , 'IT:IN'  ],
-  ['orrs{q}'           , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|1100|Rm:3|Rdn:3'                                                   , 'IT:OUT'  ],
-  ['orr{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0010|0|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
-  ['orr%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0010|0|Rn!=1111|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , 'IT:IN'  ],
-  ['orr{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0010|0|Rn!=1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['orrs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|0010|1|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
-  ['orrs.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|0010|1|Rn!=1111|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , 'IT:OUT'  ],
-  ['orrs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|0010|1|Rn!=1111|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['orr{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|00011|00|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['orr{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|00011|00|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['orrs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|00011|00|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['orrs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|00011|00|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['orrs{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|00011|00|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['orr{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|00011|00|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['pkhbt{c}{q}'       , '{Rd}, Rn, Rm, {LSL #Imm}'              , 'T32: 1110101|0110|0|Rn:4|0|Imm:3|Rd:4|xx|0|0|Rm:4'                             , ''  ],
-  ['pkhtb{c}{q}'       , '{Rd}, Rn, Rm, {ASR #Imm}'              , 'T32: 1110101|0110|0|Rn:4|0|Imm:3|Rd:4|xx|1|0|Rm:4'                             , ''  ],
-  ['pkhbt{c}{q}'       , '{Rd}, Rn, Rm, {LSL #Imm}'              , 'A32: Cond!=1111|01101000|Rn:4|Rd:4|Imm:5|0|01|Rm:4'                            , ''  ],
-  ['pkhtb{c}{q}'       , '{Rd}, Rn, Rm, {ASR #Imm}'              , 'A32: Cond!=1111|01101000|Rn:4|Rd:4|Imm:5|1|01|Rm:4'                            , ''  ],
-
-  ['pld{c}{q}'         , '[Rn ,{#{+}ImmZ}]'                      , 'T32: 1111100|0|1|0|0|1|Rn!=1111|1111|ImmZ:12'                                  , ''  ],
-  ['pldw{c}{q}'        , '[Rn ,{#{+}ImmZ}]'                      , 'T32: 1111100|0|1|0|1|1|Rn!=1111|1111|ImmZ:12'                                  , ''  ],
-  ['pld{c}{q}'         , '[Rn ,{#-ImmZ}]'                        , 'T32: 1111100|0|0|0|0|1|Rn!=1111|1111|1100|ImmZ:8'                              , ''  ],
-  ['pldw{c}{q}'        , '[Rn ,{#-ImmZ}]'                        , 'T32: 1111100|0|0|0|1|1|Rn!=1111|1111|1100|ImmZ:8'                              , ''  ],
-  ['pld{c}{q}'         , '[Rn ,{#{+/-}ImmZ}]'                    , 'A32: 1111010|1|U|1|01|Rn!=1111|1|1|1|1|ImmZ:12'                                , ''  ],
-  ['pldw{c}{q}'        , '[Rn ,{#{+/-}ImmZ}]'                    , 'A32: 1111010|1|U|0|01|Rn!=1111|1|1|1|1|ImmZ:12'                                , ''  ],
-
-  ['pld{c}{q}'         , 'RelZ'                                  , 'T32: 1111100|0|x|0|0|1|1111|1111|RelZ:12'                                      , 'FORM=PREFERRED'  ],
-  ['pld{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'T32: 1111100|0|U|0|0|1|1111|1111|ImmZ:12'                                      , 'FORM=ALTERNATIVE'  ],
-  ['pld{c}{q}'         , 'RelZ'                                  , 'A32: 1111010|1|x|1|01|1111|1|1|1|1|RelZ:12'                                    , ''  ],
-  ['pld{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'A32: 1111010|1|U|1|01|1111|1|1|1|1|ImmZ:12'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['pld{c}{q}'         , '[Rn, {+}Rm ,{LSL #Amount}]'            , 'T32: 1111100|0|0|0|0|1|Rn!=1111|1111|000000|Amount:2|Rm:4'                     , ''  ],
-  ['pldw{c}{q}'        , '[Rn, {+}Rm ,{LSL #Amount}]'            , 'T32: 1111100|0|0|0|1|1|Rn!=1111|1111|000000|Amount:2|Rm:4'                     , ''  ],
-  ['pld{c}{q}'         , '[Rn, {+/-}Rm ,{Shift #Amount}]'        , 'A32: 1111011|1|U|1|01|Rn:4|1|1|1|1|Amount!=00000|Shift!=11|0|Rm:4'             , ''  ],
-  ['pld{c}{q}'         , '[Rn, {+/-}Rm , RRX]'                   , 'A32: 1111011|1|U|1|01|Rn:4|1|1|1|1|00000|11|0|Rm:4'                            , ''  ],
-  ['pldw{c}{q}'        , '[Rn, {+/-}Rm ,{Shift #Amount}]'        , 'A32: 1111011|1|U|0|01|Rn:4|1|1|1|1|Amount!=00000|Shift!=11|0|Rm:4'             , ''  ],
-  ['pldw{c}{q}'        , '[Rn, {+/-}Rm , RRX]'                   , 'A32: 1111011|1|U|0|01|Rn:4|1|1|1|1|00000|11|0|Rm:4'                            , ''  ],
-
-  ['pli{c}{q}'         , '[Rn ,{#{+}ImmZ}]'                      , 'T32: 1111100|1|1|00|1|Rn!=1111|1111|ImmZ:12'                                   , ''  ],
-  ['pli{c}{q}'         , '[Rn ,{#-ImmZ}]'                        , 'T32: 1111100|1|0|00|1|Rn!=1111|1111|1100|ImmZ:8'                               , ''  ],
-  ['pli{c}{q}'         , 'RelZ'                                  , 'T32: 1111100|1|x|00|1|1111|1111|RelZ:12'                                       , 'FORM=PREFERRED'  ],
-  ['pli{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'T32: 1111100|1|U|00|1|1111|1111|ImmZ:12'                                       , 'FORM=ALTERNATIVE'  ],
-  ['pli{c}{q}'         , '[Rn ,{#{+/-}ImmZ}]'                    , 'A32: 1111010|0|U|1|01|Rn:4|1|1|1|1|ImmZ:12'                                    , ''  ],
-  ['pli{c}{q}'         , 'RelZ'                                  , 'A32: 1111010|0|x|1|01|xxxx|1|1|1|1|RelZ:12'                                    , ''  ],
-  ['pli{c}{q}'         , '[PC, #{+/-}ImmZ]'                      , 'A32: 1111010|0|U|1|01|xxxx|1|1|1|1|ImmZ:12'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['pli{c}{q}'         , '[Rn, {+}Rm ,{LSL #Amount}]'            , 'T32: 1111100|1|0|00|1|Rn!=1111|1111|000000|Amount:2|Rm:4'                      , ''  ],
-  ['pli{c}{q}'         , '[Rn, {+/-}Rm , RRX]'                   , 'A32: 1111011|0|U|1|01|Rn:4|1|1|1|1|00000|11|0|Rm:4'                            , ''  ],
-  ['pli{c}{q}'         , '[Rn, {+/-}Rm ,{Shift #Amount}]'        , 'A32: 1111011|0|U|1|01|Rn:4|1|1|1|1|Amount!=00000|Shift!=11|0|Rm:4'             , ''  ],
-
-  ['pop{c}{q}'         , 'List'                                  , 'T16: 1011|1|10|List.A:1|List.I:8'                                              , 'FORM=PREFERRED'  ],
-  ['ldm{c}{q}'         , 'SP!, List'                             , 'T16: 1011|1|10|List.A:1|List.I:8'                                              , 'FORM=ALTERNATIVE'  ],
-
-  ['pop{c}.w'          , 'List'                                  , 'T32: 1110100|01|0|1|1|1101|List:1|List:1|0|List:13'                            , ''  ],
-  ['pop{c}{q}'         , 'List'                                  , 'T32: 1110100|01|0|1|1|1101|List:1|List:1|0|List:13'                            , ''  ],
-  ['pop{c}{q}'         , 'List'                                  , 'A32: Cond!=1111|100|0|1|0|1|1|1101|List:16'                                    , ''  ],
-
-  ['pop{c}{q}'         , 'Single_register_list'                  , 'T32: 1111100|0|0|10|1|1101|xxxx|1|0|1|1|00000100'                              , ''  ],
-  ['pop{c}{q}'         , 'Single_register_list'                  , 'A32: Cond!=1111|010|0|1|0|0|1|1101|xxxx|000000000100'                          , ''  ],
-
-  ['push{c}{q}'        , 'List'                                  , 'T16: 1011|0|10|List.B:1|List.I:8'                                              , 'FORM=PREFERRED'  ],
-  ['stmdb{c}{q}'       , 'SP!, List'                             , 'T16: 1011|0|10|List.B:1|List.I:8'                                              , 'FORM=ALTERNATIVE'  ],
-
-  ['push{c}.w'         , 'List'                                  , 'T32: 1110100|10|0|1|0|1101|0|List.B:1|0|List.C:13'                             , ''  ],
-  ['push{c}{q}'        , 'List'                                  , 'T32: 1110100|10|0|1|0|1101|0|List.B:1|0|List.C:13'                             , ''  ],
-  ['push{c}{q}'        , 'List'                                  , 'A32: Cond!=1111|100|1|0|0|1|0|1101|List:16'                                    , ''  ],
-
-  ['push{c}{q}'        , 'Single_register_list'                  , 'T32: 1111100|0|0|10|0|1101|xxxx|1|1|0|1|00000100'                              , ''  ],
-  ['push{c}{q}'        , 'Single_register_list'                  , 'A32: Cond!=1111|010|1|0|0|1|0|1101|xxxx|000000000100'                          , ''  ],
-
-  ['qadd{c}{q}'        , '{Rd}, Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
-  ['qadd{c}{q}'        , '{Rd}, Rm, Rn'                          , 'A32: Cond!=1111|00010|00|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
-
-  ['qadd16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|1|Rm:4'                   , ''  ],
-  ['qadd16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|0|1|0|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
-
-  ['qadd8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
-  ['qadd8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
-
-  ['qasx{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
-  ['qasx{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
-
-  ['qdadd{c}{q}'       , '{Rd}, Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|01|Rm:4'                                  , ''  ],
-  ['qdadd{c}{q}'       , '{Rd}, Rm, Rn'                          , 'A32: Cond!=1111|00010|10|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
-
-  ['qdsub{c}{q}'       , '{Rd}, Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|11|Rm:4'                                  , ''  ],
-  ['qdsub{c}{q}'       , '{Rd}, Rm, Rn'                          , 'A32: Cond!=1111|00010|11|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
-
-  ['qsax{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
-  ['qsax{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
-
-  ['qsub{c}{q}'        , '{Rd}, Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|10|Rm:4'                                  , ''  ],
-  ['qsub{c}{q}'        , '{Rd}, Rm, Rn'                          , 'A32: Cond!=1111|00010|01|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
-
-  ['qsub16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|1|Rm:4'                   , ''  ],
-  ['qsub16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|0|1|0|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
-
-  ['qsub8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
-  ['qsub8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
-
-  ['rbit{c}{q}'        , 'Rd, Rm'                                , 'T32: 111110101|001|xxxx|1111|Rd:4|10|10|Rm:4'                                  , ''  ],
-  ['rbit{c}{q}'        , 'Rd, Rm'                                , 'A32: Cond!=1111|01101|1|11|1|1|1|1|Rd:4|1|1|1|1|0|011|Rm:4'                    , ''  ],
-
-  ['rev{c}{q}'         , 'Rd, Rm'                                , 'T16: 10111010|00|Rm:3|Rd:3'                                                    , ''  ],
-  ['rev{c}.w'          , 'Rd, Rm'                                , 'T32: 111110101|001|xxxx|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
-  ['rev{c}{q}'         , 'Rd, Rm'                                , 'T32: 111110101|001|xxxx|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
-  ['rev{c}{q}'         , 'Rd, Rm'                                , 'A32: Cond!=1111|01101|0|11|1|1|1|1|Rd:4|1|1|1|1|0|011|Rm:4'                    , ''  ],
-
-  ['rev16{c}{q}'       , 'Rd, Rm'                                , 'T16: 10111010|01|Rm:3|Rd:3'                                                    , ''  ],
-  ['rev16{c}.w'        , 'Rd, Rm'                                , 'T32: 111110101|001|xxxx|1111|Rd:4|10|01|Rm:4'                                  , ''  ],
-  ['rev16{c}{q}'       , 'Rd, Rm'                                , 'T32: 111110101|001|xxxx|1111|Rd:4|10|01|Rm:4'                                  , ''  ],
-  ['rev16{c}{q}'       , 'Rd, Rm'                                , 'A32: Cond!=1111|01101|0|11|1|1|1|1|Rd:4|1|1|1|1|1|011|Rm:4'                    , ''  ],
-
-  ['revsh{c}{q}'       , 'Rd, Rm'                                , 'T16: 10111010|11|Rm:3|Rd:3'                                                    , ''  ],
-  ['revsh{c}.w'        , 'Rd, Rm'                                , 'T32: 111110101|001|xxxx|1111|Rd:4|10|11|Rm:4'                                  , ''  ],
-  ['revsh{c}{q}'       , 'Rd, Rm'                                , 'T32: 111110101|001|xxxx|1111|Rd:4|10|11|Rm:4'                                  , ''  ],
-  ['revsh{c}{q}'       , 'Rd, Rm'                                , 'A32: Cond!=1111|01101|1|11|1|1|1|1|Rd:4|1|1|1|1|1|011|Rm:4'                    , ''  ],
-
-  ['rfedb{c}{q}'       , 'Rn{!}'                                 , 'T32: 1110100|00|0|W|1|Rn:4|1|1|0|0000000000000'                                , 'IT:OUT:LAST'  ],
-  ['rfe{ia}{c}{q}'     , 'Rn{!}'                                 , 'T32: 1110100|11|0|W|1|Rn:4|1|1|0|0000000000000'                                , 'IT:OUT:LAST'  ],
-  ['rfeda{c}{q}'       , 'Rn{!}'                                 , 'A32: 1111100|0|0|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
-  ['rfedb{c}{q}'       , 'Rn{!}'                                 , 'A32: 1111100|1|0|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
-  ['rfe{ia}{c}{q}'     , 'Rn{!}'                                 , 'A32: 1111100|0|1|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
-  ['rfeib{c}{q}'       , 'Rn{!}'                                 , 'A32: 1111100|1|1|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
-
-  ['ror{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|0|1111|0|Imm!=000|Rd:4|Imm!=00|11|Rm:4'                      , ''  ],
-  ['ror{c}{q}'         , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Imm!=00000|11|0|Rm:4'                     , ''  ],
-
-  ['ror%c{q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , 'IT:IN'  ],
-  ['ror%c.w'           , '{Rd}, Rm, Rs'                          , 'T32: 111110100|11|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
-  ['ror{c}{q}'         , '{Rd}, Rm, Rs'                          , 'T32: 111110100|11|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['ror{c}{q}'         , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|11|1|Rm:4'                         , ''  ],
-
-  ['rors{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'T32: 1110101|0010|1|1111|0|Imm!=000|Rd:4|Imm!=00|11|Rm:4'                      , ''  ],
-  ['rors{c}{q}'        , '{Rd}, Rm, #Imm'                        , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Imm!=00000|11|0|Rm:4'                     , ''  ],
-
-  ['rors{q}'           , '{Rdm}, Rdm, Rs'                        , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , 'IT:OUT'  ],
-  ['rors.w'            , '{Rd}, Rm, Rs'                          , 'T32: 111110100|11|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
-  ['rors{c}{q}'        , '{Rd}, Rm, Rs'                          , 'T32: 111110100|11|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
-  ['rors{c}{q}'        , '{Rd}, Rm, Rs'                          , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|11|1|Rm:4'                         , ''  ],
-
-  ['rrx{c}{q}'         , '{Rd}, Rm'                              , 'T32: 1110101|0010|0|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['rrx{c}{q}'         , '{Rd}, Rm'                              , 'A32: Cond!=1111|00011|01|0|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-
-  ['rrxs{c}{q}'        , '{Rd}, Rm'                              , 'T32: 1110101|0010|1|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['rrxs{c}{q}'        , '{Rd}, Rm'                              , 'A32: Cond!=1111|00011|01|1|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-
-  ['rsb%c{q}'          , '{Rd}, Rn, #0'                          , 'T16: 010000|1001|Rn:3|Rd:3'                                                    , 'IT:IN'  ],
-  ['rsbs{q}'           , '{Rd}, Rn, #0'                          , 'T16: 010000|1001|Rn:3|Rd:3'                                                    , 'IT:OUT'  ],
-  ['rsb%c.w'           , '{Rd}, Rn, #0'                          , 'T32: 11110|x|0|1110|0|Rn:4|0|xxx|Rd:4|xxxxxxxx'                                , 'IT:IN'  ],
-  ['rsb{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1110|0|Rn:4|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['rsbs.w'            , '{Rd}, Rn, #0'                          , 'T32: 11110|x|0|1110|1|Rn:4|0|xxx|Rd:4|xxxxxxxx'                                , 'IT:OUT'  ],
-  ['rsbs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1110|1|Rn:4|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['rsb{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|011|0|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
-  ['rsbs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|011|1|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
-
-  ['rsb{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1110|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['rsb{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1110|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['rsbs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1110|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['rsbs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1110|1|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['rsb{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|011|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['rsb{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|011|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['rsbs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|011|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['rsbs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|011|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['rsbs{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|011|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['rsb{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|011|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['rsc{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|111|0|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
-  ['rscs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|111|1|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
-
-  ['rsc{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|111|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['rsc{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|111|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['rscs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|111|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['rscs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|111|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['rscs{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|111|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['rsc{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|111|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['sadd16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|0|Rm:4'                   , ''  ],
-  ['sadd16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|0|0|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
-
-  ['sadd8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
-  ['sadd8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
-
-  ['sasx{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
-  ['sasx{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
-
-  ['sbc{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1011|0|Rn:4|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['sbcs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1011|1|Rn:4|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['sbc{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|110|0|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
-  ['sbcs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|110|1|Rn:4|Rd:4|ImmX:12'                                  , ''  ],
-
-  ['sbc%c{q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0110|Rm:3|Rdn:3'                                                   , 'IT:IN'  ],
-  ['sbcs{q}'           , '{Rdn}, Rdn, Rm'                        , 'T16: 010000|0110|Rm:3|Rdn:3'                                                   , 'IT:OUT'  ],
-  ['sbc{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1011|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['sbc%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1011|0|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:IN'  ],
-  ['sbc{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1011|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['sbcs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1011|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['sbcs.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1011|1|Rn:4|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , 'IT:OUT'  ],
-  ['sbcs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1011|1|Rn:4|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['sbc{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|110|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['sbc{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|110|0|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['sbcs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|110|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['sbcs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|110|1|Rn:4|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['sbcs{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|110|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['sbc{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|110|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['sbfx{c}{q}'        , 'Rd, Rn, #Lsb, #Width'                  , 'T32: 11110|0|11|01|0|0|Rn:4|0|Lsb:3|Rd:4|Lsb:2|0|Width:5'                      , ''  ],
-  ['sbfx{c}{q}'        , 'Rd, Rn, #Lsb, #Width'                  , 'A32: Cond!=1111|01111|0|1|Width:5|Rd:4|Lsb:5|101|Rn:4'                         , ''  ],
-
-  ['sdiv{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110111|001|Rn:4|1111|Rd:4|1111|Rm:4'                                   , ''  ],
-  ['sdiv{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|001|Rd:4|1111|Rm:4|000|1|Rn:4'                           , ''  ],
-
-  ['sel{c}{q}'         , '{Rd}, Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
-  ['sel{c}{q}'         , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01101000|Rn:4|Rd:4|1|1|1|1|1011|Rm:4'                          , ''  ],
-
-  ['setend{q}'         , 'Endian_specifier'                      , 'T16: 1011011001|0|1|Endian_specifier:1|000'                                    , ''  ],
-  ['setend{q}'         , 'Endian_specifier'                      , 'A32: 111100010000|00|0|1|0|0|0|0|0|0|Endian_specifier:1|0|0|0|0|00000'         , ''  ],
-
-  ['sev{c}{q}'         , ''                                      , 'T16: 10111111|0100|0000'                                                       , ''  ],
-  ['sev{c}.w'          , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0100'                              , ''  ],
-  ['sev{c}{q}'         , ''                                      , 'A32: Cond!=1111|00110|0|10|00|00|1|1|1|1|000000000100'                         , ''  ],
-
-  ['sevl{c}{q}'        , ''                                      , 'T16: 10111111|0101|0000'                                                       , ''  ],
-  ['sevl{c}.w'         , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0101'                              , ''  ],
-  ['sevl{c}{q}'        , ''                                      , 'A32: Cond!=1111|00110|0|10|00|00|1|1|1|1|000000000101'                         , ''  ],
-
-  ['shadd16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|0|1|0|Rm:4'                   , ''  ],
-  ['shadd16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|0|1|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
-
-  ['shadd8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
-  ['shadd8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
-
-  ['shasx{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
-  ['shasx{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
-
-  ['shsax{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
-  ['shsax{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
-
-  ['shsub16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|0|1|0|Rm:4'                   , ''  ],
-  ['shsub16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|0|1|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
-
-  ['shsub8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
-  ['shsub8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
-
-  ['smc{c}{q}'         , '{#}Imm'                                , 'T32: 11110111111|1|Imm:4|10|0|0|000000000000'                                  , ''  ],
-  ['smc{c}{q}'         , '{#}Imm'                                , 'A32: Cond!=1111|00010|11|0|000000000000|0111|Imm:4'                            , ''  ],
-
-  ['smlabb{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
-  ['smlabt{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
-  ['smlatb{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|1|0|Rm:4'                             , ''  ],
-  ['smlatt{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|1|1|Rm:4'                             , ''  ],
-  ['smlabb{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|0|0|0|Rn:4'                        , ''  ],
-  ['smlabt{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|1|0|0|Rn:4'                        , ''  ],
-  ['smlatb{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|0|1|0|Rn:4'                        , ''  ],
-  ['smlatt{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|1|1|0|Rn:4'                        , ''  ],
-
-  ['smlad{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|010|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
-  ['smladx{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|010|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
-  ['smlad{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|00|0|1|Rn:4'                      , ''  ],
-  ['smladx{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|00|1|1|Rn:4'                      , ''  ],
-
-  ['smlal{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
-  ['smlals{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|111|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-  ['smlal{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|111|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-
-  ['smlalbb{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|0|0|Rm:4'                             , ''  ],
-  ['smlalbt{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|0|1|Rm:4'                             , ''  ],
-  ['smlaltb{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|1|0|Rm:4'                             , ''  ],
-  ['smlaltt{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|1|1|Rm:4'                             , ''  ],
-  ['smlalbb{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|0|0|0|Rn:4'                    , ''  ],
-  ['smlalbt{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|1|0|0|Rn:4'                    , ''  ],
-  ['smlaltb{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|0|1|0|Rn:4'                    , ''  ],
-  ['smlaltt{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|1|1|0|Rn:4'                    , ''  ],
-
-  ['smlald{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|110|0|Rm:4'                              , ''  ],
-  ['smlaldx{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|110|1|Rm:4'                              , ''  ],
-  ['smlald{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|00|0|1|Rn:4'                      , ''  ],
-  ['smlaldx{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|00|1|1|Rn:4'                      , ''  ],
-
-  ['smlawb{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|011|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
-  ['smlawt{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|011|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
-  ['smlawb{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|00010|01|0|Rd:4|Ra:4|Rm:4|1|0|0|0|Rn:4'                        , ''  ],
-  ['smlawt{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|00010|01|0|Rd:4|Ra:4|Rm:4|1|1|0|0|Rn:4'                        , ''  ],
-
-  ['smlsd{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|100|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
-  ['smlsdx{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|100|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
-  ['smlsd{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|01|0|1|Rn:4'                      , ''  ],
-  ['smlsdx{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|01|1|1|Rn:4'                      , ''  ],
-
-  ['smlsld{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|101|Rn:4|RdLo:4|RdHi:4|110|0|Rm:4'                              , ''  ],
-  ['smlsldx{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|101|Rn:4|RdLo:4|RdHi:4|110|1|Rm:4'                              , ''  ],
-  ['smlsld{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|01|0|1|Rn:4'                      , ''  ],
-  ['smlsldx{c}{q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|01|1|1|Rn:4'                      , ''  ],
-
-  ['smmla{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|101|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
-  ['smmlar{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|101|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
-  ['smmla{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|101|Rd:4|Ra!=1111|Rm:4|00|0|1|Rn:4'                      , ''  ],
-  ['smmlar{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|101|Rd:4|Ra!=1111|Rm:4|00|1|1|Rn:4'                      , ''  ],
-
-  ['smmls{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|110|Rn:4|Ra:4|Rd:4|00|0|0|Rm:4'                                 , ''  ],
-  ['smmlsr{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|110|Rn:4|Ra:4|Rd:4|00|0|1|Rm:4'                                 , ''  ],
-  ['smmls{c}{q}'       , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|101|Rd:4|Ra:4|Rm:4|11|0|1|Rn:4'                          , ''  ],
-  ['smmlsr{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01110|101|Rd:4|Ra:4|Rm:4|11|1|1|Rn:4'                          , ''  ],
-
-  ['smmul{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110110|101|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
-  ['smmulr{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|101|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
-  ['smmul{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|101|Rd:4|1111|Rm:4|00|0|1|Rn:4'                          , ''  ],
-  ['smmulr{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|101|Rd:4|1111|Rm:4|00|1|1|Rn:4'                          , ''  ],
-
-  ['smuad{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110110|010|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
-  ['smuadx{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|010|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
-  ['smuad{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|000|Rd:4|1111|Rm:4|00|0|1|Rn:4'                          , ''  ],
-  ['smuadx{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|000|Rd:4|1111|Rm:4|00|1|1|Rn:4'                          , ''  ],
-
-  ['smulbb{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
-  ['smulbt{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
-  ['smultb{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|1|0|Rm:4'                                 , ''  ],
-  ['smultt{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|1|1|Rm:4'                                 , ''  ],
-  ['smulbb{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|0|0|0|Rn:4'                        , ''  ],
-  ['smulbt{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|1|0|0|Rn:4'                        , ''  ],
-  ['smultb{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|0|1|0|Rn:4'                        , ''  ],
-  ['smultt{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|1|1|0|Rn:4'                        , ''  ],
-
-  ['smull{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|000|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
-  ['smulls{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|110|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-  ['smull{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|110|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-
-  ['smulwb{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|011|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
-  ['smulwt{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|011|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
-  ['smulwb{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|00010|01|0|Rd:4|0000|Rm:4|1|0|1|0|Rn:4'                        , ''  ],
-  ['smulwt{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|00010|01|0|Rd:4|0000|Rm:4|1|1|1|0|Rn:4'                        , ''  ],
-
-  ['smusd{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110110|100|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
-  ['smusdx{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110110|100|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
-  ['smusd{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|000|Rd:4|1111|Rm:4|01|0|1|Rn:4'                          , ''  ],
-  ['smusdx{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|000|Rd:4|1111|Rm:4|01|1|1|Rn:4'                          , ''  ],
-
-  ['srsdb{c}{q}'       , 'SP{!}, #Mode'                          , 'T32: 1110100|00|0|W|0|1101|1|1|0|00000000|Mode:5'                              , ''  ],
-  ['srs{ia}{c}{q}'     , 'SP{!}, #Mode'                          , 'T32: 1110100|11|0|W|0|1101|1|1|0|00000000|Mode:5'                              , ''  ],
-  ['srsda{c}{q}'       , 'SP{!}, #Mode'                          , 'A32: 1111100|0|0|1|W|0|1101|00000101000|Mode:5'                                , ''  ],
-  ['srsdb{c}{q}'       , 'SP{!}, #Mode'                          , 'A32: 1111100|1|0|1|W|0|1101|00000101000|Mode:5'                                , ''  ],
-  ['srs{ia}{c}{q}'     , 'SP{!}, #Mode'                          , 'A32: 1111100|0|1|1|W|0|1101|00000101000|Mode:5'                                , ''  ],
-  ['srsib{c}{q}'       , 'SP{!}, #Mode'                          , 'A32: 1111100|1|1|1|W|0|1101|00000101000|Mode:5'                                , ''  ],
-
-  ['ssat{c}{q}'        , 'Rd, #Imm, Rn, ASR #Amount'             , 'T32: 11110|0|11|00|1|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|0|Imm:5'             , ''  ],
-  ['ssat{c}{q}'        , 'Rd, #Imm, Rn, {LSL #Amount}'           , 'T32: 11110|0|11|00|0|0|Rn:4|0|Amount:3|Rd:4|Amount:2|0|Imm:5'                  , ''  ],
-  ['ssat{c}{q}'        , 'Rd, #Imm, Rn, ASR #Amount'             , 'A32: Cond!=1111|01101|0|1|Imm:5|Rd:4|Amount:5|1|01|Rn:4'                       , ''  ],
-  ['ssat{c}{q}'        , 'Rd, #Imm, Rn, {LSL #Amount}'           , 'A32: Cond!=1111|01101|0|1|Imm:5|Rd:4|Amount:5|0|01|Rn:4'                       , ''  ],
-
-  ['ssat16{c}{q}'      , 'Rd, #Imm, Rn'                          , 'T32: 11110|0|11|00|1|0|Rn:4|0|000|Rd:4|00|0|0|Imm:4'                           , ''  ],
-  ['ssat16{c}{q}'      , 'Rd, #Imm, Rn'                          , 'A32: Cond!=1111|01101|0|10|Imm:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
-
-  ['ssax{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
-  ['ssax{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
-
-  ['ssub16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|0|Rm:4'                   , ''  ],
-  ['ssub16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|0|0|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
-
-  ['ssub8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
-  ['ssub8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
-
-  ['stc{c}{q}'         , 'p14, c5, [Rn,{#{+/-}ImmZ*4}]'          , 'T32: 111|0|110|1|U|0|0|0|Rn:4|0101|111|0|ImmZ:8'                               , ''  ],
-  ['stc{c}{q}'         , 'p14, c5, [Rn], #{+/-}ImmZ*4'           , 'T32: 111|0|110|0|U|0|1|0|Rn:4|0101|111|0|ImmZ:8'                               , ''  ],
-  ['stc{c}{q}'         , 'p14, c5, [Rn, #{+/-}ImmZ*4]!'          , 'T32: 111|0|110|1|U|0|1|0|Rn:4|0101|111|0|ImmZ:8'                               , ''  ],
-  ['stc{c}{q}'         , 'p14, c5, [Rn], Option'                 , 'T32: 111|0|110|0|1|0|0|0|Rn:4|0101|111|0|Option:8'                             , ''  ],
-  ['stc{c}{q}'         , 'p14, c5, [Rn,{#{+/-}ImmZ*4}]'          , 'A32: Cond!=1111|110|1|U|0|0|0|Rn:4|0101|111|0|ImmZ:8'                          , ''  ],
-  ['stc{c}{q}'         , 'p14, c5, [Rn], #{+/-}ImmZ*4'           , 'A32: Cond!=1111|110|0|U|0|1|0|Rn:4|0101|111|0|ImmZ:8'                          , ''  ],
-  ['stc{c}{q}'         , 'p14, c5, [Rn, #{+/-}ImmZ*4]!'          , 'A32: Cond!=1111|110|1|U|0|1|0|Rn:4|0101|111|0|ImmZ:8'                          , ''  ],
-  ['stc{c}{q}'         , 'p14, c5, [Rn], Option'                 , 'A32: Cond!=1111|110|0|1|0|0|0|Rn:4|0101|111|0|Option:8'                        , ''  ],
-
-  ['stl{c}{q}'         , 'Rt, [Rn]'                              , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|0|10|1111'                                 , ''  ],
-  ['stl{c}{q}'         , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|00|0|Rn:4|1111|1|1|0|0|1001|Rt:4'                        , ''  ],
-
-  ['stlb{c}{q}'        , 'Rt, [Rn]'                              , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|0|00|1111'                                 , ''  ],
-  ['stlb{c}{q}'        , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|10|0|Rn:4|1111|1|1|0|0|1001|Rt:4'                        , ''  ],
-
-  ['stlex{c}{q}'       , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|1|10|Rd:4'                                 , ''  ],
-  ['stlex{c}{q}'       , 'Rd, Rt, [Rn]'                          , 'A32: Cond!=1111|00011|00|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
-
-  ['stlexb{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|1|00|Rd:4'                                 , ''  ],
-  ['stlexb{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'A32: Cond!=1111|00011|10|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
-
-  ['stlexd{c}{q}'      , 'Rd, Rt, Rt2, [Rn]'                     , 'T32: 11101000110|0|Rn:4|Rt:4|Rt2:4|1|1|11|Rd:4'                                , ''  ],
-  ['stlexd{c}{q}'      , 'Rd, Rt, Rt2=Rt+1, [Rn]'                , 'A32: Cond!=1111|00011|01|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
-
-  ['stlexh{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|1|01|Rd:4'                                 , ''  ],
-  ['stlexh{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'A32: Cond!=1111|00011|11|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
-
-  ['stlh{c}{q}'        , 'Rt, [Rn]'                              , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|0|01|1111'                                 , ''  ],
-  ['stlh{c}{q}'        , 'Rt, [Rn]'                              , 'A32: Cond!=1111|00011|11|0|Rn:4|1111|1|1|0|0|1001|Rt:4'                        , ''  ],
-
-  ['stm{ia}{c}{q}'     , 'Rn!, List'                             , 'T16: 1100|0|Rn:3|List.I:8'                                                     , 'FORM=PREFERRED'  ],
-  ['stmea{c}{q}'       , 'Rn!, List'                             , 'T16: 1100|0|Rn:3|List.I:8'                                                     , 'FORM=ALTERNATIVE'  ],
-  ['stm{ia}{c}.w'      , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=PREFERRED'  ],
-  ['stmea{c}.w'        , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=ALTERNATIVE'  ],
-  ['stm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=PREFERRED'  ],
-  ['stmea{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=ALTERNATIVE'  ],
-  ['stm{ia}{c}{q}'     , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['stmea{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|1|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['stm{<amode>}{c}{q}', 'Rn, List^'                             , 'A32: Cond!=1111|100|x|x|1|0|0|Rn:4|List:16'                                    , ''  ],
-
-  ['stmda{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['stmed{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|0|0|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['stmdb{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=PREFERRED'  ],
-  ['stmfd{c}{q}'       , 'Rn{!}, List'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|List.B:1|0|List.C:13'                             , 'FORM=ALTERNATIVE'  ],
-  ['stmdb{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['stmfd{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|0|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['stmib{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|0|Rn:4|List:16'                                    , 'FORM=PREFERRED'  ],
-  ['stmfa{c}{q}'       , 'Rn{!}, List'                           , 'A32: Cond!=1111|100|1|1|0|W|0|Rn:4|List:16'                                    , 'FORM=ALTERNATIVE'  ],
-
-  ['str{c}{q}'         , 'Rt, [Rn ,{#{+}ImmZ*4}]'                , 'T16: 011|0|0|ImmZ:5|Rn:3|Rt:3'                                                 , ''  ],
-  ['str{c}{q}'         , 'Rt, [SP,{#{+}ImmZ*4}]'                 , 'T16: 1001|0|Rt:3|ImmZ:8'                                                       , ''  ],
-  ['str{c}.w'          , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|10|0|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|10|0|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1|1|0|0|ImmZ:8'                            , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|010|1|U|0|0|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|010|0|U|0|0|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|010|1|U|0|1|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-
-  ['str{c}{q}'         , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|0|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['str{c}.w'          , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|000000|xx|Rm:4'                            , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|000000|Imm:2|Rm:4'                         , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn, {+/-}Rm,{Shift}]'             , 'A32: Cond!=1111|011|1|U|0|0|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|0|0|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['str{c}{q}'         , 'Rt, [Rn, {+/-}Rm,{Shift}]!'            , 'A32: Cond!=1111|011|1|U|0|1|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['strb{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T16: 011|1|0|ImmZ:5|Rn:3|Rt:3'                                                 , ''  ],
-  ['strb{c}.w'         , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|00|0|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|00|0|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1|1|0|0|ImmZ:8'                            , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|010|1|U|1|0|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|010|0|U|1|0|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|010|1|U|1|1|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-
-  ['strb{c}{q}'        , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|1|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['strb{c}.w'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|000000|xx|Rm:4'                            , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|000000|Imm:2|Rm:4'                         , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn, {+/-}Rm,{Shift}]'             , 'A32: Cond!=1111|011|1|U|1|0|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|1|0|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-  ['strb{c}{q}'        , 'Rt, [Rn, {+/-}Rm,{Shift}]!'            , 'A32: Cond!=1111|011|1|U|1|1|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['strbt{c}{q}'       , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['strbt{c}{q}'       , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|010|0|U|1|1|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['strbt{c}{q}'       , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|1|1|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['strd{c}{q}'        , 'Rt, Rt2, [Rn ,{#{+/-}ImmZ*4}]'         , 'T32: 1110100|1|U|1|0|0|Rn!=1111|Rt:4|Rt2:4|ImmZ:8'                             , ''  ],
-  ['strd{c}{q}'        , 'Rt, Rt2, [Rn], #{+/-}ImmZ*4'           , 'T32: 1110100|0|U|1|1|0|Rn!=1111|Rt:4|Rt2:4|ImmZ:8'                             , ''  ],
-  ['strd{c}{q}'        , 'Rt, Rt2, [Rn, #{+/-}ImmZ*4]!'          , 'T32: 1110100|1|U|1|1|0|Rn!=1111|Rt:4|Rt2:4|ImmZ:8'                             , ''  ],
-  ['strd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn ,{#{+/-}ImmZ}]'      , 'A32: Cond!=1111|000|1|U|1|0|0|Rn:4|Rt:4|ImmZ:4|1|11|1|ImmZ:4'                  , ''  ],
-  ['strd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn], #{+/-}ImmZ'        , 'A32: Cond!=1111|000|0|U|1|0|0|Rn:4|Rt:4|ImmZ:4|1|11|1|ImmZ:4'                  , ''  ],
-  ['strd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, #{+/-}ImmZ]!'       , 'A32: Cond!=1111|000|1|U|1|1|0|Rn:4|Rt:4|ImmZ:4|1|11|1|ImmZ:4'                  , ''  ],
-
-  ['strd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, {+/-}Rm]'           , 'A32: Cond!=1111|000|1|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
-  ['strd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn], {+/-}Rm'           , 'A32: Cond!=1111|000|0|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
-  ['strd{c}{q}'        , 'Rt, Rt2=Rt+1, [Rn, {+/-}Rm]!'          , 'A32: Cond!=1111|000|1|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
-
-  ['strex{c}{q}'       , 'Rd, Rt, [Rn ,{#ImmZ*4}]'               , 'T32: 11101000010|0|Rn:4|Rt:4|Rd:4|ImmZ:8'                                      , ''  ],
-  ['strex{c}{q}'       , 'Rd, Rt, [Rn ,{{#}0}]'                  , 'A32: Cond!=1111|00011|00|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
-
-  ['strexb{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|01|00|Rd:4'                                  , ''  ],
-  ['strexb{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'A32: Cond!=1111|00011|10|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
-
-  ['strexd{c}{q}'      , 'Rd, Rt, Rt2, [Rn]'                     , 'T32: 11101000110|0|Rn:4|Rt:4|Rt2:4|01|11|Rd:4'                                 , ''  ],
-  ['strexd{c}{q}'      , 'Rd, Rt, Rt2=Rt+1, [Rn]'                , 'A32: Cond!=1111|00011|01|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
-
-  ['strexh{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|01|01|Rd:4'                                  , ''  ],
-  ['strexh{c}{q}'      , 'Rd, Rt, [Rn]'                          , 'A32: Cond!=1111|00011|11|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
-
-  ['strh{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ*2}]'                , 'T16: 1000|0|ImmZ:5|Rn:3|Rt:3'                                                  , ''  ],
-  ['strh{c}.w'         , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|01|0|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|1|01|0|Rn!=1111|Rt:4|ImmZ:12'                                   , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn ,{#-ImmZ}]'                    , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1|1|0|0|ImmZ:8'                            , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1|0|U|1|ImmZ:8'                            , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1|1|U|1|ImmZ:8'                            , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn ,{#{+/-}ImmZ}]'                , 'A32: Cond!=1111|000|1|U|1|0|0|Rn:4|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn], #{+/-}ImmZ'                  , 'A32: Cond!=1111|000|0|U|1|0|0|Rn:4|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn, #{+/-}ImmZ]!'                 , 'A32: Cond!=1111|000|1|U|1|1|0|Rn:4|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , ''  ],
-
-  ['strh{c}{q}'        , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|0|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
-  ['strh{c}.w'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|000000|xx|Rm:4'                            , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn, {+}Rm,{LSL #Imm}]'            , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|000000|Imm:2|Rm:4'                         , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: Cond!=1111|000|1|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-  ['strh{c}{q}'        , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: Cond!=1111|000|1|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-
-  ['strht{c}{q}'       , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['strht{c}{q}'       , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|000|0|U|1|1|0|Rn:4|Rt:4|ImmZ:4|1|01|1|ImmZ:4'                  , ''  ],
-  ['strht{c}{q}'       , 'Rt, [Rn], {+/-}Rm'                     , 'A32: Cond!=1111|000|0|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
-
-  ['strt{c}{q}'        , 'Rt, [Rn ,{#{+}ImmZ}]'                  , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1110|ImmZ:8'                               , ''  ],
-  ['strt{c}{q}'        , 'Rt, [Rn], {#{+/-}ImmZ}'                , 'A32: Cond!=1111|010|0|U|0|1|0|Rn:4|Rt:4|ImmZ:12'                               , ''  ],
-  ['strt{c}{q}'        , 'Rt, [Rn], {+/-}Rm, {Shift}'            , 'A32: Cond!=1111|011|0|U|0|1|0|Rn:4|Rt:4|xxxxx|Shift:2|0|Rm:4'                  , ''  ],
-
-  ['sub{c}{q}'         , 'Rd, PC, #ImmZ'                         , 'T32: 11110|ImmZ:1|10|1|0|1|0|1111|0|ImmZ:3|Rd:4|ImmZ:8'                        , ''  ],
-  ['sub{c}{q}'         , 'Rd, PC, #ImmX'                         , 'A32: Cond!=1111|0010|010|0|1111|Rd:4|ImmX:12'                                  , ''  ],
-
-  ['sub%c{q}'          , 'Rd, Rn, #ImmZ'                         , 'T16: 000111|1|ImmZ:3|Rn:3|Rd:3'                                                , 'IT:IN'  ],
-  ['subs{q}'           , 'Rd, Rn, #ImmZ'                         , 'T16: 000111|1|ImmZ:3|Rn:3|Rd:3'                                                , 'IT:OUT'  ],
-  ['sub%c{q}'          , 'Rdn, #ImmZ'                            , 'T16: 001|11|Rdn:3|ImmZ:8'                                                      , 'IT:IN'  ],
-  ['sub%c{q}'          , '{Rdn}, Rdn, #ImmZ'                     , 'T16: 001|11|Rdn:3|ImmZ:8'                                                      , 'IT:IN'  ],
-  ['subs{q}'           , 'Rdn, #ImmZ'                            , 'T16: 001|11|Rdn:3|ImmZ:8'                                                      , 'IT:OUT'  ],
-  ['subs{q}'           , '{Rdn}, Rdn, #ImmZ'                     , 'T16: 001|11|Rdn:3|ImmZ:8'                                                      , 'IT:OUT'  ],
-  ['sub%c.w'           , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1101|0|Rn!=1101|0|ImmX:3|Rd:4|ImmX:8'                      , 'IT:IN'  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1101|0|Rn!=1101|0|ImmX:3|Rd:4|ImmX:8'                      , ''  ],
-  ['subs.w'            , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1101|1|Rn!=1101|0|ImmX:3|Rd!=1111|ImmX:8'                  , 'IT:OUT'  ],
-  ['subs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'T32: 11110|ImmX:1|0|1101|1|Rn!=1101|0|ImmX:3|Rd!=1111|ImmX:8'                  , ''  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|1|0|1|0|Rn!=11x1|0|ImmZ:3|Rd:4|ImmZ:8'                    , ''  ],
-  ['subw{c}{q}'        , '{Rd}, Rn, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|1|0|1|0|Rn!=11x1|0|ImmZ:3|Rd:4|ImmZ:8'                    , ''  ],
-  ['subs{c}{q}'        , 'PC, LR, #ImmZ'                         , 'T32: 111100111101|1110|10|0|0|1|1|1|1|ImmZ!=00000000'                          , ''  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|010|0|Rn!=11x1|Rd:4|ImmX:12'                              , ''  ],
-  ['subs{c}{q}'        , '{Rd}, Rn, #ImmX'                       , 'A32: Cond!=1111|0010|010|1|Rn!=1101|Rd:4|ImmX:12'                              , ''  ],
-
-  ['sub%c{q}'          , 'Rd, Rn, Rm'                            , 'T16: 000110|1|Rm:3|Rn:3|Rd:3'                                                  , 'IT:IN'  ],
-  ['subs{q}'           , '{Rd}, Rn, Rm'                          , 'T16: 000110|1|Rm:3|Rn:3|Rd:3'                                                  , 'IT:OUT'  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1101|0|Rn!=1101|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
-  ['sub%c.w'           , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1101|0|Rn!=1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                      , 'IT:IN'  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1101|0|Rn!=1101|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['subs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110101|1101|1|Rn!=1101|0|000|Rd!=1111|00|11|Rm:4'                        , ''  ],
-  ['subs.w'            , '{Rd}, Rn, Rm'                          , 'T32: 1110101|1101|1|Rn!=1101|0|!=000|Rd!=1111|!=00|!=11|Rm:4'                  , 'IT:OUT'  ],
-  ['subs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'T32: 1110101|1101|1|Rn!=1101|0|Amount!=000|Rd!=1111|Amount!=00|Shift!=11|Rm:4' , ''  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|010|0|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|010|0|Rn!=1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'       , ''  ],
-  ['subs{c}{q}'        , '{Rd}, Rn, Rm, RRX'                     , 'A32: Cond!=1111|0000|010|1|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
-  ['subs{c}{q}'        , '{Rd}, Rn, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|010|1|Rn!=1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'       , ''  ],
-
-  ['subs{c}{q}'        , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|010|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-  ['sub{c}{q}'         , '{Rd}, Rn, Rm, type Rs'                 , 'A32: Cond!=1111|0000|010|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
-
-  ['sub{c}{q}'         , '{SP}, SP, #ImmZ*4'                     , 'T16: 10110000|1|ImmZ:7'                                                        , ''  ],
-  ['sub{c}.w'          , '{Rd}, SP, #ImmX'                       , 'T32: 11110|ImmX:1|0|1101|0|1101|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['sub{c}{q}'         , '{Rd}, SP, #ImmX'                       , 'T32: 11110|ImmX:1|0|1101|0|1101|0|ImmX:3|Rd:4|ImmX:8'                          , ''  ],
-  ['subs{c}{q}'        , '{Rd}, SP, #ImmX'                       , 'T32: 11110|ImmX:1|0|1101|1|1101|0|ImmX:3|Rd!=1111|ImmX:8'                      , ''  ],
-  ['sub{c}{q}'         , '{Rd}, SP, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|1|0|1|0|1101|0|ImmZ:3|Rd:4|ImmZ:8'                        , ''  ],
-  ['subw{c}{q}'        , '{Rd}, SP, #ImmZ'                       , 'T32: 11110|ImmZ:1|10|1|0|1|0|1101|0|ImmZ:3|Rd:4|ImmZ:8'                        , ''  ],
-  ['sub{c}{q}'         , '{Rd}, SP, #ImmX'                       , 'A32: Cond!=1111|0010|010|0|1101|Rd:4|ImmX:12'                                  , ''  ],
-  ['subs{c}{q}'        , '{Rd}, SP, #ImmX'                       , 'A32: Cond!=1111|0010|010|1|1101|Rd:4|ImmX:12'                                  , ''  ],
-
-  ['sub{c}{q}'         , '{Rd}, SP, Rm, RRX'                     , 'T32: 1110101|1101|0|1101|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
-  ['sub{c}.w'          , '{Rd}, SP, Rm'                          , 'T32: 1110101|1101|0|1101|0|!=000|Rd:4|!=00|!=11|Rm:4'                          , ''  ],
-  ['sub{c}{q}'         , '{Rd}, SP, Rm, {Shift #Amount}'         , 'T32: 1110101|1101|0|1101|0|Amount!=000|Rd:4|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['subs{c}{q}'        , '{Rd}, SP, Rm, RRX'                     , 'T32: 1110101|1101|1|1101|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
-  ['subs{c}{q}'        , '{Rd}, SP, Rm, {Shift #Amount}'         , 'T32: 1110101|1101|1|1101|0|Amount!=000|Rd!=1111|Amount!=00|Shift!=11|Rm:4'     , ''  ],
-  ['sub{c}{q}'         , '{Rd}, SP, Rm, RRX'                     , 'A32: Cond!=1111|0000|010|0|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['sub{c}{q}'         , '{Rd}, SP, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|010|0|1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-  ['subs{c}{q}'        , '{Rd}, SP, Rm, RRX'                     , 'A32: Cond!=1111|0000|010|1|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
-  ['subs{c}{q}'        , '{Rd}, SP, Rm, {Shift #Amount}'         , 'A32: Cond!=1111|0000|010|1|1101|Rd:4|Amount!=00000|Shift!=11|0|Rm:4'           , ''  ],
-
-  ['svc{c}{q}'         , '{#}ImmZ'                               , 'T16: 1101111|1|ImmZ:8'                                                         , ''  ],
-  ['svc{c}{q}'         , '{#}ImmZ'                               , 'A32: Cond!=1111|1111|ImmZ:24'                                                  , ''  ],
-
-  ['sxtab{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'T32: 111110100|10|0|Rn!=1111|1111|Rd:4|1|0|Amount:2|Rm:4'                      , ''  ],
-  ['sxtab{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'A32: Cond!=1111|01101|0|10|Rn!=1111|Rd:4|Amount:2|0|0|0111|Rm:4'               , ''  ],
-
-  ['sxtab16{c}{q}'     , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'T32: 111110100|01|0|Rn!=1111|1111|Rd:4|1|0|Amount:2|Rm:4'                      , ''  ],
-  ['sxtab16{c}{q}'     , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'A32: Cond!=1111|01101|0|00|Rn!=1111|Rd:4|Amount:2|0|0|0111|Rm:4'               , ''  ],
-
-  ['sxtah{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'T32: 111110100|00|0|Rn!=1111|1111|Rd:4|1|0|Amount:2|Rm:4'                      , ''  ],
-  ['sxtah{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'A32: Cond!=1111|01101|0|11|Rn!=1111|Rd:4|Amount:2|0|0|0111|Rm:4'               , ''  ],
-
-  ['sxtb{c}{q}'        , '{Rd}, Rm'                              , 'T16: 10110010|0|1|Rm:3|Rd:3'                                                   , ''  ],
-  ['sxtb{c}.w'         , '{Rd}, Rm'                              , 'T32: 111110100|10|0|1111|1111|Rd:4|1|0|xx|Rm:4'                                , ''  ],
-  ['sxtb{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'T32: 111110100|10|0|1111|1111|Rd:4|1|0|Amount:2|Rm:4'                          , ''  ],
-  ['sxtb{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'A32: Cond!=1111|01101|0|10|1111|Rd:4|Amount:2|0|0|0111|Rm:4'                   , ''  ],
-
-  ['sxtb16{c}{q}'      , '{Rd}, Rm, {ROR #Amount*8}'             , 'T32: 111110100|01|0|1111|1111|Rd:4|1|0|Amount:2|Rm:4'                          , ''  ],
-  ['sxtb16{c}{q}'      , '{Rd}, Rm, {ROR #Amount*8}'             , 'A32: Cond!=1111|01101|0|00|1111|Rd:4|Amount:2|0|0|0111|Rm:4'                   , ''  ],
-
-  ['sxth{c}{q}'        , '{Rd}, Rm'                              , 'T16: 10110010|0|0|Rm:3|Rd:3'                                                   , ''  ],
-  ['sxth{c}.w'         , '{Rd}, Rm'                              , 'T32: 111110100|00|0|1111|1111|Rd:4|1|0|xx|Rm:4'                                , ''  ],
-  ['sxth{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'T32: 111110100|00|0|1111|1111|Rd:4|1|0|Amount:2|Rm:4'                          , ''  ],
-  ['sxth{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'A32: Cond!=1111|01101|0|11|1111|Rd:4|Amount:2|0|0|0111|Rm:4'                   , ''  ],
-
-  ['tbb{c}{q}'         , '[Rn, Rm]'                              , 'T32: 111010001101|Rn:4|1|1|1|1|0|0|0|0|000|0|Rm:4'                             , 'IT:OUT:LAST'  ],
-  ['tbh{c}{q}'         , '[Rn, Rm, LSL #1]'                      , 'T32: 111010001101|Rn:4|1|1|1|1|0|0|0|0|000|1|Rm:4'                             , 'IT:OUT:LAST'  ],
-
-  ['teq{c}{q}'         , 'Rn, #ImmC'                             , 'T32: 11110|ImmC:1|0|0100|1|Rn:4|0|ImmC:3|1111|ImmC:8'                          , ''  ],
-  ['teq{c}{q}'         , 'Rn, #ImmC'                             , 'A32: Cond!=1111|00110|01|1|Rn:4|0|0|0|0|ImmC:12'                               , ''  ],
-
-  ['teq{c}{q}'         , 'Rn, Rm, RRX'                           , 'T32: 1110101|0100|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
-  ['teq{c}{q}'         , 'Rn, Rm, {Shift #Amount}'               , 'T32: 1110101|0100|1|Rn:4|0|Amount!=000|1111|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['teq{c}{q}'         , 'Rn, Rm, RRX'                           , 'A32: Cond!=1111|00010|01|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
-  ['teq{c}{q}'         , 'Rn, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00010|01|1|Rn:4|0|0|0|0|Amount!=00000|Shift!=11|0|Rm:4'        , ''  ],
-
-  ['teq{c}{q}'         , 'Rn, Rm, type Rs'                       , 'A32: Cond!=1111|00010|01|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
-
-  ['tst{c}{q}'         , 'Rn, #ImmC'                             , 'T32: 11110|ImmC:1|0|0000|1|Rn:4|0|ImmC:3|1111|ImmC:8'                          , ''  ],
-  ['tst{c}{q}'         , 'Rn, #ImmC'                             , 'A32: Cond!=1111|00110|00|1|Rn:4|0|0|0|0|ImmC:12'                               , ''  ],
-
-  ['tst{c}{q}'         , 'Rn, Rm'                                , 'T16: 010000|1000|Rm:3|Rn:3'                                                    , ''  ],
-  ['tst{c}{q}'         , 'Rn, Rm, RRX'                           , 'T32: 1110101|0000|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
-  ['tst{c}.w'          , 'Rn, Rm'                                , 'T32: 1110101|0000|1|Rn:4|0|!=000|1111|!=00|!=11|Rm:4'                          , ''  ],
-  ['tst{c}{q}'         , 'Rn, Rm, {Shift #Amount}'               , 'T32: 1110101|0000|1|Rn:4|0|Amount!=000|1111|Amount!=00|Shift!=11|Rm:4'         , ''  ],
-  ['tst{c}{q}'         , 'Rn, Rm, RRX'                           , 'A32: Cond!=1111|00010|00|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
-  ['tst{c}{q}'         , 'Rn, Rm, {Shift #Amount}'               , 'A32: Cond!=1111|00010|00|1|Rn:4|0|0|0|0|Amount!=00000|Shift!=11|0|Rm:4'        , ''  ],
-
-  ['tst{c}{q}'         , 'Rn, Rm, type Rs'                       , 'A32: Cond!=1111|00010|00|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
-
-  ['uadd16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|0|Rm:4'                   , ''  ],
-  ['uadd16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|1|0|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
-
-  ['uadd8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
-  ['uadd8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
-
-  ['uasx{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
-  ['uasx{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
-
-  ['ubfx{c}{q}'        , 'Rd, Rn, #Lsb, #Width'                  , 'T32: 11110|0|11|11|0|0|Rn:4|0|Lsb:3|Rd:4|Lsb:2|0|Width:5'                      , ''  ],
-  ['ubfx{c}{q}'        , 'Rd, Rn, #Lsb, #Width'                  , 'A32: Cond!=1111|01111|1|1|Width:5|Rd:4|Lsb:5|101|Rn:4'                         , ''  ],
-
-  ['udf{c}{q}'         , '{#}ImmZ'                               , 'T16: 1101111|0|ImmZ:8'                                                         , ''  ],
-  ['udf{c}.w'          , '{#}ImmZ'                               , 'T32: 11110111111|1|ImmZ:4|10|1|0|ImmZ:12'                                      , ''  ],
-  ['udf{c}{q}'         , '{#}ImmZ'                               , 'T32: 11110111111|1|ImmZ:4|10|1|0|ImmZ:12'                                      , ''  ],
-  ['udf{c}{q}'         , '{#}ImmZ'                               , 'A32: 1110|01111111|ImmZ:12|1111|ImmZ:4'                                        , ''  ],
-
-  ['udiv{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110111|011|Rn:4|1111|Rd:4|1111|Rm:4'                                   , ''  ],
-  ['udiv{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01110|011|Rd:4|1111|Rm:4|000|1|Rn:4'                           , ''  ],
-
-  ['uhadd16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|1|1|0|Rm:4'                   , ''  ],
-  ['uhadd16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|1|1|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
-
-  ['uhadd8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
-  ['uhadd8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
-
-  ['uhasx{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
-  ['uhasx{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
-
-  ['uhsax{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
-  ['uhsax{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
-
-  ['uhsub16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|1|1|0|Rm:4'                   , ''  ],
-  ['uhsub16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|1|1|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
-
-  ['uhsub8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
-  ['uhsub8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
-
-  ['umaal{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|110|Rn:4|RdLo:4|RdHi:4|0110|Rm:4'                               , ''  ],
-  ['umaal{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|010|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-
-  ['umlal{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|110|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
-  ['umlals{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|101|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-  ['umlal{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|101|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-
-  ['umull{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|010|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
-  ['umulls{c}{q}'      , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|100|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-  ['umull{c}{q}'       , 'RdLo, RdHi, Rn, Rm'                    , 'A32: Cond!=1111|0000|100|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
-
-  ['uqadd16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|1|Rm:4'                   , ''  ],
-  ['uqadd16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|1|1|0|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
-
-  ['uqadd8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
-  ['uqadd8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
-
-  ['uqasx{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
-  ['uqasx{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
-
-  ['uqsax{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
-  ['uqsax{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
-
-  ['uqsub16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|1|Rm:4'                   , ''  ],
-  ['uqsub16{c}{q}'     , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|1|1|0|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
-
-  ['uqsub8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
-  ['uqsub8{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
-
-  ['usad8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|1|0|1|1|1|Rn:4|1|1|1|1|Rd:4|0|0|0|0|Rm:4'                   , ''  ],
-  ['usad8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|1|1|0|0|0|Rd:4|1|1|1|1|Rm:4|0|0|0|1|Rn:4'                , ''  ],
-
-  ['usada8{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|111|Rn:4|Ra!=1111|Rd:4|00|00|Rm:4'                              , ''  ],
-  ['usada8{c}{q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: Cond!=1111|01111000|Rd:4|Ra!=1111|Rm:4|0001|Rn:4'                         , ''  ],
-
-  ['usat{c}{q}'        , 'Rd, #Imm, Rn, ASR #Amount'             , 'T32: 11110|0|11|10|1|0|Rn:4|0|Amount!=000|Rd:4|Amount!=00|0|Imm:5'             , ''  ],
-  ['usat{c}{q}'        , 'Rd, #Imm, Rn, {LSL #Amount}'           , 'T32: 11110|0|11|10|0|0|Rn:4|0|Amount:3|Rd:4|Amount:2|0|Imm:5'                  , ''  ],
-  ['usat{c}{q}'        , 'Rd, #Imm, Rn, ASR #Amount'             , 'A32: Cond!=1111|01101|1|1|Imm:5|Rd:4|Amount:5|1|01|Rn:4'                       , ''  ],
-  ['usat{c}{q}'        , 'Rd, #Imm, Rn, {LSL #Amount}'           , 'A32: Cond!=1111|01101|1|1|Imm:5|Rd:4|Amount:5|0|01|Rn:4'                       , ''  ],
-
-  ['usat16{c}{q}'      , 'Rd, #Imm, Rn'                          , 'T32: 11110|0|11|10|1|0|Rn:4|0|000|Rd:4|00|0|0|Imm:4'                           , ''  ],
-  ['usat16{c}{q}'      , 'Rd, #Imm, Rn'                          , 'A32: Cond!=1111|01101|1|10|Imm:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
-
-  ['usax{c}{q}'        , '{Rd}, Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
-  ['usax{c}{q}'        , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
-
-  ['usub16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|0|Rm:4'                   , ''  ],
-  ['usub16{c}{q}'      , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|0|1|1|0|0|1|0|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
-
-  ['usub8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
-  ['usub8{c}{q}'       , '{Rd}, Rn, Rm'                          , 'A32: Cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
-
-  ['uxtab{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'T32: 111110100|10|1|Rn!=1111|1111|Rd:4|1|0|Amount:2|Rm:4'                      , ''  ],
-  ['uxtab{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'A32: Cond!=1111|01101|1|10|Rn!=1111|Rd:4|Amount:2|0|0|0111|Rm:4'               , ''  ],
-
-  ['uxtab16{c}{q}'     , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'T32: 111110100|01|1|Rn!=1111|1111|Rd:4|1|0|Amount:2|Rm:4'                      , ''  ],
-  ['uxtab16{c}{q}'     , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'A32: Cond!=1111|01101|1|00|Rn!=1111|Rd:4|Amount:2|0|0|0111|Rm:4'               , ''  ],
-
-  ['uxtah{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'T32: 111110100|00|1|Rn!=1111|1111|Rd:4|1|0|Amount:2|Rm:4'                      , ''  ],
-  ['uxtah{c}{q}'       , '{Rd}, Rn, Rm, {ROR #Amount*8}'         , 'A32: Cond!=1111|01101|1|11|Rn!=1111|Rd:4|Amount:2|0|0|0111|Rm:4'               , ''  ],
-
-  ['uxtb{c}{q}'        , '{Rd}, Rm'                              , 'T16: 10110010|1|1|Rm:3|Rd:3'                                                   , ''  ],
-  ['uxtb{c}.w'         , '{Rd}, Rm'                              , 'T32: 111110100|10|1|1111|1111|Rd:4|1|0|xx|Rm:4'                                , ''  ],
-  ['uxtb{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'T32: 111110100|10|1|1111|1111|Rd:4|1|0|Amount:2|Rm:4'                          , ''  ],
-  ['uxtb{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'A32: Cond!=1111|01101|1|10|1111|Rd:4|Amount:2|0|0|0111|Rm:4'                   , ''  ],
-
-  ['uxtb16{c}{q}'      , '{Rd}, Rm, {ROR #Amount*8}'             , 'T32: 111110100|01|1|1111|1111|Rd:4|1|0|Amount:2|Rm:4'                          , ''  ],
-  ['uxtb16{c}{q}'      , '{Rd}, Rm, {ROR #Amount*8}'             , 'A32: Cond!=1111|01101|1|00|1111|Rd:4|Amount:2|0|0|0111|Rm:4'                   , ''  ],
-
-  ['uxth{c}{q}'        , '{Rd}, Rm'                              , 'T16: 10110010|1|0|Rm:3|Rd:3'                                                   , ''  ],
-  ['uxth{c}.w'         , '{Rd}, Rm'                              , 'T32: 111110100|00|1|1111|1111|Rd:4|1|0|xx|Rm:4'                                , ''  ],
-  ['uxth{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'T32: 111110100|00|1|1111|1111|Rd:4|1|0|Amount:2|Rm:4'                          , ''  ],
-  ['uxth{c}{q}'        , '{Rd}, Rm, {ROR #Amount*8}'             , 'A32: Cond!=1111|01101|1|11|1111|Rd:4|Amount:2|0|0|0111|Rm:4'                   , ''  ],
-
-  ['wfe{c}{q}'         , ''                                      , 'T16: 10111111|0010|0000'                                                       , ''  ],
-  ['wfe{c}.w'          , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0010'                              , ''  ],
-  ['wfe{c}{q}'         , ''                                      , 'A32: Cond!=1111|00110|0|10|00|00|1|1|1|1|000000000010'                         , ''  ],
-
-  ['wfi{c}{q}'         , ''                                      , 'T16: 10111111|0011|0000'                                                       , ''  ],
-  ['wfi{c}.w'          , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0011'                              , ''  ],
-  ['wfi{c}{q}'         , ''                                      , 'A32: Cond!=1111|00110|0|10|00|00|1|1|1|1|000000000011'                         , ''  ],
-
-  ['yield{c}{q}'       , ''                                      , 'T16: 10111111|0001|0000'                                                       , ''  ],
-  ['yield{c}.w'        , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0001'                              , ''  ],
-  ['yield{c}{q}'       , ''                                      , 'A32: Cond!=1111|00110|0|10|00|00|1|1|1|1|000000000001'                         , ''  ],
+  # DMB
+  ['dmb{%c}{%q}'       , '{option}'                              , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0101|option:4'                        , ''  ],
+  ['dmb{%c}{%q}'       , '{option}'                              , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0101|option:4'                       , ''  ],
+
+  # DSB
+  ['dsb{%c}{%q}'       , '{option}'                              , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0100|option:4'                        , ''  ],
+  ['dsb{%c}{%q}'       , '{option}'                              , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0100|option:4'                       , ''  ],
+
+  # EOR, EORS (immediate)
+  ['eor{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0100|0|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['eors{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0100|1|Rn:4|0|cnst:3|Rd!=1111|cnst:8'                      , ''  ],
+  ['eor{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|0010|001|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['eors{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|0010|001|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+
+  # EOR, EORS (register)
+  ['eor%c{%q}'         , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0001|Rm:3|Rdn:3'                                                   , ''  ],
+  ['eors{%q}'          , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0001|Rm:3|Rdn:3'                                                   , ''  ],
+  ['eor{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0100|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['eor%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0100|0|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['eor{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0100|0|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['eors{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0100|1|Rn:4|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
+  ['eors.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0100|1|Rn:4|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['eors{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0100|1|Rn:4|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['eor{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|001|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['eor{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|001|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['eors{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|001|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['eors{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|001|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # EOR, EORS (register-shifted register)
+  ['eors{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|001|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['eor{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|001|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # ERET
+  ['eret{%c}{%q}'      , ''                                      , 'T32: 111100111101|1110|10|0|0|1|1|1|1|00000000'                                , ''  ],
+  ['eret{%c}{%q}'      , ''                                      , 'A32: cond!=1111|00010110|0|0|0|0|0|0|0|0|0|0|0|0|0110|1|1|1|0'                 , ''  ],
+
+  # HLT
+  ['hlt{%q}'           , '{#}imm'                                , 'T16: 1011101010|imm:6'                                                         , ''  ],
+  ['hlt{%q}'           , '{#}imm'                                , 'A32: cond!=1111|00010|00|0|imm:12|0111|imm:4'                                  , ''  ],
+
+  # HVC
+  ['hvc{%q}'           , '{#}imm'                                , 'T32: 11110111111|0|imm:4|10|0|0|imm:12'                                        , ''  ],
+  ['hvc{%q}'           , '{#}imm'                                , 'A32: cond!=1111|00010|10|0|imm:12|0111|imm:4'                                  , ''  ],
+
+  # ISB
+  ['isb{%c}{%q}'       , '{option}'                              , 'T32: 111100111011|1|1|1|1|10|0|0|1|1|1|1|0110|option:4'                        , ''  ],
+  ['isb{%c}{%q}'       , '{option}'                              , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0110|option:4'                       , ''  ],
+
+  # IT
+  ['it{%x{%y{%z}}}{%q}', 'cond'                                  , 'T16: 10111111|cond:4|y/x/z!=0000'                                              , ''  ],
+
+  # LDA
+  ['lda{%c}{%q}'       , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|0|10|1111'                                 , ''  ],
+  ['lda{%c}{%q}'       , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|00|1|Rn:4|Rt:4|1|1|0|0|1001|1111'                        , ''  ],
+
+  # LDAB
+  ['ldab{%c}{%q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|0|00|1111'                                 , ''  ],
+  ['ldab{%c}{%q}'      , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|10|1|Rn:4|Rt:4|1|1|0|0|1001|1111'                        , ''  ],
+
+  # LDAEX
+  ['ldaex{%c}{%q}'     , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|1|10|1111'                                 , ''  ],
+  ['ldaex{%c}{%q}'     , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|00|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
+
+  # LDAEXB
+  ['ldaexb{%c}{%q}'    , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|1|00|1111'                                 , ''  ],
+  ['ldaexb{%c}{%q}'    , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|10|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
+
+  # LDAEXD
+  ['ldaexd{%c}{%q}'    , 'Rt, Rt2, [Rn]'                         , 'T32: 11101000110|1|Rn:4|Rt:4|Rt2:4|1|1|11|1111'                                , ''  ],
+  ['ldaexd{%c}{%q}'    , 'Rt, Rt2, [Rn]'                         , 'A32: cond!=1111|00011|01|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
+
+  # LDAEXH
+  ['ldaexh{%c}{%q}'    , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|1|01|1111'                                 , ''  ],
+  ['ldaexh{%c}{%q}'    , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|11|1|Rn:4|Rt:4|1|1|1|0|1001|1111'                        , ''  ],
+
+  # LDAH
+  ['ldah{%c}{%q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|0|01|1111'                                 , ''  ],
+  ['ldah{%c}{%q}'      , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|11|1|Rn:4|Rt:4|1|1|0|0|1001|1111'                        , ''  ],
+
+  # LDC (immediate)
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn{, #{+/-}imm.z*4}]'        , 'T32: 111|0|110|1|U|0|0|1|Rn!=1111|0101|111|0|imm:8'                            , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn], #{+/-}imm.z*4'          , 'T32: 111|0|110|0|U|0|1|1|Rn!=1111|0101|111|0|imm:8'                            , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn, #{+/-}imm.z*4]!'         , 'T32: 111|0|110|1|U|0|1|1|Rn!=1111|0101|111|0|imm:8'                            , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn], option'                 , 'T32: 111|0|110|0|1|0|0|1|Rn!=1111|0101|111|0|option:8'                         , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn{, #{+/-}imm.z*4}]'        , 'A32: cond!=1111|110|1|U|0|0|1|Rn!=1111|0101|111|0|imm:8'                       , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn], #{+/-}imm.z*4'          , 'A32: cond!=1111|110|0|U|0|1|1|Rn!=1111|0101|111|0|imm:8'                       , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn, #{+/-}imm.z*4]!'         , 'A32: cond!=1111|110|1|U|0|1|1|Rn!=1111|0101|111|0|imm:8'                       , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [Rn], option'                 , 'A32: cond!=1111|110|0|1|0|0|1|Rn!=1111|0101|111|0|option:8'                    , ''  ],
+
+  # LDC (literal)
+  ['ldc{%c}{%q}'       , 'p14, c5, rel.z*4'                      , 'T32: 111|0|110|P!=0|U!=0|0|W!=0|1|1111|0101|111|0|rel:8'                       , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [PC, #{+/-}imm.z*4]'          , 'T32: 111|0|110|P!=0|U!=0|0|W!=0|1|1111|0101|111|0|imm:8'                       , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, rel.z*4'                      , 'A32: cond!=1111|110|P!=0|U!=0|0|W!=0|1|1111|0101|111|0|rel:8'                  , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [PC, #{+/-}imm.z*4]'          , 'A32: cond!=1111|110|P!=0|U!=0|0|W!=0|1|1111|0101|111|0|imm:8'                  , ''  ],
+  ['ldc{%c}{%q}'       , 'p14, c5, [PC], option'                 , 'A32: cond!=1111|110|P!=0|U!=0|0|W!=0|1|1111|0101|111|0|option:8'               , ''  ],
+
+  # LDM, LDMIA, LDMFD
+  ['ldm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
+  ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
+  ['ldm{IA}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmfd{%c}.W'       , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|1|0|W|1|Rn:4|list:16'                                    , ''  ],
+  ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|1|0|W|1|Rn:4|list:16'                                    , ''  ],
+
+  # LDM (exception return)
+  ['ldm{%amode}{%c}{%q}', 'Rn{!}, list'                           , 'A32: cond!=1111|100|P|U|1|W|1|Rn:4|1|list:15'                                  , ''  ],
+
+  # LDM (User registers)
+  ['ldm{%amode}{%c}{%q}', 'Rn, list'                              , 'A32: cond!=1111|100|P|U|1|0|1|Rn:4|0|list:15'                                  , ''  ],
+
+  # LDMDA, LDMFA
+  ['ldmda{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|0|0|W|1|Rn:4|list:16'                                    , ''  ],
+  ['ldmfa{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|0|0|W|1|Rn:4|list:16'                                    , ''  ],
+
+  # LDMDB, LDMEA
+  ['ldmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110100|10|0|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmea{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110100|10|0|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|0|0|W|1|Rn:4|list:16'                                    , ''  ],
+  ['ldmea{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|0|0|W|1|Rn:4|list:16'                                    , ''  ],
+
+  # LDMIB, LDMED
+  ['ldmib{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|1|0|W|1|Rn:4|list:16'                                    , ''  ],
+  ['ldmed{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|1|0|W|1|Rn:4|list:16'                                    , ''  ],
+
+  # LDR (immediate)
+  ['ldr{%c}{%q}'       , 'Rt, [Rn {, #{+}imm.z*4}]'              , 'T16: 011|0|1|imm:5|Rn:3|Rt:3'                                                  , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [SP{, #{+}imm.z*4}]'               , 'T16: 1001|1|Rt:3|imm:8'                                                        , ''  ],
+  ['ldr{%c}.W'         , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|10|1|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|10|1|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1|1|0|0|imm:8'                             , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|010|1|U|0|0|1|Rn!=1111|Rt:4|imm:12'                            , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|010|0|U|0|0|1|Rn!=1111|Rt:4|imm:12'                            , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|010|1|U|0|1|1|Rn!=1111|Rt:4|imm:12'                            , ''  ],
+
+  # LDR (literal)
+  ['ldr{%c}{%q}'       , 'Rt, rel.z*4'                           , 'T16: 01001|Rt:3|rel:8'                                                         , ''  ],
+  ['ldr{%c}.W'         , 'Rt, rel.z'                             , 'T32: 1111100|0|U|10|1|1111|Rt:4|rel:12'                                        , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, rel.z'                             , 'T32: 1111100|0|U|10|1|1111|Rt:4|rel:12'                                        , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [PC, #{+/-}imm.z]'                 , 'T32: 1111100|0|U|10|1|1111|Rt:4|imm:12'                                        , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, rel.z'                             , 'A32: cond!=1111|010|P!=0|U|0|W!=1|1|1111|Rt:4|rel:12'                          , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [PC, #{+/-}imm.z]'                 , 'A32: cond!=1111|010|P!=0|U|0|W!=1|1|1111|Rt:4|imm:12'                          , ''  ],
+
+  # LDR (register)
+  ['ldr{%c}{%q}'       , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|0|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['ldr{%c}.W'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|000000|imm2:2|Rm:4'                        , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|000000|imm:2|Rm:4'                         , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]'  , 'A32: cond!=1111|011|1|U|0|0|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|0|0|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['ldr{%c}{%q}'       , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]!' , 'A32: cond!=1111|011|1|U|0|1|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # LDRB (immediate)
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T16: 011|1|1|imm:5|Rn:3|Rt:3'                                                  , ''  ],
+  ['ldrb{%c}.W'        , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|00|1|Rn!=1111|Rt!=1111|imm:12'                                , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|00|1|Rn!=1111|Rt!=1111|imm:12'                                , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt!=1111|1|1|0|0|imm:8'                         , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|010|1|U|1|0|1|Rn!=1111|Rt:4|imm:12'                            , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|010|0|U|1|0|1|Rn!=1111|Rt:4|imm:12'                            , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|010|1|U|1|1|1|Rn!=1111|Rt:4|imm:12'                            , ''  ],
+
+  # LDRB (literal)
+  ['ldrb{%c}{%q}'      , 'Rt, rel.z'                             , 'T32: 1111100|0|U|00|1|1111|Rt!=1111|rel:12'                                    , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [PC, #{+/-}imm.z]'                 , 'T32: 1111100|0|U|00|1|1111|Rt!=1111|imm:12'                                    , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, rel.z'                             , 'A32: cond!=1111|010|P!=0|U|1|W!=1|1|1111|Rt:4|rel:12'                          , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [PC, #{+/-}imm.z]'                 , 'A32: cond!=1111|010|P!=0|U|1|W!=1|1|1111|Rt:4|imm:12'                          , ''  ],
+
+  # LDRB (register)
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|1|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['ldrb{%c}.W'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt!=1111|000000|imm2:2|Rm:4'                    , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt!=1111|000000|imm:2|Rm:4'                     , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]'  , 'A32: cond!=1111|011|1|U|1|0|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|1|0|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['ldrb{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]!' , 'A32: cond!=1111|011|1|U|1|1|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # LDRBT
+  ['ldrbt{%c}{%q}'     , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|0|00|1|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['ldrbt{%c}{%q}'     , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|010|0|U|1|1|1|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['ldrbt{%c}{%q}'     , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|1|1|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # LDRD (immediate)
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn {, #{+/-}imm.z*4}]'       , 'T32: 1110100|1|U|1|0|1|Rn!=1111|Rt:4|Rt2:4|imm:8'                              , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn], #{+/-}imm.z*4'          , 'T32: 1110100|0|U|1|1|1|Rn!=1111|Rt:4|Rt2:4|imm:8'                              , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn, #{+/-}imm.z*4]!'         , 'T32: 1110100|1|U|1|1|1|Rn!=1111|Rt:4|Rt2:4|imm:8'                              , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn {, #{+/-}imm.z}]'         , 'A32: cond!=1111|000|1|U|1|0|0|Rn!=1111|Rt:4|imm:4|1|10|1|imm:4'                , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn], #{+/-}imm.z'            , 'A32: cond!=1111|000|0|U|1|0|0|Rn!=1111|Rt:4|imm:4|1|10|1|imm:4'                , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn, #{+/-}imm.z]!'           , 'A32: cond!=1111|000|1|U|1|1|0|Rn!=1111|Rt:4|imm:4|1|10|1|imm:4'                , ''  ],
+
+  # LDRD (literal)
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, rel.z*4'                      , 'T32: 1110100|P!=0|U|1|W!=0|1|1111|Rt:4|Rt2:4|rel:8'                            , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [PC, #{+/-}imm.z]'            , 'T32: 1110100|P!=0|U|1|W!=0|1|1111|Rt:4|Rt2:4|imm:8'                            , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, rel.z'                        , 'A32: cond!=1111|000|1|U|1|0|0|1111|Rt:4|rel:4|1|10|1|rel:4'                    , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [PC, #{+/-}imm.z]'            , 'A32: cond!=1111|000|1|U|1|0|0|1111|Rt:4|imm:4|1|10|1|imm:4'                    , ''  ],
+
+  # LDRD (register)
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn, {+/-}Rm]'                , 'A32: cond!=1111|000|1|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn], {+/-}Rm'                , 'A32: cond!=1111|000|0|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [Rn, {+/-}Rm]!'               , 'A32: cond!=1111|000|1|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
+
+  # LDREX
+  ['ldrex{%c}{%q}'     , 'Rt, [Rn {, #imm.z*4}]'                 , 'T32: 11101000010|1|Rn:4|Rt:4|1111|imm:8'                                       , ''  ],
+  ['ldrex{%c}{%q}'     , 'Rt, [Rn {, {#}imm}]'                   , 'A32: cond!=1111|00011|00|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
+
+  # LDREXB
+  ['ldrexb{%c}{%q}'    , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|01|00|1111'                                  , ''  ],
+  ['ldrexb{%c}{%q}'    , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|10|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
+
+  # LDREXD
+  ['ldrexd{%c}{%q}'    , 'Rt, Rt2, [Rn]'                         , 'T32: 11101000110|1|Rn:4|Rt:4|Rt2:4|01|11|1111'                                 , ''  ],
+  ['ldrexd{%c}{%q}'    , 'Rt, Rt2, [Rn]'                         , 'A32: cond!=1111|00011|01|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
+
+  # LDREXH
+  ['ldrexh{%c}{%q}'    , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|01|01|1111'                                  , ''  ],
+  ['ldrexh{%c}{%q}'    , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|11|1|Rn:4|Rt:4|1|1|1|1|1001|1111'                        , ''  ],
+
+  # LDRH (immediate)
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z*2}]'              , 'T16: 1000|1|imm:5|Rn:3|Rt:3'                                                   , ''  ],
+  ['ldrh{%c}.W'        , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|01|1|Rn!=1111|Rt!=1111|imm:12'                                , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|01|1|Rn!=1111|Rt!=1111|imm:12'                                , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt!=1111|1|1|0|0|imm:8'                         , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|000|1|U|1|0|1|Rn!=1111|Rt:4|imm:4|1|01|1|imm:4'                , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|imm:4|1|01|1|imm:4'                , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|imm:4|1|01|1|imm:4'                , ''  ],
+
+  # LDRH (literal)
+  ['ldrh{%c}{%q}'      , 'Rt, rel.z'                             , 'T32: 1111100|0|U|01|1|1111|Rt!=1111|rel:12'                                    , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [PC, #{+/-}imm.z]'                 , 'T32: 1111100|0|U|01|1|1111|Rt!=1111|imm:12'                                    , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, rel.z'                             , 'A32: cond!=1111|000|P!=0|U|1|W!=1|1|1111|Rt:4|rel:4|1|01|1|rel:4'              , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [PC, #{+/-}imm.z]'                 , 'A32: cond!=1111|000|P!=0|U|1|W!=1|1|1111|Rt:4|imm:4|1|01|1|imm:4'              , ''  ],
+
+  # LDRH (register)
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|0|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['ldrh{%c}.W'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt!=1111|000000|imm2:2|Rm:4'                    , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt!=1111|000000|imm:2|Rm:4'                     , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: cond!=1111|000|1|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+  ['ldrh{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: cond!=1111|000|1|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+
+  # LDRHT
+  ['ldrht{%c}{%q}'     , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|0|01|1|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['ldrht{%c}{%q}'     , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|000|0|U|1|1|1|Rn:4|Rt:4|imm:4|1|01|1|imm:4'                    , ''  ],
+  ['ldrht{%c}{%q}'     , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+
+  # LDRSB (immediate)
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|1|1|00|1|Rn!=1111|Rt!=1111|imm:12'                                , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1|1|0|0|imm:8'                             , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|000|1|U|1|0|1|Rn!=1111|Rt:4|imm:4|1|10|1|imm:4'                , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|imm:4|1|10|1|imm:4'                , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|imm:4|1|10|1|imm:4'                , ''  ],
+
+  # LDRSB (literal)
+  ['ldrsb{%c}{%q}'     , 'Rt, rel.z'                             , 'T32: 1111100|1|U|00|1|1111|Rt!=1111|rel:12'                                    , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [PC, #{+/-}imm.z]'                 , 'T32: 1111100|1|U|00|1|1111|Rt!=1111|imm:12'                                    , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, rel.z'                             , 'A32: cond!=1111|000|P!=0|U|1|W!=1|1|1111|Rt:4|rel:4|1|10|1|rel:4'              , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [PC, #{+/-}imm.z]'                 , 'A32: cond!=1111|000|P!=0|U|1|W!=1|1|1111|Rt:4|imm:4|1|10|1|imm:4'              , ''  ],
+
+  # LDRSB (register)
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|1|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['ldrsb{%c}.W'       , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt!=1111|000000|imm2:2|Rm:4'                    , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt!=1111|000000|imm:2|Rm:4'                     , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: cond!=1111|000|1|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
+  ['ldrsb{%c}{%q}'     , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: cond!=1111|000|1|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
+
+  # LDRSBT
+  ['ldrsbt{%c}{%q}'    , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|1|0|00|1|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['ldrsbt{%c}{%q}'    , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|000|0|U|1|1|1|Rn:4|Rt:4|imm:4|1|10|1|imm:4'                    , ''  ],
+  ['ldrsbt{%c}{%q}'    , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|10|1|Rm:4'                   , ''  ],
+
+  # LDRSH (immediate)
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|1|1|01|1|Rn!=1111|Rt!=1111|imm:12'                                , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt!=1111|1|1|0|0|imm:8'                         , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|000|1|U|1|0|1|Rn!=1111|Rt:4|imm:4|1|11|1|imm:4'                , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|000|0|U|1|0|1|Rn!=1111|Rt:4|imm:4|1|11|1|imm:4'                , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|000|1|U|1|1|1|Rn!=1111|Rt:4|imm:4|1|11|1|imm:4'                , ''  ],
+
+  # LDRSH (literal)
+  ['ldrsh{%c}{%q}'     , 'Rt, rel.z'                             , 'T32: 1111100|1|U|01|1|1111|Rt!=1111|rel:12'                                    , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [PC, #{+/-}imm.z]'                 , 'T32: 1111100|1|U|01|1|1111|Rt!=1111|imm:12'                                    , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, rel.z'                             , 'A32: cond!=1111|000|P!=0|U|1|W!=1|1|1111|Rt:4|rel:4|1|11|1|rel:4'              , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [PC, #{+/-}imm.z]'                 , 'A32: cond!=1111|000|P!=0|U|1|W!=1|1|1111|Rt:4|imm:4|1|11|1|imm:4'              , ''  ],
+
+  # LDRSH (register)
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|1|1|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['ldrsh{%c}.W'       , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt!=1111|000000|imm2:2|Rm:4'                    , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt!=1111|000000|imm:2|Rm:4'                     , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: cond!=1111|000|1|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|0|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
+  ['ldrsh{%c}{%q}'     , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: cond!=1111|000|1|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
+
+  # LDRSHT
+  ['ldrsht{%c}{%q}'    , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|1|0|01|1|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['ldrsht{%c}{%q}'    , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|000|0|U|1|1|1|Rn:4|Rt:4|imm:4|1|11|1|imm:4'                    , ''  ],
+  ['ldrsht{%c}{%q}'    , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|1|1|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
+
+  # LDRT
+  ['ldrt{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|0|10|1|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['ldrt{%c}{%q}'      , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|010|0|U|0|1|1|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['ldrt{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|0|1|1|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # LSL (immediate)
+  ['lsl%c{%q}'         , '{Rd,} Rm, #imm'                        , 'T16: 000|00|imm!=00000|Rm:3|Rd:3'                                              , ''  ],
+  ['lsl%c.W'           , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|0|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
+  ['lsl{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|0|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
+  ['lsl{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|0|0000|Rd:4|imm!=00000|00|0|Rm:4'                     , ''  ],
+
+  # LSL (register)
+  ['lsl%c{%q}'         , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , ''  ],
+  ['lsl%c.W'           , '{Rd,} Rm, Rs'                          , 'T32: 111110100|00|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsl{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'T32: 111110100|00|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsl{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|00|1|Rm:4'                         , ''  ],
+
+  # LSLS (immediate)
+  ['lsls{%q}'          , '{Rd,} Rm, #imm'                        , 'T16: 000|00|imm!=00000|Rm:3|Rd:3'                                              , ''  ],
+  ['lsls.W'            , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|1|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
+  ['lsls{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|1|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
+  ['lsls{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|1|0000|Rd:4|imm!=00000|00|0|Rm:4'                     , ''  ],
+
+  # LSLS (register)
+  ['lsls{%q}'          , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , ''  ],
+  ['lsls.W'            , '{Rd,} Rm, Rs'                          , 'T32: 111110100|00|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsls{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'T32: 111110100|00|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsls{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|00|1|Rm:4'                         , ''  ],
+
+  # LSR (immediate)
+  ['lsr%c{%q}'         , '{Rd,} Rm, #imm'                        , 'T16: 000|01|imm:5|Rm:3|Rd:3'                                                   , ''  ],
+  ['lsr%c.W'           , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|0|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
+  ['lsr{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|0|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
+  ['lsr{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|0|0000|Rd:4|imm:5|01|0|Rm:4'                          , ''  ],
+
+  # LSR (register)
+  ['lsr%c{%q}'         , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , ''  ],
+  ['lsr%c.W'           , '{Rd,} Rm, Rs'                          , 'T32: 111110100|01|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsr{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'T32: 111110100|01|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsr{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|01|1|Rm:4'                         , ''  ],
+
+  # LSRS (immediate)
+  ['lsrs{%q}'          , '{Rd,} Rm, #imm'                        , 'T16: 000|01|imm:5|Rm:3|Rd:3'                                                   , ''  ],
+  ['lsrs.W'            , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|1|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
+  ['lsrs{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|1|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
+  ['lsrs{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|1|0000|Rd:4|imm:5|01|0|Rm:4'                          , ''  ],
+
+  # LSRS (register)
+  ['lsrs{%q}'          , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , ''  ],
+  ['lsrs.W'            , '{Rd,} Rm, Rs'                          , 'T32: 111110100|01|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsrs{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'T32: 111110100|01|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsrs{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|01|1|Rm:4'                         , ''  ],
+
+  # MCR
+  ['mcr{%c}{%q}'       , 'coproc, {#}opc1, Rt, CRn, CRm{, {#}opc2}', 'T32: 111|0|1110|opc1:3|0|CRn:4|Rt:4|coproc=111x|opc2:3|1|CRm:4'                , ''  ],
+  ['mcr{%c}{%q}'       , 'coproc, {#}opc1, Rt, CRn, CRm{, {#}opc2}', 'A32: cond!=1111|1110|opc1:3|0|CRn:4|Rt:4|coproc=111x|opc2:3|1|CRm:4'           , ''  ],
+
+  # MCRR
+  ['mcrr{%c}{%q}'      , 'coproc, {#}opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|0|Rt2:4|Rt:4|coproc=111x|opc1:4|CRm:4'                    , ''  ],
+  ['mcrr{%c}{%q}'      , 'coproc, {#}opc1, Rt, Rt2, CRm'         , 'A32: cond!=1111|11000|1|0|0|Rt2:4|Rt:4|coproc=111x|opc1:4|CRm:4'               , ''  ],
+
+  # MLA, MLAS
+  ['mla{%c}{%q}'       , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|000|Rn:4|Ra!=1111|Rd:4|00|00|Rm:4'                              , ''  ],
+  ['mlas{%c}{%q}'      , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|0000|001|1|Rd:4|Ra:4|Rm:4|1001|Rn:4'                           , ''  ],
+  ['mla{%c}{%q}'       , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|0000|001|0|Rd:4|Ra:4|Rm:4|1001|Rn:4'                           , ''  ],
+
+  # MLS
+  ['mls{%c}{%q}'       , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|000|Rn:4|Ra:4|Rd:4|00|01|Rm:4'                                  , ''  ],
+  ['mls{%c}{%q}'       , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|0000|011|0|Rd:4|Ra:4|Rm:4|1001|Rn:4'                           , ''  ],
+
+  # MOV, MOVS (immediate)
+  ['mov%c{%q}'         , 'Rd, #imm.z'                            , 'T16: 001|00|Rd:3|imm:8'                                                        , ''  ],
+  ['movs{%q}'          , 'Rd, #imm.z'                            , 'T16: 001|00|Rd:3|imm:8'                                                        , ''  ],
+  ['mov%c.W'           , 'Rd, #cnst.c'                           , 'T32: 11110|cnst:1|0|0010|0|1111|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, #cnst.c'                           , 'T32: 11110|cnst:1|0|0010|0|1111|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['movs.W'            , 'Rd, #cnst.c'                           , 'T32: 11110|cnst:1|0|0010|1|1111|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, #cnst.c'                           , 'T32: 11110|cnst:1|0|0010|1|1111|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, #imm.z'                            , 'T32: 11110|imm.B:1|10|0|100|imm.A:4|0|imm.C:3|Rd:4|imm.D:8'                    , ''  ],
+  ['movw{%c}{%q}'      , 'Rd, #imm.z'                            , 'T32: 11110|imm.B:1|10|0|100|imm.A:4|0|imm.C:3|Rd:4|imm.D:8'                    , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, #cnst.c'                           , 'A32: cond!=1111|00111|01|0|0000|Rd:4|cnst:12'                                  , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, #cnst.c'                           , 'A32: cond!=1111|00111|01|1|0000|Rd:4|cnst:12'                                  , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, #imm.z'                            , 'A32: cond!=1111|00110|0|00|imm:4|Rd:4|imm:12'                                  , ''  ],
+  ['movw{%c}{%q}'      , 'Rd, #imm.z'                            , 'A32: cond!=1111|00110|0|00|imm:4|Rd:4|imm:12'                                  , ''  ],
+
+  # MOV, MOVS (register)
+  ['mov{%c}{%q}'       , 'Rd, Rm'                                , 'T16: 010001|10|Rd:1|Rm:3|Rd:4'                                                 , ''  ],
+  ['mov%c{%q}'         , 'Rd, Rm {, shift #amount}'              , 'T16: 000|shift!=11|amount:5|Rm:3|Rd:3'                                         , ''  ],
+  ['movs{%q}'          , 'Rd, Rm {, shift #amount}'              , 'T16: 000|shift!=11|amount:5|Rm:3|Rd:3'                                         , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'T32: 1110101|0010|0|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['mov{%c}.W'         , 'Rd, Rm {, LSL #0}'                     , 'T32: 1110101|0010|0|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['mov%c.W'           , 'Rd, Rm {, shift #amount}'              , 'T32: 1110101|0010|0|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, Rm {, shift #amount}'              , 'T32: 1110101|0010|0|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, Rm, RRX'                           , 'T32: 1110101|0010|1|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['movs.W'            , 'Rd, Rm {, shift #amount}'              , 'T32: 1110101|0010|1|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, Rm {, shift #amount}'              , 'T32: 1110101|0010|1|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'A32: cond!=1111|00011|01|0|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, Rm {, shift #amount}'              , 'A32: cond!=1111|00011|01|0|0000|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, Rm, RRX'                           , 'A32: cond!=1111|00011|01|1|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, Rm {, shift #amount}'              , 'A32: cond!=1111|00011|01|1|0000|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # MOV, MOVS (register-shifted register)
+  ['mov%c{%q}'         , 'Rdm, Rdm, ASR Rs'                      , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , ''  ],
+  ['movs{%q}'          , 'Rdm, Rdm, ASR Rs'                      , 'T16: 010000|0100|Rs:3|Rdm:3'                                                   , ''  ],
+  ['mov%c{%q}'         , 'Rdm, Rdm, LSL Rs'                      , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , ''  ],
+  ['movs{%q}'          , 'Rdm, Rdm, LSL Rs'                      , 'T16: 010000|0010|Rs:3|Rdm:3'                                                   , ''  ],
+  ['mov%c{%q}'         , 'Rdm, Rdm, LSR Rs'                      , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , ''  ],
+  ['movs{%q}'          , 'Rdm, Rdm, LSR Rs'                      , 'T16: 010000|0011|Rs:3|Rdm:3'                                                   , ''  ],
+  ['mov%c{%q}'         , 'Rdm, Rdm, ROR Rs'                      , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , ''  ],
+  ['movs{%q}'          , 'Rdm, Rdm, ROR Rs'                      , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , ''  ],
+  ['movs.W'            , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|1|Rm:4|1111|Rd:4|0000|Rs:4'                              , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|1|Rm:4|1111|Rd:4|0000|Rs:4'                              , ''  ],
+  ['mov%c.W'           , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|0|Rm:4|1111|Rd:4|0000|Rs:4'                              , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, Rm, type Rs'                       , 'T32: 111110100|type:2|0|Rm:4|1111|Rd:4|0000|Rs:4'                              , ''  ],
+  ['movs{%c}{%q}'      , 'Rd, Rm, type Rs'                       , 'A32: cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['mov{%c}{%q}'       , 'Rd, Rm, type Rs'                       , 'A32: cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # MOVT
+  ['movt{%c}{%q}'      , 'Rd, #imm'                              , 'T32: 11110|imm.B:1|10|1|100|imm.A:4|0|imm.C:3|Rd:4|imm.D:8'                    , ''  ],
+  ['movt{%c}{%q}'      , 'Rd, #imm'                              , 'A32: cond!=1111|00110|1|00|imm:4|Rd:4|imm:12'                                  , ''  ],
+
+  # MRC
+  ['mrc{%c}{%q}'       , 'coproc, {#}opc1, Rt, CRn, CRm{, {#}opc2}', 'T32: 111|0|1110|opc1:3|1|CRn:4|Rt:4|coproc=111x|opc2:3|1|CRm:4'                , ''  ],
+  ['mrc{%c}{%q}'       , 'coproc, {#}opc1, Rt, CRn, CRm{, {#}opc2}', 'A32: cond!=1111|1110|opc1:3|1|CRn:4|Rt:4|coproc=111x|opc2:3|1|CRm:4'           , ''  ],
+
+  # MRRC
+  ['mrrc{%c}{%q}'      , 'coproc, {#}opc1, Rt, Rt2, CRm'         , 'T32: 111|0|11000|1|0|1|Rt2:4|Rt:4|coproc=111x|opc1:4|CRm:4'                    , ''  ],
+  ['mrrc{%c}{%q}'      , 'coproc, {#}opc1, Rt, Rt2, CRm'         , 'A32: cond!=1111|11000|1|0|1|Rt2:4|Rt:4|coproc=111x|opc1:4|CRm:4'               , ''  ],
+
+  # MRS
+  ['mrs{%c}{%q}'       , 'Rd, sreg'                              , 'T32: 11110011111|sreg:1|1|1|1|1|10|0|0|Rd:4|0|0|0|0|0|0|0|0'                   , ''  ],
+  ['mrs{%c}{%q}'       , 'Rd, sreg'                              , 'A32: cond!=1111|00010|sreg:1|0|0|1111|Rd:4|0|0|0|0|0000|0000'                  , ''  ],
+
+  # MRS (Banked register)
+  ['mrs{%c}{%q}'       , 'Rd, breg'                              , 'T32: 11110011111|breg.A:1|breg.C:4|10|0|0|Rd:4|0|0|1|breg.B:1|0|0|0|0'         , ''  ],
+  ['mrs{%c}{%q}'       , 'Rd, breg'                              , 'A32: cond!=1111|00010|breg.A:1|0|0|breg.C:4|Rd:4|0|0|1|breg.B:1|0000|0000'     , ''  ],
+
+  # MSR (Banked register)
+  ['msr{%c}{%q}'       , 'breg, Rn'                              , 'T32: 11110011100|breg.A:1|Rn:4|10|0|0|breg.C:4|0|0|1|breg.B:1|0|0|0|0'         , ''  ],
+  ['msr{%c}{%q}'       , 'breg, Rn'                              , 'A32: cond!=1111|00010|breg.A:1|1|0|breg.C:4|1111|0|0|1|breg.B:1|0000|Rn:4'     , ''  ],
+
+  # MSR (immediate)
+  ['msr{%c}{%q}'       , 'sreg, #imm.x'                          , 'A32: cond!=1111|00110|R!=0|10|mask!=0000|1|1|1|1|imm:12'                       , ''  ],
+
+  # MSR (register)
+  ['msr{%c}{%q}'       , 'sreg, Rn'                              , 'T32: 11110011100|R|Rn:4|10|0|0|mask:4|0|0|0|0|0|0|0|0'                         , ''  ],
+  ['msr{%c}{%q}'       , 'sreg, Rn'                              , 'A32: cond!=1111|00010|R|1|0|mask:4|1111|0|0|0|0|0000|Rn:4'                     , ''  ],
+
+  # MUL, MULS
+  ['mul%c{%q}'         , 'Rdm, Rn{, Rdm}'                        , 'T16: 010000|1101|Rn:3|Rdm:3'                                                   , ''  ],
+  ['muls{%q}'          , 'Rdm, Rn{, Rdm}'                        , 'T16: 010000|1101|Rn:3|Rdm:3'                                                   , ''  ],
+  ['mul%c.W'           , 'Rd, Rn{, Rm}'                          , 'T32: 111110110|000|Rn:4|1111|Rd:4|00|00|Rm:4'                                  , ''  ],
+  ['mul{%c}{%q}'       , 'Rd, Rn{, Rm}'                          , 'T32: 111110110|000|Rn:4|1111|Rd:4|00|00|Rm:4'                                  , ''  ],
+  ['muls{%c}{%q}'      , 'Rd, Rn{, Rm}'                          , 'A32: cond!=1111|0000|000|1|Rd:4|0000|Rm:4|1001|Rn:4'                           , ''  ],
+  ['mul{%c}{%q}'       , 'Rd, Rn{, Rm}'                          , 'A32: cond!=1111|0000|000|0|Rd:4|0000|Rm:4|1001|Rn:4'                           , ''  ],
+
+  # MVN, MVNS (immediate)
+  ['mvn{%c}{%q}'       , 'Rd, #cnst.c'                           , 'T32: 11110|cnst:1|0|0011|0|1111|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['mvns{%c}{%q}'      , 'Rd, #cnst.c'                           , 'T32: 11110|cnst:1|0|0011|1|1111|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['mvn{%c}{%q}'       , 'Rd, #cnst.c'                           , 'A32: cond!=1111|00111|11|0|0000|Rd:4|cnst:12'                                  , ''  ],
+  ['mvns{%c}{%q}'      , 'Rd, #cnst.c'                           , 'A32: cond!=1111|00111|11|1|0000|Rd:4|cnst:12'                                  , ''  ],
+
+  # MVN, MVNS (register)
+  ['mvn%c{%q}'         , 'Rd, Rm'                                , 'T16: 010000|1111|Rm:3|Rd:3'                                                    , ''  ],
+  ['mvns{%q}'          , 'Rd, Rm'                                , 'T16: 010000|1111|Rm:3|Rd:3'                                                    , ''  ],
+  ['mvn{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'T32: 1110101|0011|0|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['mvn%c.W'           , 'Rd, Rm'                                , 'T32: 1110101|0011|0|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['mvn{%c}{%q}'       , 'Rd, Rm {, shift #amount}'              , 'T32: 1110101|0011|0|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['mvns{%c}{%q}'      , 'Rd, Rm, RRX'                           , 'T32: 1110101|0011|1|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['mvns.W'            , 'Rd, Rm'                                , 'T32: 1110101|0011|1|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['mvns{%c}{%q}'      , 'Rd, Rm {, shift #amount}'              , 'T32: 1110101|0011|1|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['mvn{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'A32: cond!=1111|00011|11|0|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['mvn{%c}{%q}'       , 'Rd, Rm {, shift #amount}'              , 'A32: cond!=1111|00011|11|0|0000|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['mvns{%c}{%q}'      , 'Rd, Rm, RRX'                           , 'A32: cond!=1111|00011|11|1|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['mvns{%c}{%q}'      , 'Rd, Rm {, shift #amount}'              , 'A32: cond!=1111|00011|11|1|0000|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # MVN, MVNS (register-shifted register)
+  ['mvns{%c}{%q}'      , 'Rd, Rm, type Rs'                       , 'A32: cond!=1111|00011|11|1|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['mvn{%c}{%q}'       , 'Rd, Rm, type Rs'                       , 'A32: cond!=1111|00011|11|0|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # NOP
+  ['nop{%c}{%q}'       , ''                                      , 'T16: 10111111|0000|0000'                                                       , ''  ],
+  ['nop{%c}.W'         , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0000'                              , ''  ],
+  ['nop{%c}{%q}'       , ''                                      , 'A32: cond!=1111|00110|0|10|00|00|1|1|1|1|000000000000'                         , ''  ],
+
+  # ORN, ORNS (immediate)
+  ['orns{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0011|1|Rn!=1111|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['orn{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0011|0|Rn!=1111|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+
+  # ORN, ORNS (register)
+  ['orn{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0011|0|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
+  ['orn{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0011|0|Rn!=1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['orns{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0011|1|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
+  ['orns{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0011|1|Rn!=1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
+
+  # ORR, ORRS (immediate)
+  ['orr{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0010|0|Rn!=1111|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['orrs{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'T32: 11110|cnst:1|0|0010|1|Rn!=1111|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['orr{%c}{%q}'       , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|00111|00|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['orrs{%c}{%q}'      , '{Rd,} Rn, #cnst.c'                     , 'A32: cond!=1111|00111|00|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+
+  # ORR, ORRS (register)
+  ['orr%c{%q}'         , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|1100|Rm:3|Rdn:3'                                                   , ''  ],
+  ['orrs{%q}'          , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|1100|Rm:3|Rdn:3'                                                   , ''  ],
+  ['orr{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0010|0|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
+  ['orr%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0010|0|Rn!=1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['orr{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0010|0|Rn!=1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['orrs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|0010|1|Rn!=1111|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
+  ['orrs.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|0010|1|Rn!=1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['orrs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|0010|1|Rn!=1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['orr{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|00011|00|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['orr{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|00011|00|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['orrs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|00011|00|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['orrs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|00011|00|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # ORR, ORRS (register-shifted register)
+  ['orrs{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|00011|00|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['orr{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|00011|00|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # PKHBT, PKHTB
+  ['pkhbt{%c}{%q}'     , '{Rd,} Rn, Rm {, LSL #imm}'             , 'T32: 1110101|0110|0|Rn:4|0|imm3:3|Rd:4|imm2:2|0|0|Rm:4'                        , ''  ],
+  ['pkhtb{%c}{%q}'     , '{Rd,} Rn, Rm {, ASR #imm}'             , 'T32: 1110101|0110|0|Rn:4|0|imm3:3|Rd:4|imm2:2|1|0|Rm:4'                        , ''  ],
+  ['pkhbt{%c}{%q}'     , '{Rd,} Rn, Rm {, LSL #imm}'             , 'A32: cond!=1111|01101000|Rn:4|Rd:4|imm5:5|0|01|Rm:4'                           , ''  ],
+  ['pkhtb{%c}{%q}'     , '{Rd,} Rn, Rm {, ASR #imm}'             , 'A32: cond!=1111|01101000|Rn:4|Rd:4|imm5:5|1|01|Rm:4'                           , ''  ],
+
+  # PLD, PLDW (immediate)
+  ['pld{%c}{%q}'       , '[Rn {, #{+}imm.z}]'                    , 'T32: 1111100|0|1|0|0|1|Rn!=1111|1111|imm:12'                                   , ''  ],
+  ['pldw{%c}{%q}'      , '[Rn {, #{+}imm.z}]'                    , 'T32: 1111100|0|1|0|1|1|Rn!=1111|1111|imm:12'                                   , ''  ],
+  ['pld{%c}{%q}'       , '[Rn {, #-imm.z}]'                      , 'T32: 1111100|0|0|0|0|1|Rn!=1111|1111|1100|imm:8'                               , ''  ],
+  ['pldw{%c}{%q}'      , '[Rn {, #-imm.z}]'                      , 'T32: 1111100|0|0|0|1|1|Rn!=1111|1111|1100|imm:8'                               , ''  ],
+  ['pld{%c}{%q}'       , '[Rn {, #{+/-}imm.z}]'                  , 'A32: 1111010|1|U|1|01|Rn!=1111|1|1|1|1|imm:12'                                 , ''  ],
+  ['pldw{%c}{%q}'      , '[Rn {, #{+/-}imm.z}]'                  , 'A32: 1111010|1|U|0|01|Rn!=1111|1|1|1|1|imm:12'                                 , ''  ],
+
+  # PLD (literal)
+  ['pld{%c}{%q}'       , 'rel.z'                                 , 'T32: 1111100|0|U|0|0|1|1111|1111|rel:12'                                       , ''  ],
+  ['pld{%c}{%q}'       , '[PC, #{+/-}imm.z]'                     , 'T32: 1111100|0|U|0|0|1|1111|1111|imm:12'                                       , ''  ],
+  ['pld{%c}{%q}'       , 'rel.z'                                 , 'A32: 1111010|1|U|1|01|1111|1|1|1|1|rel:12'                                     , ''  ],
+  ['pld{%c}{%q}'       , '[PC, #{+/-}imm.z]'                     , 'A32: 1111010|1|U|1|01|1111|1|1|1|1|imm:12'                                     , ''  ],
+
+  # PLD, PLDW (register)
+  ['pld{%c}{%q}'       , '[Rn, {+}Rm {, LSL #amount}]'           , 'T32: 1111100|0|0|0|0|1|Rn!=1111|1111|000000|amount:2|Rm:4'                     , ''  ],
+  ['pldw{%c}{%q}'      , '[Rn, {+}Rm {, LSL #amount}]'           , 'T32: 1111100|0|0|0|1|1|Rn!=1111|1111|000000|amount:2|Rm:4'                     , ''  ],
+  ['pld{%c}{%q}'       , '[Rn, {+/-}Rm {, shift #amount}]'       , 'A32: 1111011|1|U|1|01|Rn:4|1|1|1|1|amount!=00000|shift!=11|0|Rm:4'             , ''  ],
+  ['pld{%c}{%q}'       , '[Rn, {+/-}Rm , RRX]'                   , 'A32: 1111011|1|U|1|01|Rn:4|1|1|1|1|00000|11|0|Rm:4'                            , ''  ],
+  ['pldw{%c}{%q}'      , '[Rn, {+/-}Rm {, shift #amount}]'       , 'A32: 1111011|1|U|0|01|Rn:4|1|1|1|1|amount!=00000|shift!=11|0|Rm:4'             , ''  ],
+  ['pldw{%c}{%q}'      , '[Rn, {+/-}Rm , RRX]'                   , 'A32: 1111011|1|U|0|01|Rn:4|1|1|1|1|00000|11|0|Rm:4'                            , ''  ],
+
+  # PLI (immediate, literal)
+  ['pli{%c}{%q}'       , '[Rn {, #{+}imm.z}]'                    , 'T32: 1111100|1|1|00|1|Rn!=1111|1111|imm:12'                                    , ''  ],
+  ['pli{%c}{%q}'       , '[Rn {, #-imm.z}]'                      , 'T32: 1111100|1|0|00|1|Rn!=1111|1111|1100|imm:8'                                , ''  ],
+  ['pli{%c}{%q}'       , 'rel.z'                                 , 'T32: 1111100|1|U|00|1|1111|1111|rel:12'                                        , ''  ],
+  ['pli{%c}{%q}'       , '[PC, #{+/-}imm.z]'                     , 'T32: 1111100|1|U|00|1|1111|1111|imm:12'                                        , ''  ],
+  ['pli{%c}{%q}'       , '[Rn {, #{+/-}imm.z}]'                  , 'A32: 1111010|0|U|1|01|Rn:4|1|1|1|1|imm:12'                                     , ''  ],
+  ['pli{%c}{%q}'       , 'rel.z'                                 , 'A32: 1111010|0|U|1|01|Rn:4|1|1|1|1|rel:12'                                     , ''  ],
+  ['pli{%c}{%q}'       , '[PC, #{+/-}imm.z]'                     , 'A32: 1111010|0|U|1|01|Rn:4|1|1|1|1|imm:12'                                     , ''  ],
+
+  # PLI (register)
+  ['pli{%c}{%q}'       , '[Rn, {+}Rm {, LSL #amount}]'           , 'T32: 1111100|1|0|00|1|Rn!=1111|1111|000000|amount:2|Rm:4'                      , ''  ],
+  ['pli{%c}{%q}'       , '[Rn, {+/-}Rm , RRX]'                   , 'A32: 1111011|0|U|1|01|Rn:4|1|1|1|1|00000|11|0|Rm:4'                            , ''  ],
+  ['pli{%c}{%q}'       , '[Rn, {+/-}Rm {, shift #amount}]'       , 'A32: 1111011|0|U|1|01|Rn:4|1|1|1|1|amount!=00000|shift!=11|0|Rm:4'             , ''  ],
+
+  # POP
+  ['pop{%c}{%q}'       , 'list'                                  , 'T16: 1011|1|10|list.A:1|list.I:8'                                              , ''  ],
+  ['ldm{%c}{%q}'       , 'SP!, list'                             , 'T16: 1011|1|10|list.A:1|list.I:8'                                              , ''  ],
+
+  # POP (multiple registers)
+  ['pop{%c}.W'         , 'list'                                  , 'T32: 1110100|01|0|1|1|1101|list:1|list:1|0|list:13'                            , ''  ],
+  ['pop{%c}{%q}'       , 'list'                                  , 'T32: 1110100|01|0|1|1|1101|list:1|list:1|0|list:13'                            , ''  ],
+  ['pop{%c}{%q}'       , 'list'                                  , 'A32: cond!=1111|100|0|1|0|1|1|1101|list:16'                                    , ''  ],
+
+  # POP (single register)
+  ['pop{%c}{%q}'       , 'RtList'                                , 'T32: 1111100|0|0|10|1|1101|Rt:4|1|0|1|1|00000100'                              , ''  ],
+  ['pop{%c}{%q}'       , 'RtList'                                , 'A32: cond!=1111|010|0|1|0|0|1|1101|Rt:4|000000000100'                          , ''  ],
+
+  # PUSH
+  ['push{%c}{%q}'      , 'list'                                  , 'T16: 1011|0|10|list.A:1|list.H:8'                                              , ''  ],
+  ['stmdb{%c}{%q}'     , 'SP!, list'                             , 'T16: 1011|0|10|list.A:1|list.H:8'                                              , ''  ],
+
+  # PUSH (multiple registers)
+  ['push{%c}.W'        , 'list'                                  , 'T32: 1110100|10|0|1|0|1101|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['push{%c}{%q}'      , 'list'                                  , 'T32: 1110100|10|0|1|0|1101|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['push{%c}{%q}'      , 'list'                                  , 'A32: cond!=1111|100|1|0|0|1|0|1101|list:16'                                    , ''  ],
+
+  # PUSH (single register)
+  ['push{%c}{%q}'      , 'RtList'                                , 'T32: 1111100|0|0|10|0|1101|Rt:4|1|1|0|1|00000100'                              , ''  ],
+  ['push{%c}{%q}'      , 'RtList'                                , 'A32: cond!=1111|010|1|0|0|1|0|1101|Rt:4|000000000100'                          , ''  ],
+
+  # QADD
+  ['qadd{%c}{%q}'      , '{Rd,} Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
+  ['qadd{%c}{%q}'      , '{Rd,} Rm, Rn'                          , 'A32: cond!=1111|00010|00|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
+
+  # QADD16
+  ['qadd16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|1|Rm:4'                   , ''  ],
+  ['qadd16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|0|1|0|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
+
+  # QADD8
+  ['qadd8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
+  ['qadd8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
+
+  # QASX
+  ['qasx{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
+  ['qasx{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
+
+  # QDADD
+  ['qdadd{%c}{%q}'     , '{Rd,} Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|01|Rm:4'                                  , ''  ],
+  ['qdadd{%c}{%q}'     , '{Rd,} Rm, Rn'                          , 'A32: cond!=1111|00010|10|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
+
+  # QDSUB
+  ['qdsub{%c}{%q}'     , '{Rd,} Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|11|Rm:4'                                  , ''  ],
+  ['qdsub{%c}{%q}'     , '{Rd,} Rm, Rn'                          , 'A32: cond!=1111|00010|11|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
+
+  # QSAX
+  ['qsax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
+  ['qsax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
+
+  # QSUB
+  ['qsub{%c}{%q}'      , '{Rd,} Rm, Rn'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|10|10|Rm:4'                                  , ''  ],
+  ['qsub{%c}{%q}'      , '{Rd,} Rm, Rn'                          , 'A32: cond!=1111|00010|01|0|Rn:4|Rd:4|0|0|0|0|0101|Rm:4'                        , ''  ],
+
+  # QSUB16
+  ['qsub16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|1|Rm:4'                   , ''  ],
+  ['qsub16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|0|1|0|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
+
+  # QSUB8
+  ['qsub8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|0|0|1|Rm:4'                                , ''  ],
+  ['qsub8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|010|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
+
+  # RBIT
+  ['rbit{%c}{%q}'      , 'Rd, Rm'                                , 'T32: 111110101|001|Rn:4|1111|Rd:4|10|10|Rm:4'                                  , ''  ],
+  ['rbit{%c}{%q}'      , 'Rd, Rm'                                , 'A32: cond!=1111|01101|1|11|1|1|1|1|Rd:4|1|1|1|1|0|011|Rm:4'                    , ''  ],
+
+  # REV
+  ['rev{%c}{%q}'       , 'Rd, Rm'                                , 'T16: 10111010|00|Rm:3|Rd:3'                                                    , ''  ],
+  ['rev{%c}.W'         , 'Rd, Rm'                                , 'T32: 111110101|001|Rn:4|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
+  ['rev{%c}{%q}'       , 'Rd, Rm'                                , 'T32: 111110101|001|Rn:4|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
+  ['rev{%c}{%q}'       , 'Rd, Rm'                                , 'A32: cond!=1111|01101|0|11|1|1|1|1|Rd:4|1|1|1|1|0|011|Rm:4'                    , ''  ],
+
+  # REV16
+  ['rev16{%c}{%q}'     , 'Rd, Rm'                                , 'T16: 10111010|01|Rm:3|Rd:3'                                                    , ''  ],
+  ['rev16{%c}.W'       , 'Rd, Rm'                                , 'T32: 111110101|001|Rn:4|1111|Rd:4|10|01|Rm:4'                                  , ''  ],
+  ['rev16{%c}{%q}'     , 'Rd, Rm'                                , 'T32: 111110101|001|Rn:4|1111|Rd:4|10|01|Rm:4'                                  , ''  ],
+  ['rev16{%c}{%q}'     , 'Rd, Rm'                                , 'A32: cond!=1111|01101|0|11|1|1|1|1|Rd:4|1|1|1|1|1|011|Rm:4'                    , ''  ],
+
+  # REVSH
+  ['revsh{%c}{%q}'     , 'Rd, Rm'                                , 'T16: 10111010|11|Rm:3|Rd:3'                                                    , ''  ],
+  ['revsh{%c}.W'       , 'Rd, Rm'                                , 'T32: 111110101|001|Rn:4|1111|Rd:4|10|11|Rm:4'                                  , ''  ],
+  ['revsh{%c}{%q}'     , 'Rd, Rm'                                , 'T32: 111110101|001|Rn:4|1111|Rd:4|10|11|Rm:4'                                  , ''  ],
+  ['revsh{%c}{%q}'     , 'Rd, Rm'                                , 'A32: cond!=1111|01101|1|11|1|1|1|1|Rd:4|1|1|1|1|1|011|Rm:4'                    , ''  ],
+
+  # RFE, RFEDA, RFEDB, RFEIA, RFEIB
+  ['rfedb{%c}{%q}'     , 'Rn{!}'                                 , 'T32: 1110100|00|0|W|1|Rn:4|1|1|0|0000000000000'                                , ''  ],
+  ['rfe{IA}{%c}{%q}'   , 'Rn{!}'                                 , 'T32: 1110100|11|0|W|1|Rn:4|1|1|0|0000000000000'                                , ''  ],
+  ['rfeda{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111100|0|0|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
+  ['rfedb{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111100|1|0|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
+  ['rfe{IA}{%c}{%q}'   , 'Rn{!}'                                 , 'A32: 1111100|0|1|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
+  ['rfeib{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111100|1|1|0|W|1|Rn:4|00001010000|00000'                                 , ''  ],
+
+  # ROR (immediate)
+  ['ror{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|0|1111|0|imm!=000|Rd:4|imm!=00|11|Rm:4'                      , ''  ],
+  ['ror{%c}{%q}'       , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|0|0000|Rd:4|imm!=00000|11|0|Rm:4'                     , ''  ],
+
+  # ROR (register)
+  ['ror%c{%q}'         , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , ''  ],
+  ['ror%c.W'           , '{Rd,} Rm, Rs'                          , 'T32: 111110100|11|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['ror{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'T32: 111110100|11|0|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['ror{%c}{%q}'       , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|0|0000|Rd:4|Rs:4|0|11|1|Rm:4'                         , ''  ],
+
+  # RORS (immediate)
+  ['rors{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'T32: 1110101|0010|1|1111|0|imm!=000|Rd:4|imm!=00|11|Rm:4'                      , ''  ],
+  ['rors{%c}{%q}'      , '{Rd,} Rm, #imm'                        , 'A32: cond!=1111|00011|01|1|0000|Rd:4|imm!=00000|11|0|Rm:4'                     , ''  ],
+
+  # RORS (register)
+  ['rors{%q}'          , '{Rdm,} Rdm, Rs'                        , 'T16: 010000|0111|Rs:3|Rdm:3'                                                   , ''  ],
+  ['rors.W'            , '{Rd,} Rm, Rs'                          , 'T32: 111110100|11|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['rors{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'T32: 111110100|11|1|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['rors{%c}{%q}'      , '{Rd,} Rm, Rs'                          , 'A32: cond!=1111|00011|01|1|0000|Rd:4|Rs:4|0|11|1|Rm:4'                         , ''  ],
+
+  # RRX
+  ['rrx{%c}{%q}'       , '{Rd,} Rm'                              , 'T32: 1110101|0010|0|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['rrx{%c}{%q}'       , '{Rd,} Rm'                              , 'A32: cond!=1111|00011|01|0|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+
+  # RRXS
+  ['rrxs{%c}{%q}'      , '{Rd,} Rm'                              , 'T32: 1110101|0010|1|1111|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['rrxs{%c}{%q}'      , '{Rd,} Rm'                              , 'A32: cond!=1111|00011|01|1|0000|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+
+  # RSB, RSBS (immediate)
+  ['rsb%c{%q}'         , '{Rd, }Rn, #0'                          , 'T16: 010000|1001|Rn:3|Rd:3'                                                    , ''  ],
+  ['rsbs{%q}'          , '{Rd, }Rn, #0'                          , 'T16: 010000|1001|Rn:3|Rd:3'                                                    , ''  ],
+  ['rsb%c.W'           , '{Rd,} Rn, #0'                          , 'T32: 11110|i|0|1110|0|Rn:4|0|imm3:3|Rd:4|imm8:8'                               , ''  ],
+  ['rsb{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1110|0|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['rsbs.W'            , '{Rd,} Rn, #0'                          , 'T32: 11110|i|0|1110|1|Rn:4|0|imm3:3|Rd:4|imm8:8'                               , ''  ],
+  ['rsbs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1110|1|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['rsb{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|011|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['rsbs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|011|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+
+  # RSB, RSBS (register)
+  ['rsb{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1110|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['rsb{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1110|0|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['rsbs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1110|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['rsbs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1110|1|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['rsb{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|011|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['rsb{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|011|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['rsbs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|011|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['rsbs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|011|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # RSB, RSBS (register-shifted register)
+  ['rsbs{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|011|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['rsb{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|011|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # RSC, RSCS (immediate)
+  ['rsc{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|111|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['rscs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|111|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+
+  # RSC, RSCS (register)
+  ['rsc{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|111|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['rsc{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|111|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['rscs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|111|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['rscs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|111|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # RSC, RSCS (register-shifted register)
+  ['rscs{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|111|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['rsc{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|111|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # SADD16
+  ['sadd16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|0|Rm:4'                   , ''  ],
+  ['sadd16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|0|0|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
+
+  # SADD8
+  ['sadd8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
+  ['sadd8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
+
+  # SASX
+  ['sasx{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
+  ['sasx{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
+
+  # SBC, SBCS (immediate)
+  ['sbc{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1011|0|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['sbcs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1011|1|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['sbc{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|110|0|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+  ['sbcs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|110|1|Rn:4|Rd:4|cnst:12'                                  , ''  ],
+
+  # SBC, SBCS (register)
+  ['sbc%c{%q}'         , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0110|Rm:3|Rdn:3'                                                   , ''  ],
+  ['sbcs{%q}'          , '{Rdn,} Rdn, Rm'                        , 'T16: 010000|0110|Rm:3|Rdn:3'                                                   , ''  ],
+  ['sbc{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1011|0|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['sbc%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1011|0|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['sbc{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1011|0|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['sbcs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1011|1|Rn:4|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['sbcs.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1011|1|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['sbcs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1011|1|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['sbc{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|110|0|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['sbc{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|110|0|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['sbcs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|110|1|Rn:4|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['sbcs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|110|1|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # SBC, SBCS (register-shifted register)
+  ['sbcs{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|110|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['sbc{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|110|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # SBFX
+  ['sbfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'T32: 11110|0|11|01|0|0|Rn:4|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
+  ['sbfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'A32: cond!=1111|01111|0|1|width:5|Rd:4|lsb:5|101|Rn:4'                         , ''  ],
+
+  # SDIV
+  ['sdiv{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110111|001|Rn:4|1111|Rd:4|1111|Rm:4'                                   , ''  ],
+  ['sdiv{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|001|Rd:4|1111|Rm:4|000|1|Rn:4'                           , ''  ],
+
+  # SEL
+  ['sel{%c}{%q}'       , '{Rd,} Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|10|00|Rm:4'                                  , ''  ],
+  ['sel{%c}{%q}'       , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01101000|Rn:4|Rd:4|1|1|1|1|1011|Rm:4'                          , ''  ],
+
+  # SETEND
+  ['setend{%q}'        , 'endian_specifier'                      , 'T16: 1011011001|0|1|endian_specifier:1|000'                                    , ''  ],
+  ['setend{%q}'        , 'endian_specifier'                      , 'A32: 111100010000|00|0|1|0|0|0|0|0|0|endian_specifier:1|0|0|0|0|00000'         , ''  ],
+
+  # SEV
+  ['sev{%c}{%q}'       , ''                                      , 'T16: 10111111|0100|0000'                                                       , ''  ],
+  ['sev{%c}.W'         , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0100'                              , ''  ],
+  ['sev{%c}{%q}'       , ''                                      , 'A32: cond!=1111|00110|0|10|00|00|1|1|1|1|000000000100'                         , ''  ],
+
+  # SEVL
+  ['sevl{%c}{%q}'      , ''                                      , 'T16: 10111111|0101|0000'                                                       , ''  ],
+  ['sevl{%c}.W'        , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0101'                              , ''  ],
+  ['sevl{%c}{%q}'      , ''                                      , 'A32: cond!=1111|00110|0|10|00|00|1|1|1|1|000000000101'                         , ''  ],
+
+  # SHADD16
+  ['shadd16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|0|1|0|Rm:4'                   , ''  ],
+  ['shadd16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|0|1|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
+
+  # SHADD8
+  ['shadd8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
+  ['shadd8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
+
+  # SHASX
+  ['shasx{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
+  ['shasx{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
+
+  # SHSAX
+  ['shsax{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
+  ['shsax{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
+
+  # SHSUB16
+  ['shsub16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|0|1|0|Rm:4'                   , ''  ],
+  ['shsub16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|0|1|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
+
+  # SHSUB8
+  ['shsub8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|0|1|0|Rm:4'                                , ''  ],
+  ['shsub8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|011|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
+
+  # SMC
+  ['smc{%c}{%q}'       , '{#}imm'                                , 'T32: 11110111111|1|imm:4|10|0|0|000000000000'                                  , ''  ],
+  ['smc{%c}{%q}'       , '{#}imm'                                , 'A32: cond!=1111|00010|11|0|000000000000|0111|imm:4'                            , ''  ],
+
+  # SMLABB, SMLABT, SMLATB, SMLATT
+  ['smlabb{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
+  ['smlabt{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
+  ['smlatb{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|1|0|Rm:4'                             , ''  ],
+  ['smlatt{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|001|Rn:4|Ra!=1111|Rd:4|00|1|1|Rm:4'                             , ''  ],
+  ['smlabb{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|0|0|0|Rn:4'                        , ''  ],
+  ['smlabt{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|1|0|0|Rn:4'                        , ''  ],
+  ['smlatb{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|0|1|0|Rn:4'                        , ''  ],
+  ['smlatt{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|00010|00|0|Rd:4|Ra:4|Rm:4|1|1|1|0|Rn:4'                        , ''  ],
+
+  # SMLAD, SMLADX
+  ['smlad{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|010|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
+  ['smladx{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|010|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
+  ['smlad{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|00|0|1|Rn:4'                      , ''  ],
+  ['smladx{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|00|1|1|Rn:4'                      , ''  ],
+
+  # SMLAL, SMLALS
+  ['smlal{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
+  ['smlals{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|111|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+  ['smlal{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|111|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+
+  # SMLALBB, SMLALBT, SMLALTB, SMLALTT
+  ['smlalbb{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|0|0|Rm:4'                             , ''  ],
+  ['smlalbt{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|0|1|Rm:4'                             , ''  ],
+  ['smlaltb{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|1|0|Rm:4'                             , ''  ],
+  ['smlaltt{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|10|1|1|Rm:4'                             , ''  ],
+  ['smlalbb{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|0|0|0|Rn:4'                    , ''  ],
+  ['smlalbt{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|1|0|0|Rn:4'                    , ''  ],
+  ['smlaltb{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|0|1|0|Rn:4'                    , ''  ],
+  ['smlaltt{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|00010|10|0|RdHi:4|RdLo:4|Rm:4|1|1|1|0|Rn:4'                    , ''  ],
+
+  # SMLALD, SMLALDX
+  ['smlald{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|110|0|Rm:4'                              , ''  ],
+  ['smlaldx{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|100|Rn:4|RdLo:4|RdHi:4|110|1|Rm:4'                              , ''  ],
+  ['smlald{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|00|0|1|Rn:4'                      , ''  ],
+  ['smlaldx{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|00|1|1|Rn:4'                      , ''  ],
+
+  # SMLAWB, SMLAWT
+  ['smlawb{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|011|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
+  ['smlawt{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|011|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
+  ['smlawb{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|00010|01|0|Rd:4|Ra:4|Rm:4|1|0|0|0|Rn:4'                        , ''  ],
+  ['smlawt{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|00010|01|0|Rd:4|Ra:4|Rm:4|1|1|0|0|Rn:4'                        , ''  ],
+
+  # SMLSD, SMLSDX
+  ['smlsd{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|100|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
+  ['smlsdx{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|100|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
+  ['smlsd{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|01|0|1|Rn:4'                      , ''  ],
+  ['smlsdx{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|000|Rd:4|Ra!=1111|Rm:4|01|1|1|Rn:4'                      , ''  ],
+
+  # SMLSLD, SMLSLDX
+  ['smlsld{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|101|Rn:4|RdLo:4|RdHi:4|110|0|Rm:4'                              , ''  ],
+  ['smlsldx{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|101|Rn:4|RdLo:4|RdHi:4|110|1|Rm:4'                              , ''  ],
+  ['smlsld{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|01|0|1|Rn:4'                      , ''  ],
+  ['smlsldx{%c}{%q}'   , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|01110|100|RdHi:4|RdLo:4|Rm:4|01|1|1|Rn:4'                      , ''  ],
+
+  # SMMLA, SMMLAR
+  ['smmla{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|101|Rn:4|Ra!=1111|Rd:4|00|0|0|Rm:4'                             , ''  ],
+  ['smmlar{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|101|Rn:4|Ra!=1111|Rd:4|00|0|1|Rm:4'                             , ''  ],
+  ['smmla{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|101|Rd:4|Ra!=1111|Rm:4|00|0|1|Rn:4'                      , ''  ],
+  ['smmlar{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|101|Rd:4|Ra!=1111|Rm:4|00|1|1|Rn:4'                      , ''  ],
+
+  # SMMLS, SMMLSR
+  ['smmls{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|110|Rn:4|Ra:4|Rd:4|00|0|0|Rm:4'                                 , ''  ],
+  ['smmlsr{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|110|Rn:4|Ra:4|Rd:4|00|0|1|Rm:4'                                 , ''  ],
+  ['smmls{%c}{%q}'     , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|101|Rd:4|Ra:4|Rm:4|11|0|1|Rn:4'                          , ''  ],
+  ['smmlsr{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01110|101|Rd:4|Ra:4|Rm:4|11|1|1|Rn:4'                          , ''  ],
+
+  # SMMUL, SMMULR
+  ['smmul{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110110|101|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
+  ['smmulr{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|101|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
+  ['smmul{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|101|Rd:4|1111|Rm:4|00|0|1|Rn:4'                          , ''  ],
+  ['smmulr{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|101|Rd:4|1111|Rm:4|00|1|1|Rn:4'                          , ''  ],
+
+  # SMUAD, SMUADX
+  ['smuad{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110110|010|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
+  ['smuadx{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|010|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
+  ['smuad{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|000|Rd:4|1111|Rm:4|00|0|1|Rn:4'                          , ''  ],
+  ['smuadx{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|000|Rd:4|1111|Rm:4|00|1|1|Rn:4'                          , ''  ],
+
+  # SMULBB, SMULBT, SMULTB, SMULTT
+  ['smulbb{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
+  ['smulbt{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
+  ['smultb{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|1|0|Rm:4'                                 , ''  ],
+  ['smultt{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|001|Rn:4|1111|Rd:4|00|1|1|Rm:4'                                 , ''  ],
+  ['smulbb{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|0|0|0|Rn:4'                        , ''  ],
+  ['smulbt{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|1|0|0|Rn:4'                        , ''  ],
+  ['smultb{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|0|1|0|Rn:4'                        , ''  ],
+  ['smultt{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|00010|11|0|Rd:4|0000|Rm:4|1|1|1|0|Rn:4'                        , ''  ],
+
+  # SMULL, SMULLS
+  ['smull{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|000|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
+  ['smulls{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|110|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+  ['smull{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|110|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+
+  # SMULWB, SMULWT
+  ['smulwb{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|011|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
+  ['smulwt{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|011|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
+  ['smulwb{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|00010|01|0|Rd:4|0000|Rm:4|1|0|1|0|Rn:4'                        , ''  ],
+  ['smulwt{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|00010|01|0|Rd:4|0000|Rm:4|1|1|1|0|Rn:4'                        , ''  ],
+
+  # SMUSD, SMUSDX
+  ['smusd{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110110|100|Rn:4|1111|Rd:4|00|0|0|Rm:4'                                 , ''  ],
+  ['smusdx{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110110|100|Rn:4|1111|Rd:4|00|0|1|Rm:4'                                 , ''  ],
+  ['smusd{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|000|Rd:4|1111|Rm:4|01|0|1|Rn:4'                          , ''  ],
+  ['smusdx{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|000|Rd:4|1111|Rm:4|01|1|1|Rn:4'                          , ''  ],
+
+  # SRS, SRSDA, SRSDB, SRSIA, SRSIB
+  ['srsdb{%c}{%q}'     , 'SP{!}, #mode'                          , 'T32: 1110100|00|0|W|0|1101|1|1|0|00000000|mode:5'                              , ''  ],
+  ['srs{IA}{%c}{%q}'   , 'SP{!}, #mode'                          , 'T32: 1110100|11|0|W|0|1101|1|1|0|00000000|mode:5'                              , ''  ],
+  ['srsda{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111100|0|0|1|W|0|1101|00000101000|mode:5'                                , ''  ],
+  ['srsdb{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111100|1|0|1|W|0|1101|00000101000|mode:5'                                , ''  ],
+  ['srs{IA}{%c}{%q}'   , 'SP{!}, #mode'                          , 'A32: 1111100|0|1|1|W|0|1101|00000101000|mode:5'                                , ''  ],
+  ['srsib{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111100|1|1|1|W|0|1101|00000101000|mode:5'                                , ''  ],
+
+  # SSAT
+  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'T32: 11110|0|11|00|1|0|Rn:4|0|amount!=000|Rd:4|amount!=00|0|imm:5'             , ''  ],
+  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'T32: 11110|0|11|00|0|0|Rn:4|0|amount:3|Rd:4|amount:2|0|imm:5'                  , ''  ],
+  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'A32: cond!=1111|01101|0|1|imm:5|Rd:4|amount:5|1|01|Rn:4'                       , ''  ],
+  ['ssat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'A32: cond!=1111|01101|0|1|imm:5|Rd:4|amount:5|0|01|Rn:4'                       , ''  ],
+
+  # SSAT16
+  ['ssat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'T32: 11110|0|11|00|1|0|Rn:4|0|000|Rd:4|00|0|0|imm:4'                           , ''  ],
+  ['ssat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'A32: cond!=1111|01101|0|10|imm:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
+
+  # SSAX
+  ['ssax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
+  ['ssax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
+
+  # SSUB16
+  ['ssub16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|0|0|0|Rm:4'                   , ''  ],
+  ['ssub16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|0|0|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
+
+  # SSUB8
+  ['ssub8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|0|0|0|Rm:4'                                , ''  ],
+  ['ssub8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|001|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
+
+  # STC
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn{, #{+/-}imm.z*4}]'        , 'T32: 111|0|110|1|U|0|0|0|Rn:4|0101|111|0|imm:8'                                , ''  ],
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn], #{+/-}imm.z*4'          , 'T32: 111|0|110|0|U|0|1|0|Rn:4|0101|111|0|imm:8'                                , ''  ],
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn, #{+/-}imm.z*4]!'         , 'T32: 111|0|110|1|U|0|1|0|Rn:4|0101|111|0|imm:8'                                , ''  ],
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn], option'                 , 'T32: 111|0|110|0|1|0|0|0|Rn:4|0101|111|0|option:8'                             , ''  ],
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn{, #{+/-}imm.z*4}]'        , 'A32: cond!=1111|110|1|U|0|0|0|Rn:4|0101|111|0|imm:8'                           , ''  ],
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn], #{+/-}imm.z*4'          , 'A32: cond!=1111|110|0|U|0|1|0|Rn:4|0101|111|0|imm:8'                           , ''  ],
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn, #{+/-}imm.z*4]!'         , 'A32: cond!=1111|110|1|U|0|1|0|Rn:4|0101|111|0|imm:8'                           , ''  ],
+  ['stc{%c}{%q}'       , 'p14, c5, [Rn], option'                 , 'A32: cond!=1111|110|0|1|0|0|0|Rn:4|0101|111|0|option:8'                        , ''  ],
+
+  # STL
+  ['stl{%c}{%q}'       , 'Rt, [Rn]'                              , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|0|10|1111'                                 , ''  ],
+  ['stl{%c}{%q}'       , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|00|0|Rn:4|1111|1|1|0|0|1001|Rt:4'                        , ''  ],
+
+  # STLB
+  ['stlb{%c}{%q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|0|00|1111'                                 , ''  ],
+  ['stlb{%c}{%q}'      , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|10|0|Rn:4|1111|1|1|0|0|1001|Rt:4'                        , ''  ],
+
+  # STLEX
+  ['stlex{%c}{%q}'     , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|1|10|Rd:4'                                 , ''  ],
+  ['stlex{%c}{%q}'     , 'Rd, Rt, [Rn]'                          , 'A32: cond!=1111|00011|00|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
+
+  # STLEXB
+  ['stlexb{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|1|00|Rd:4'                                 , ''  ],
+  ['stlexb{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'A32: cond!=1111|00011|10|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
+
+  # STLEXD
+  ['stlexd{%c}{%q}'    , 'Rd, Rt, Rt2, [Rn]'                     , 'T32: 11101000110|0|Rn:4|Rt:4|Rt2:4|1|1|11|Rd:4'                                , ''  ],
+  ['stlexd{%c}{%q}'    , 'Rd, Rt, Rt2, [Rn]'                     , 'A32: cond!=1111|00011|01|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
+
+  # STLEXH
+  ['stlexh{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|1|01|Rd:4'                                 , ''  ],
+  ['stlexh{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'A32: cond!=1111|00011|11|0|Rn:4|Rd:4|1|1|1|0|1001|Rt:4'                        , ''  ],
+
+  # STLH
+  ['stlh{%c}{%q}'      , 'Rt, [Rn]'                              , 'T32: 11101000110|0|Rn:4|Rt:4|1111|1|0|01|1111'                                 , ''  ],
+  ['stlh{%c}{%q}'      , 'Rt, [Rn]'                              , 'A32: cond!=1111|00011|11|0|Rn:4|1111|1|1|0|0|1001|Rt:4'                        , ''  ],
+
+  # STM, STMIA, STMEA
+  ['stm{IA}{%c}{%q}'   , 'Rn!, list'                             , 'T16: 1100|0|Rn:3|list:8'                                                       , ''  ],
+  ['stmea{%c}{%q}'     , 'Rn!, list'                             , 'T16: 1100|0|Rn:3|list:8'                                                       , ''  ],
+  ['stm{IA}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmea{%c}.W'       , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmea{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110100|01|0|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|1|0|W|0|Rn:4|list:16'                                    , ''  ],
+  ['stmea{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|1|0|W|0|Rn:4|list:16'                                    , ''  ],
+
+  # STM (User registers)
+  ['stm{%amode}{%c}{%q}', 'Rn, list'                              , 'A32: cond!=1111|100|P|U|1|0|0|Rn:4|list:16'                                    , ''  ],
+
+  # STMDA, STMED
+  ['stmda{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|0|0|W|0|Rn:4|list:16'                                    , ''  ],
+  ['stmed{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|0|0|0|W|0|Rn:4|list:16'                                    , ''  ],
+
+  # STMDB, STMFD
+  ['stmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110100|10|0|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|0|0|W|0|Rn:4|list:16'                                    , ''  ],
+  ['stmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|0|0|W|0|Rn:4|list:16'                                    , ''  ],
+
+  # STMIB, STMFA
+  ['stmib{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|1|0|W|0|Rn:4|list:16'                                    , ''  ],
+  ['stmfa{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|100|1|1|0|W|0|Rn:4|list:16'                                    , ''  ],
+
+  # STR (immediate)
+  ['str{%c}{%q}'       , 'Rt, [Rn {, #{+}imm.z*4}]'              , 'T16: 011|0|0|imm:5|Rn:3|Rt:3'                                                  , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [SP{, #{+}imm.z*4}]'               , 'T16: 1001|0|Rt:3|imm:8'                                                        , ''  ],
+  ['str{%c}.W'         , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|10|0|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|10|0|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1|1|0|0|imm:8'                             , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|010|1|U|0|0|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|010|0|U|0|0|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|010|1|U|0|1|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+
+  # STR (register)
+  ['str{%c}{%q}'       , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|0|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['str{%c}.W'         , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|000000|imm2:2|Rm:4'                        , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|000000|imm:2|Rm:4'                         , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]'  , 'A32: cond!=1111|011|1|U|0|0|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|0|0|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['str{%c}{%q}'       , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]!' , 'A32: cond!=1111|011|1|U|0|1|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # STRB (immediate)
+  ['strb{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T16: 011|1|0|imm:5|Rn:3|Rt:3'                                                  , ''  ],
+  ['strb{%c}.W'        , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|00|0|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|00|0|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1|1|0|0|imm:8'                             , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|010|1|U|1|0|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|010|0|U|1|0|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|010|1|U|1|1|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+
+  # STRB (register)
+  ['strb{%c}{%q}'      , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|1|0|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['strb{%c}.W'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|000000|imm2:2|Rm:4'                        , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|000000|imm:2|Rm:4'                         , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]'  , 'A32: cond!=1111|011|1|U|1|0|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|1|0|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+  ['strb{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm{, shift {#amount}}]!' , 'A32: cond!=1111|011|1|U|1|1|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # STRBT
+  ['strbt{%c}{%q}'     , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|0|00|0|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['strbt{%c}{%q}'     , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|010|0|U|1|1|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['strbt{%c}{%q}'     , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|1|1|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # STRD (immediate)
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn {, #{+/-}imm.z*4}]'       , 'T32: 1110100|1|U|1|0|0|Rn!=1111|Rt:4|Rt2:4|imm:8'                              , ''  ],
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn], #{+/-}imm.z*4'          , 'T32: 1110100|0|U|1|1|0|Rn!=1111|Rt:4|Rt2:4|imm:8'                              , ''  ],
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn, #{+/-}imm.z*4]!'         , 'T32: 1110100|1|U|1|1|0|Rn!=1111|Rt:4|Rt2:4|imm:8'                              , ''  ],
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn {, #{+/-}imm.z}]'         , 'A32: cond!=1111|000|1|U|1|0|0|Rn:4|Rt:4|imm:4|1|11|1|imm:4'                    , ''  ],
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn], #{+/-}imm.z'            , 'A32: cond!=1111|000|0|U|1|0|0|Rn:4|Rt:4|imm:4|1|11|1|imm:4'                    , ''  ],
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn, #{+/-}imm.z]!'           , 'A32: cond!=1111|000|1|U|1|1|0|Rn:4|Rt:4|imm:4|1|11|1|imm:4'                    , ''  ],
+
+  # STRD (register)
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn, {+/-}Rm]'                , 'A32: cond!=1111|000|1|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn], {+/-}Rm'                , 'A32: cond!=1111|000|0|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
+  ['strd{%c}{%q}'      , 'Rt, Rt2, [Rn, {+/-}Rm]!'               , 'A32: cond!=1111|000|1|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|11|1|Rm:4'                   , ''  ],
+
+  # STREX
+  ['strex{%c}{%q}'     , 'Rd, Rt, [Rn {, #imm.z*4}]'             , 'T32: 11101000010|0|Rn:4|Rt:4|Rd:4|imm:8'                                       , ''  ],
+  ['strex{%c}{%q}'     , 'Rd, Rt, [Rn {, {#}imm}]'               , 'A32: cond!=1111|00011|00|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
+
+  # STREXB
+  ['strexb{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|01|00|Rd:4'                                  , ''  ],
+  ['strexb{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'A32: cond!=1111|00011|10|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
+
+  # STREXD
+  ['strexd{%c}{%q}'    , 'Rd, Rt, Rt2, [Rn]'                     , 'T32: 11101000110|0|Rn:4|Rt:4|Rt2:4|01|11|Rd:4'                                 , ''  ],
+  ['strexd{%c}{%q}'    , 'Rd, Rt, Rt2, [Rn]'                     , 'A32: cond!=1111|00011|01|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
+
+  # STREXH
+  ['strexh{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'T32: 11101000110|0|Rn:4|Rt:4|1111|01|01|Rd:4'                                  , ''  ],
+  ['strexh{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'A32: cond!=1111|00011|11|0|Rn:4|Rd:4|1|1|1|1|1001|Rt:4'                        , ''  ],
+
+  # STRH (immediate)
+  ['strh{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z*2}]'              , 'T16: 1000|0|imm:5|Rn:3|Rt:3'                                                   , ''  ],
+  ['strh{%c}.W'        , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|01|0|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|1|01|0|Rn!=1111|Rt:4|imm:12'                                    , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn {, #-imm.z}]'                  , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1|1|0|0|imm:8'                             , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1|0|U|1|imm:8'                             , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1|1|U|1|imm:8'                             , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn {, #{+/-}imm.z}]'              , 'A32: cond!=1111|000|1|U|1|0|0|Rn:4|Rt:4|imm:4|1|01|1|imm:4'                    , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn], #{+/-}imm.z'                 , 'A32: cond!=1111|000|0|U|1|0|0|Rn:4|Rt:4|imm:4|1|01|1|imm:4'                    , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn, #{+/-}imm.z]!'                , 'A32: cond!=1111|000|1|U|1|1|0|Rn:4|Rt:4|imm:4|1|01|1|imm:4'                    , ''  ],
+
+  # STRH (register)
+  ['strh{%c}{%q}'      , 'Rt, [Rn, {+}Rm]'                       , 'T16: 0101|0|0|1|Rm:3|Rn:3|Rt:3'                                                , ''  ],
+  ['strh{%c}.W'        , 'Rt, [Rn, {+}Rm]'                       , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|000000|imm2:2|Rm:4'                        , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn, {+}Rm{, LSL #imm}]'           , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|000000|imm:2|Rm:4'                         , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm]'                     , 'A32: cond!=1111|000|1|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|0|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+  ['strh{%c}{%q}'      , 'Rt, [Rn, {+/-}Rm]!'                    , 'A32: cond!=1111|000|1|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+
+  # STRHT
+  ['strht{%c}{%q}'     , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|0|01|0|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['strht{%c}{%q}'     , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|000|0|U|1|1|0|Rn:4|Rt:4|imm:4|1|01|1|imm:4'                    , ''  ],
+  ['strht{%c}{%q}'     , 'Rt, [Rn], {+/-}Rm'                     , 'A32: cond!=1111|000|0|U|0|1|0|Rn:4|Rt:4|0|0|0|0|1|01|1|Rm:4'                   , ''  ],
+
+  # STRT
+  ['strt{%c}{%q}'      , 'Rt, [Rn {, #{+}imm.z}]'                , 'T32: 1111100|0|0|10|0|Rn!=1111|Rt:4|1110|imm:8'                                , ''  ],
+  ['strt{%c}{%q}'      , 'Rt, [Rn] {, #{+/-}imm.z}'              , 'A32: cond!=1111|010|0|U|0|1|0|Rn:4|Rt:4|imm:12'                                , ''  ],
+  ['strt{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm{, shift {#amount}}'  , 'A32: cond!=1111|011|0|U|0|1|0|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'               , ''  ],
+
+  # SUB (immediate, from PC)
+  ['sub{%c}{%q}'       , 'Rd, PC, #imm.z'                        , 'T32: 11110|imm:1|10|1|0|1|0|1111|0|imm:3|Rd:4|imm:8'                           , ''  ],
+  ['sub{%c}{%q}'       , 'Rd, PC, #cnst.x'                       , 'A32: cond!=1111|0010|010|0|1111|Rd:4|cnst:12'                                  , ''  ],
+
+  # SUB, SUBS (immediate)
+  ['sub%c{%q}'         , 'Rd, Rn, #imm.z'                        , 'T16: 000111|1|imm:3|Rn:3|Rd:3'                                                 , ''  ],
+  ['subs{%q}'          , 'Rd, Rn, #imm.z'                        , 'T16: 000111|1|imm:3|Rn:3|Rd:3'                                                 , ''  ],
+  ['sub%c{%q}'         , 'Rdn, #imm.z'                           , 'T16: 001|11|Rdn:3|imm:8'                                                       , ''  ],
+  ['sub%c{%q}'         , '{Rdn,} Rdn, #imm.z'                    , 'T16: 001|11|Rdn:3|imm:8'                                                       , ''  ],
+  ['subs{%q}'          , 'Rdn, #imm.z'                           , 'T16: 001|11|Rdn:3|imm:8'                                                       , ''  ],
+  ['subs{%q}'          , '{Rdn,} Rdn, #imm.z'                    , 'T16: 001|11|Rdn:3|imm:8'                                                       , ''  ],
+  ['sub%c.W'           , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1101|0|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1101|0|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['subs.W'            , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1101|1|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'T32: 11110|cnst:1|0|1101|1|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, #imm.z'                      , 'T32: 11110|imm:1|10|1|0|1|0|Rn!=11x1|0|imm:3|Rd:4|imm:8'                       , ''  ],
+  ['subw{%c}{%q}'      , '{Rd,} Rn, #imm.z'                      , 'T32: 11110|imm:1|10|1|0|1|0|Rn!=11x1|0|imm:3|Rd:4|imm:8'                       , ''  ],
+  ['subs{%c}{%q}'      , 'PC, LR, #imm.z'                        , 'T32: 111100111101|1110|10|0|0|1|1|1|1|imm!=00000000'                           , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|010|0|Rn!=11x1|Rd:4|cnst:12'                              , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} Rn, #cnst.x'                     , 'A32: cond!=1111|0010|010|1|Rn!=1101|Rd:4|cnst:12'                              , ''  ],
+
+  # SUB, SUBS (register)
+  ['sub%c{%q}'         , 'Rd, Rn, Rm'                            , 'T16: 000110|1|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
+  ['subs{%q}'          , '{Rd,} Rn, Rm'                          , 'T16: 000110|1|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1101|0|Rn!=1101|0|000|Rd:4|00|11|Rm:4'                            , ''  ],
+  ['sub%c.W'           , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1101|0|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1101|0|Rn!=1101|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'T32: 1110101|1101|1|Rn!=1101|0|000|Rd!=1111|00|11|Rm:4'                        , ''  ],
+  ['subs.W'            , '{Rd,} Rn, Rm'                          , 'T32: 1110101|1101|1|Rn!=1101|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'      , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'T32: 1110101|1101|1|Rn!=1101|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4' , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|010|0|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|010|0|Rn!=1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'       , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|010|1|Rn!=1101|Rd:4|00000|11|0|Rm:4'                      , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} Rn, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|010|1|Rn!=1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'       , ''  ],
+
+  # SUB, SUBS (register-shifted register)
+  ['subs{%c}{%q}'      , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|010|1|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|010|0|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                     , ''  ],
+
+  # SUB, SUBS (SP minus immediate)
+  ['sub{%c}{%q}'       , '{SP,} SP, #imm.z*4'                    , 'T16: 10110000|1|imm:7'                                                         , ''  ],
+  ['sub{%c}.W'         , '{Rd,} SP, #cnst.x'                     , 'T32: 11110|cnst:1|0|1101|0|1101|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} SP, #cnst.x'                     , 'T32: 11110|cnst:1|0|1101|0|1101|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} SP, #cnst.x'                     , 'T32: 11110|cnst:1|0|1101|1|1101|0|cnst:3|Rd!=1111|cnst:8'                      , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} SP, #imm.z'                      , 'T32: 11110|imm:1|10|1|0|1|0|1101|0|imm:3|Rd:4|imm:8'                           , ''  ],
+  ['subw{%c}{%q}'      , '{Rd,} SP, #imm.z'                      , 'T32: 11110|imm:1|10|1|0|1|0|1101|0|imm:3|Rd:4|imm:8'                           , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} SP, #cnst.x'                     , 'A32: cond!=1111|0010|010|0|1101|Rd:4|cnst:12'                                  , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} SP, #cnst.x'                     , 'A32: cond!=1111|0010|010|1|1101|Rd:4|cnst:12'                                  , ''  ],
+
+  # SUB, SUBS (SP minus register)
+  ['sub{%c}{%q}'       , '{Rd,} SP, Rm, RRX'                     , 'T32: 1110101|1101|0|1101|0|000|Rd:4|00|11|Rm:4'                                , ''  ],
+  ['sub{%c}.W'         , '{Rd,} SP, Rm'                          , 'T32: 1110101|1101|0|1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} SP, Rm {, shift #amount}'        , 'T32: 1110101|1101|0|1101|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} SP, Rm, RRX'                     , 'T32: 1110101|1101|1|1101|0|000|Rd!=1111|00|11|Rm:4'                            , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} SP, Rm {, shift #amount}'        , 'T32: 1110101|1101|1|1101|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4'     , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} SP, Rm , RRX'                    , 'A32: cond!=1111|0000|010|0|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['sub{%c}{%q}'       , '{Rd,} SP, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|010|0|1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} SP, Rm , RRX'                    , 'A32: cond!=1111|0000|010|1|1101|Rd:4|00000|11|0|Rm:4'                          , ''  ],
+  ['subs{%c}{%q}'      , '{Rd,} SP, Rm {, shift #amount}'        , 'A32: cond!=1111|0000|010|1|1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'           , ''  ],
+
+  # SVC
+  ['svc{%c}{%q}'       , '{#}imm.z'                              , 'T16: 1101111|1|imm:8'                                                          , ''  ],
+  ['svc{%c}{%q}'       , '{#}imm.z'                              , 'A32: cond!=1111|1111|imm:24'                                                   , ''  ],
+
+  # SXTAB
+  ['sxtab{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'T32: 111110100|10|0|Rn!=1111|1111|Rd:4|1|0|amount:2|Rm:4'                      , ''  ],
+  ['sxtab{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'A32: cond!=1111|01101|0|10|Rn!=1111|Rd:4|amount:2|0|0|0111|Rm:4'               , ''  ],
+
+  # SXTAB16
+  ['sxtab16{%c}{%q}'   , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'T32: 111110100|01|0|Rn!=1111|1111|Rd:4|1|0|amount:2|Rm:4'                      , ''  ],
+  ['sxtab16{%c}{%q}'   , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'A32: cond!=1111|01101|0|00|Rn!=1111|Rd:4|amount:2|0|0|0111|Rm:4'               , ''  ],
+
+  # SXTAH
+  ['sxtah{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'T32: 111110100|00|0|Rn!=1111|1111|Rd:4|1|0|amount:2|Rm:4'                      , ''  ],
+  ['sxtah{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'A32: cond!=1111|01101|0|11|Rn!=1111|Rd:4|amount:2|0|0|0111|Rm:4'               , ''  ],
+
+  # SXTB
+  ['sxtb{%c}{%q}'      , '{Rd,} Rm'                              , 'T16: 10110010|0|1|Rm:3|Rd:3'                                                   , ''  ],
+  ['sxtb{%c}.W'        , '{Rd,} Rm'                              , 'T32: 111110100|10|0|1111|1111|Rd:4|1|0|rotate:2|Rm:4'                          , ''  ],
+  ['sxtb{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'T32: 111110100|10|0|1111|1111|Rd:4|1|0|amount:2|Rm:4'                          , ''  ],
+  ['sxtb{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'A32: cond!=1111|01101|0|10|1111|Rd:4|amount:2|0|0|0111|Rm:4'                   , ''  ],
+
+  # SXTB16
+  ['sxtb16{%c}{%q}'    , '{Rd,} Rm {, ROR #amount*8}'            , 'T32: 111110100|01|0|1111|1111|Rd:4|1|0|amount:2|Rm:4'                          , ''  ],
+  ['sxtb16{%c}{%q}'    , '{Rd,} Rm {, ROR #amount*8}'            , 'A32: cond!=1111|01101|0|00|1111|Rd:4|amount:2|0|0|0111|Rm:4'                   , ''  ],
+
+  # SXTH
+  ['sxth{%c}{%q}'      , '{Rd,} Rm'                              , 'T16: 10110010|0|0|Rm:3|Rd:3'                                                   , ''  ],
+  ['sxth{%c}.W'        , '{Rd,} Rm'                              , 'T32: 111110100|00|0|1111|1111|Rd:4|1|0|rotate:2|Rm:4'                          , ''  ],
+  ['sxth{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'T32: 111110100|00|0|1111|1111|Rd:4|1|0|amount:2|Rm:4'                          , ''  ],
+  ['sxth{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'A32: cond!=1111|01101|0|11|1111|Rd:4|amount:2|0|0|0111|Rm:4'                   , ''  ],
+
+  # TBB, TBH
+  ['tbb{%c}{%q}'       , '[Rn, Rm]'                              , 'T32: 111010001101|Rn:4|1|1|1|1|0|0|0|0|000|0|Rm:4'                             , ''  ],
+  ['tbh{%c}{%q}'       , '[Rn, Rm, LSL #1]'                      , 'T32: 111010001101|Rn:4|1|1|1|1|0|0|0|0|000|1|Rm:4'                             , ''  ],
+
+  # TEQ (immediate)
+  ['teq{%c}{%q}'       , 'Rn, #cnst.c'                           , 'T32: 11110|cnst:1|0|0100|1|Rn:4|0|cnst:3|1111|cnst:8'                          , ''  ],
+  ['teq{%c}{%q}'       , 'Rn, #cnst.c'                           , 'A32: cond!=1111|00110|01|1|Rn:4|0|0|0|0|cnst:12'                               , ''  ],
+
+  # TEQ (register)
+  ['teq{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'T32: 1110101|0100|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
+  ['teq{%c}{%q}'       , 'Rn, Rm {, shift #amount}'              , 'T32: 1110101|0100|1|Rn:4|0|amount!=000|1111|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['teq{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'A32: cond!=1111|00010|01|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
+  ['teq{%c}{%q}'       , 'Rn, Rm {, shift #amount}'              , 'A32: cond!=1111|00010|01|1|Rn:4|0|0|0|0|amount!=00000|shift!=11|0|Rm:4'        , ''  ],
+
+  # TEQ (register-shifted register)
+  ['teq{%c}{%q}'       , 'Rn, Rm, type Rs'                       , 'A32: cond!=1111|00010|01|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
+
+  # TST (immediate)
+  ['tst{%c}{%q}'       , 'Rn, #cnst.c'                           , 'T32: 11110|cnst:1|0|0000|1|Rn:4|0|cnst:3|1111|cnst:8'                          , ''  ],
+  ['tst{%c}{%q}'       , 'Rn, #cnst.c'                           , 'A32: cond!=1111|00110|00|1|Rn:4|0|0|0|0|cnst:12'                               , ''  ],
+
+  # TST (register)
+  ['tst{%c}{%q}'       , 'Rn, Rm'                                , 'T16: 010000|1000|Rm:3|Rn:3'                                                    , ''  ],
+  ['tst{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'T32: 1110101|0000|1|Rn:4|0|000|1111|00|11|Rm:4'                                , ''  ],
+  ['tst{%c}.W'         , 'Rn, Rm'                                , 'T32: 1110101|0000|1|Rn:4|0|imm3!=000|1111|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['tst{%c}{%q}'       , 'Rn, Rm {, shift #amount}'              , 'T32: 1110101|0000|1|Rn:4|0|amount!=000|1111|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['tst{%c}{%q}'       , 'Rn, Rm, RRX'                           , 'A32: cond!=1111|00010|00|1|Rn:4|0|0|0|0|00000|11|0|Rm:4'                       , ''  ],
+  ['tst{%c}{%q}'       , 'Rn, Rm {, shift #amount}'              , 'A32: cond!=1111|00010|00|1|Rn:4|0|0|0|0|amount!=00000|shift!=11|0|Rm:4'        , ''  ],
+
+  # TST (register-shifted register)
+  ['tst{%c}{%q}'       , 'Rn, Rm, type Rs'                       , 'A32: cond!=1111|00010|00|1|Rn:4|0|0|0|0|Rs:4|0|type:2|1|Rm:4'                  , ''  ],
+
+  # UADD16
+  ['uadd16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|0|Rm:4'                   , ''  ],
+  ['uadd16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|1|0|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
+
+  # UADD8
+  ['uadd8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
+  ['uadd8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
+
+  # UASX
+  ['uasx{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
+  ['uasx{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
+
+  # UBFX
+  ['ubfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'T32: 11110|0|11|11|0|0|Rn:4|0|lsb:3|Rd:4|lsb:2|0|width:5'                      , ''  ],
+  ['ubfx{%c}{%q}'      , 'Rd, Rn, #lsb, #width'                  , 'A32: cond!=1111|01111|1|1|width:5|Rd:4|lsb:5|101|Rn:4'                         , ''  ],
+
+  # UDF
+  ['udf{%c}{%q}'       , '{#}imm.z'                              , 'T16: 1101111|0|imm:8'                                                          , ''  ],
+  ['udf{%c}.W'         , '{#}imm.z'                              , 'T32: 11110111111|1|imm:4|10|1|0|imm:12'                                        , ''  ],
+  ['udf{%c}{%q}'       , '{#}imm.z'                              , 'T32: 11110111111|1|imm:4|10|1|0|imm:12'                                        , ''  ],
+  ['udf{%c}{%q}'       , '{#}imm.z'                              , 'A32: 1110|01111111|imm:12|1111|imm:4'                                          , ''  ],
+
+  # UDIV
+  ['udiv{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110111|011|Rn:4|1111|Rd:4|1111|Rm:4'                                   , ''  ],
+  ['udiv{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01110|011|Rd:4|1111|Rm:4|000|1|Rn:4'                           , ''  ],
+
+  # UHADD16
+  ['uhadd16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|1|1|0|Rm:4'                   , ''  ],
+  ['uhadd16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|1|1|1|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
+
+  # UHADD8
+  ['uhadd8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
+  ['uhadd8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
+
+  # UHASX
+  ['uhasx{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
+  ['uhasx{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
+
+  # UHSAX
+  ['uhsax{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
+  ['uhsax{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
+
+  # UHSUB16
+  ['uhsub16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|1|1|0|Rm:4'                   , ''  ],
+  ['uhsub16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|1|1|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
+
+  # UHSUB8
+  ['uhsub8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|1|1|0|Rm:4'                                , ''  ],
+  ['uhsub8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|111|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
+
+  # UMAAL
+  ['umaal{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|110|Rn:4|RdLo:4|RdHi:4|0110|Rm:4'                               , ''  ],
+  ['umaal{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|010|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+
+  # UMLAL, UMLALS
+  ['umlal{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|110|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
+  ['umlals{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|101|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+  ['umlal{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|101|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+
+  # UMULL, UMULLS
+  ['umull{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'T32: 111110111|010|Rn:4|RdLo:4|RdHi:4|0000|Rm:4'                               , ''  ],
+  ['umulls{%c}{%q}'    , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|100|1|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+  ['umull{%c}{%q}'     , 'RdLo, RdHi, Rn, Rm'                    , 'A32: cond!=1111|0000|100|0|RdHi:4|RdLo:4|Rm:4|1001|Rn:4'                       , ''  ],
+
+  # UQADD16
+  ['uqadd16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|0|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|1|Rm:4'                   , ''  ],
+  ['uqadd16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|1|1|0|Rn:4|Rd:4|1|1|1|1|0|0|0|1|Rm:4'                , ''  ],
+
+  # UQADD8
+  ['uqadd8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110101|000|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
+  ['uqadd8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|1|00|1|Rm:4'                       , ''  ],
+
+  # UQASX
+  ['uqasx{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|010|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
+  ['uqasx{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|0|01|1|Rm:4'                       , ''  ],
+
+  # UQSAX
+  ['uqsax{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
+  ['uqsax{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
+
+  # UQSUB16
+  ['uqsub16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|1|Rm:4'                   , ''  ],
+  ['uqsub16{%c}{%q}'   , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|1|1|0|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
+
+  # UQSUB8
+  ['uqsub8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|1|0|1|Rm:4'                                , ''  ],
+  ['uqsub8{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|110|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
+
+  # USAD8
+  ['usad8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|1|0|1|1|1|Rn:4|1|1|1|1|Rd:4|0|0|0|0|Rm:4'                   , ''  ],
+  ['usad8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|1|1|0|0|0|Rd:4|1|1|1|1|Rm:4|0|0|0|1|Rn:4'                , ''  ],
+
+  # USADA8
+  ['usada8{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'T32: 111110110|111|Rn:4|Ra!=1111|Rd:4|00|00|Rm:4'                              , ''  ],
+  ['usada8{%c}{%q}'    , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|01111000|Rd:4|Ra!=1111|Rm:4|0001|Rn:4'                         , ''  ],
+
+  # USAT
+  ['usat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'T32: 11110|0|11|10|1|0|Rn:4|0|amount!=000|Rd:4|amount!=00|0|imm:5'             , ''  ],
+  ['usat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'T32: 11110|0|11|10|0|0|Rn:4|0|amount:3|Rd:4|amount:2|0|imm:5'                  , ''  ],
+  ['usat{%c}{%q}'      , 'Rd, #imm, Rn, ASR #amount'             , 'A32: cond!=1111|01101|1|1|imm:5|Rd:4|amount:5|1|01|Rn:4'                       , ''  ],
+  ['usat{%c}{%q}'      , 'Rd, #imm, Rn {, LSL #amount}'          , 'A32: cond!=1111|01101|1|1|imm:5|Rd:4|amount:5|0|01|Rn:4'                       , ''  ],
+
+  # USAT16
+  ['usat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'T32: 11110|0|11|10|1|0|Rn:4|0|000|Rd:4|00|0|0|imm:4'                           , ''  ],
+  ['usat16{%c}{%q}'    , 'Rd, #imm, Rn'                          , 'A32: cond!=1111|01101|1|10|imm:4|Rd:4|1|1|1|1|0011|Rn:4'                       , ''  ],
+
+  # USAX
+  ['usax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'T32: 111110101|110|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
+  ['usax{%c}{%q}'      , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|0|10|1|Rm:4'                       , ''  ],
+
+  # USUB16
+  ['usub16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'T32: 1|1|1|1|1|0|1|0|1|1|0|1|Rn:4|1|1|1|1|Rd:4|0|1|0|0|Rm:4'                   , ''  ],
+  ['usub16{%c}{%q}'    , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|0|1|1|0|0|1|0|1|Rn:4|Rd:4|1|1|1|1|0|1|1|1|Rm:4'                , ''  ],
+
+  # USUB8
+  ['usub8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'T32: 111110101|100|Rn:4|1111|Rd:4|0|1|0|0|Rm:4'                                , ''  ],
+  ['usub8{%c}{%q}'     , '{Rd,} Rn, Rm'                          , 'A32: cond!=1111|01100|101|Rn:4|Rd:4|1|1|1|1|1|11|1|Rm:4'                       , ''  ],
+
+  # UXTAB
+  ['uxtab{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'T32: 111110100|10|1|Rn!=1111|1111|Rd:4|1|0|amount:2|Rm:4'                      , ''  ],
+  ['uxtab{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'A32: cond!=1111|01101|1|10|Rn!=1111|Rd:4|amount:2|0|0|0111|Rm:4'               , ''  ],
+
+  # UXTAB16
+  ['uxtab16{%c}{%q}'   , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'T32: 111110100|01|1|Rn!=1111|1111|Rd:4|1|0|amount:2|Rm:4'                      , ''  ],
+  ['uxtab16{%c}{%q}'   , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'A32: cond!=1111|01101|1|00|Rn!=1111|Rd:4|amount:2|0|0|0111|Rm:4'               , ''  ],
+
+  # UXTAH
+  ['uxtah{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'T32: 111110100|00|1|Rn!=1111|1111|Rd:4|1|0|amount:2|Rm:4'                      , ''  ],
+  ['uxtah{%c}{%q}'     , '{Rd,} Rn, Rm {, ROR #amount*8}'        , 'A32: cond!=1111|01101|1|11|Rn!=1111|Rd:4|amount:2|0|0|0111|Rm:4'               , ''  ],
+
+  # UXTB
+  ['uxtb{%c}{%q}'      , '{Rd,} Rm'                              , 'T16: 10110010|1|1|Rm:3|Rd:3'                                                   , ''  ],
+  ['uxtb{%c}.W'        , '{Rd,} Rm'                              , 'T32: 111110100|10|1|1111|1111|Rd:4|1|0|rotate:2|Rm:4'                          , ''  ],
+  ['uxtb{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'T32: 111110100|10|1|1111|1111|Rd:4|1|0|amount:2|Rm:4'                          , ''  ],
+  ['uxtb{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'A32: cond!=1111|01101|1|10|1111|Rd:4|amount:2|0|0|0111|Rm:4'                   , ''  ],
+
+  # UXTB16
+  ['uxtb16{%c}{%q}'    , '{Rd,} Rm {, ROR #amount*8}'            , 'T32: 111110100|01|1|1111|1111|Rd:4|1|0|amount:2|Rm:4'                          , ''  ],
+  ['uxtb16{%c}{%q}'    , '{Rd,} Rm {, ROR #amount*8}'            , 'A32: cond!=1111|01101|1|00|1111|Rd:4|amount:2|0|0|0111|Rm:4'                   , ''  ],
+
+  # UXTH
+  ['uxth{%c}{%q}'      , '{Rd,} Rm'                              , 'T16: 10110010|1|0|Rm:3|Rd:3'                                                   , ''  ],
+  ['uxth{%c}.W'        , '{Rd,} Rm'                              , 'T32: 111110100|00|1|1111|1111|Rd:4|1|0|rotate:2|Rm:4'                          , ''  ],
+  ['uxth{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'T32: 111110100|00|1|1111|1111|Rd:4|1|0|amount:2|Rm:4'                          , ''  ],
+  ['uxth{%c}{%q}'      , '{Rd,} Rm {, ROR #amount*8}'            , 'A32: cond!=1111|01101|1|11|1111|Rd:4|amount:2|0|0|0111|Rm:4'                   , ''  ],
+
+  # WFE
+  ['wfe{%c}{%q}'       , ''                                      , 'T16: 10111111|0010|0000'                                                       , ''  ],
+  ['wfe{%c}.W'         , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0010'                              , ''  ],
+  ['wfe{%c}{%q}'       , ''                                      , 'A32: cond!=1111|00110|0|10|00|00|1|1|1|1|000000000010'                         , ''  ],
+
+  # WFI
+  ['wfi{%c}{%q}'       , ''                                      , 'T16: 10111111|0011|0000'                                                       , ''  ],
+  ['wfi{%c}.W'         , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0011'                              , ''  ],
+  ['wfi{%c}{%q}'       , ''                                      , 'A32: cond!=1111|00110|0|10|00|00|1|1|1|1|000000000011'                         , ''  ],
+
+  # YIELD
+  ['yield{%c}{%q}'     , ''                                      , 'T16: 10111111|0001|0000'                                                       , ''  ],
+  ['yield{%c}.W'       , ''                                      , 'T32: 111100111010|1|1|1|1|10|0|0|0|000|0000|0001'                              , ''  ],
+  ['yield{%c}{%q}'     , ''                                      , 'A32: cond!=1111|00110|0|10|00|00|1|1|1|1|000000000001'                         , ''  ],
 
 );
