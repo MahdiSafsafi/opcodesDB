@@ -1,11 +1,62 @@
-# ===>        ARM instruction set        <===
-    
-warn "Work still in progress and data may contain some bugs.\n";
+# ===>                          ARM instruction set                        <===
 
-# page title was added just for track ! 
+# Author = Mahdi Safsafi.
+
+# https://github.com/MahdiSafsafi/opcodesDB
+
+# INSTRUCTIONS
+# ------------
+#
+# Each instruction definition consists of 4 strings:
+#
+#   [0] - Instruction mnemonic.
+#   [1] - Instruction operands.
+#   [2] - Instruction opcode.
+#   [3] - Instruction metadata - CPU requirements, FLAGS (read/write), and other metadata.
+
+# MNEMONIC
+# ========
+# Instruction mnemonic:
+#   - %c = specifies the condition under which the instruction is executed.
+#   - %q = optional assembler qualifiers.
+#   - %X = depends on instruction !
+
+# OPERANDS
+# ========
+# Instruction operands. I used same representation found in ARM doc.
+#   - .c = ExpandImm with carry. 
+#   - .s = SignExtend.
+#   - .x = ExpandImm.
+#   - .z = ZeroExtend.
+
+# OPCODE
+# ======
+# Pattern = [Arch]:[Fields].
+# Arch   = ARM architecture [T16,T32,A32,A64].
+# Fields = represents instruction opcodes. Fields are separated by '|'.
+# Each field is represented as follow: [name(s)]*[match]*[value]*[:size]*
+#  - name(s) : field's name.
+#  - match   : '=' or '!='.
+#  - value   : field's value in binary format [01x]+.
+#  - size    : field's size in bits.
+#  * means optional => However, a field can't be empty !
+#
+# Operands are encoded in opcodes fields, and if an operand requires more than
+# one field, all used fields will have the same name as the operand.
+#
+# - If order (right to left) wasn't respected, an alphabetical suffix is used to indicate
+#   the correct order. 
+# - If the alphabetical order was used but wasn't respected, it means that
+#   the gap in between (previous and next suffix) must be filled by zero !
+#   eg: Foo.B|xx|Foo.A|Foo.E => Foo operand is encoded as : Foo.A:Foo.B:0:0:Foo.E 
+ 
+ 
+# Page's title was added just for bugs tracking ! 
 
 my $locked = 1;  # Don't edit instructions until ($locked == 0) !
-	
+
+warn "Work still in progress and data may contain some bugs.\n";
+
 my @instructions = (
 
   # ===>                     AArch32.Base instructions                     <===
@@ -353,7 +404,7 @@ my @instructions = (
   ['isb{%c}{%q}'       , '{option}'                              , 'A32: 111101010111|1|1|1|1|1|1|1|1|0|0|0|0|0110|option:4'                       , ''  ],
 
   # IT
-  ['it{%x{%y{%z}}}{%q}', 'cond'                                  , 'T16: 10111111|cond:4|y/x/z!=0000'                                              , ''  ],
+  ['it{%x{%y{%z}}}{%q}', 'cond'                                  , 'T16: 10111111|cond:4|x/y/z!=0000'                                              , ''  ],
 
   # LDA
   ['lda{%c}{%q}'       , 'Rt, [Rn]'                              , 'T32: 11101000110|1|Rn:4|Rt:4|1111|1|0|10|1111'                                 , ''  ],
