@@ -1,3 +1,4 @@
+my @instructions = (
 # ===>                          ARM instruction set                        <===
 
 # Author = Mahdi Safsafi.
@@ -59,7 +60,6 @@ my $locked = 1;  # Don't edit instructions until ($locked == 0) !
 
 warn "Work still in progress and data may contain some bugs.\n";
 
-my @instructions = (
 
   # ===>                     AArch32.Base instructions                     <===
 
@@ -406,7 +406,7 @@ my @instructions = (
   ['isb{%c}{%q}'       , '{option}'                              , 'A32: 1111|0101|0111|1111|1111|0000|0110|option:4'                              , ''  ],
 
   # IT
-  ['it{%x{%y{%z}}}{%q}', 'cond'                                  , 'T16: 1011|1111|cond:4|x/y/z!=0000'                                             , ''  ],
+  ['it{%x{%y{%z}}}{%q}', 'cond'                                  , 'T16: 1011|1111|cond:4|y/z/x!=0000'                                             , ''  ],
 
   # LDA
   ['lda{%c}{%q}'       , 'Rt, [Rn]'                              , 'T32: 1110|1000|1101|Rn:4|Rt:4|1111|1010|1111'                                  , ''  ],
@@ -454,13 +454,13 @@ my @instructions = (
   ['ldc{%c}{%q}'       , 'p14, c5, [PC], option'                 , 'A32: cond!=1111|110|P!=0|U!=0|0|W!=0|1111|1010|1111|0|option:8'                , ''  ],
 
   # LDM, LDMIA, LDMFD
-  ['ldm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
+  ['ldm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
   ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
-  ['ldm{IA}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldm{ia}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
   ['ldmfd{%c}.W'       , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
   ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|1|Rn:4|list:16'                                      , ''  ],
   ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|1|Rn:4|list:16'                                      , ''  ],
 
   # LDM (exception return)
@@ -562,7 +562,7 @@ my @instructions = (
 
   # LDREX
   ['ldrex{%c}{%q}'     , 'Rt, [Rn {, #imm.z*4}]'                 , 'T32: 1110|1000|0101|Rn:4|Rt:4|1111|imm:8'                                      , ''  ],
-  ['ldrex{%c}{%q}'     , 'Rt, [Rn {, {#}imm}]'                   , 'A32: cond!=1111|0001|1001|Rn:4|Rt:4|1111|1001|1111'                            , ''  ],
+  ['ldrex{%c}{%q}'     , 'Rt, [Rn {, {#}????}]'                  , 'A32: cond!=1111|0001|1001|Rn:4|Rt:4|1111|1001|1111'                            , ''  ],
 
   # LDREXB
   ['ldrexb{%c}{%q}'    , 'Rt, [Rn]'                              , 'T32: 1110|1000|1101|Rn:4|Rt:4|1111|0100|1111'                                  , ''  ],
@@ -881,10 +881,10 @@ my @instructions = (
   ['orr{%c}{%q}'       , '{Rd,} Rn, Rm, type Rs'                 , 'A32: cond!=1111|0001|1000|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                      , ''  ],
 
   # PKHBT, PKHTB
-  ['pkhbt{%c}{%q}'     , '{Rd,} Rn, Rm {, LSL #imm}'             , 'T32: 1110|1010|1100|Rn:4|0|imm3:3|Rd:4|imm2:2|00|Rm:4'                         , ''  ],
-  ['pkhtb{%c}{%q}'     , '{Rd,} Rn, Rm {, ASR #imm}'             , 'T32: 1110|1010|1100|Rn:4|0|imm3:3|Rd:4|imm2:2|10|Rm:4'                         , ''  ],
-  ['pkhbt{%c}{%q}'     , '{Rd,} Rn, Rm {, LSL #imm}'             , 'A32: cond!=1111|0110|1000|Rn:4|Rd:4|imm5:5|001|Rm:4'                           , ''  ],
-  ['pkhtb{%c}{%q}'     , '{Rd,} Rn, Rm {, ASR #imm}'             , 'A32: cond!=1111|0110|1000|Rn:4|Rd:4|imm5:5|101|Rm:4'                           , ''  ],
+  ['pkhbt{%c}{%q}'     , '{Rd,} Rn, Rm {, LSL #imm}'             , 'T32: 1110|1010|1100|Rn:4|0|imm:3|Rd:4|imm2:2|00|Rm:4'                          , ''  ],
+  ['pkhtb{%c}{%q}'     , '{Rd,} Rn, Rm {, ASR #imm}'             , 'T32: 1110|1010|1100|Rn:4|0|imm:3|Rd:4|imm2:2|10|Rm:4'                          , ''  ],
+  ['pkhbt{%c}{%q}'     , '{Rd,} Rn, Rm {, LSL #imm}'             , 'A32: cond!=1111|0110|1000|Rn:4|Rd:4|imm:5|001|Rm:4'                            , ''  ],
+  ['pkhtb{%c}{%q}'     , '{Rd,} Rn, Rm {, ASR #imm}'             , 'A32: cond!=1111|0110|1000|Rn:4|Rd:4|imm:5|101|Rm:4'                            , ''  ],
 
   # PLD, PLDW (immediate)
   ['pld{%c}{%q}'       , '[Rn {, #{+}imm.z}]'                    , 'T32: 1111|1000|1001|Rn!=1111|1111|imm:12'                                      , ''  ],
@@ -1012,10 +1012,10 @@ my @instructions = (
 
   # RFE, RFEDA, RFEDB, RFEIA, RFEIB
   ['rfedb{%c}{%q}'     , 'Rn{!}'                                 , 'T32: 1110|1000|00|W|1|Rn:4|1100|0000|0000|0000'                                , ''  ],
-  ['rfe{IA}{%c}{%q}'   , 'Rn{!}'                                 , 'T32: 1110|1001|10|W|1|Rn:4|1100|0000|0000|0000'                                , ''  ],
+  ['rfe{ia}{%c}{%q}'   , 'Rn{!}'                                 , 'T32: 1110|1001|10|W|1|Rn:4|1100|0000|0000|0000'                                , ''  ],
   ['rfeda{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111|1000|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
   ['rfedb{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111|1001|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
-  ['rfe{IA}{%c}{%q}'   , 'Rn{!}'                                 , 'A32: 1111|1000|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
+  ['rfe{ia}{%c}{%q}'   , 'Rn{!}'                                 , 'A32: 1111|1000|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
   ['rfeib{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111|1001|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
 
   # ROR (immediate)
@@ -1282,10 +1282,10 @@ my @instructions = (
 
   # SRS, SRSDA, SRSDB, SRSIA, SRSIB
   ['srsdb{%c}{%q}'     , 'SP{!}, #mode'                          , 'T32: 1110|1000|00|W|0110|1110|0000|0000|mode:5'                                , ''  ],
-  ['srs{IA}{%c}{%q}'   , 'SP{!}, #mode'                          , 'T32: 1110|1001|10|W|0110|1110|0000|0000|mode:5'                                , ''  ],
+  ['srs{ia}{%c}{%q}'   , 'SP{!}, #mode'                          , 'T32: 1110|1001|10|W|0110|1110|0000|0000|mode:5'                                , ''  ],
   ['srsda{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111|1000|01|W|0110|1000|0010|1000|mode:5'                                , ''  ],
   ['srsdb{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111|1001|01|W|0110|1000|0010|1000|mode:5'                                , ''  ],
-  ['srs{IA}{%c}{%q}'   , 'SP{!}, #mode'                          , 'A32: 1111|1000|11|W|0110|1000|0010|1000|mode:5'                                , ''  ],
+  ['srs{ia}{%c}{%q}'   , 'SP{!}, #mode'                          , 'A32: 1111|1000|11|W|0110|1000|0010|1000|mode:5'                                , ''  ],
   ['srsib{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111|1001|11|W|0110|1000|0010|1000|mode:5'                                , ''  ],
 
   # SSAT
@@ -1349,13 +1349,13 @@ my @instructions = (
   ['stlh{%c}{%q}'      , 'Rt, [Rn]'                              , 'A32: cond!=1111|0001|1110|Rn:4|1111|1100|1001|Rt:4'                            , ''  ],
 
   # STM, STMIA, STMEA
-  ['stm{IA}{%c}{%q}'   , 'Rn!, list'                             , 'T16: 1100|0|Rn:3|list:8'                                                       , ''  ],
+  ['stm{ia}{%c}{%q}'   , 'Rn!, list'                             , 'T16: 1100|0|Rn:3|list:8'                                                       , ''  ],
   ['stmea{%c}{%q}'     , 'Rn!, list'                             , 'T16: 1100|0|Rn:3|list:8'                                                       , ''  ],
-  ['stm{IA}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stm{ia}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
   ['stmea{%c}.W'       , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
   ['stmea{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stm{IA}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|0|Rn:4|list:16'                                      , ''  ],
   ['stmea{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|0|Rn:4|list:16'                                      , ''  ],
 
   # STM (User registers)
@@ -1434,7 +1434,7 @@ my @instructions = (
 
   # STREX
   ['strex{%c}{%q}'     , 'Rd, Rt, [Rn {, #imm.z*4}]'             , 'T32: 1110|1000|0100|Rn:4|Rt:4|Rd:4|imm:8'                                      , ''  ],
-  ['strex{%c}{%q}'     , 'Rd, Rt, [Rn {, {#}imm}]'               , 'A32: cond!=1111|0001|1000|Rn:4|Rd:4|1111|1001|Rt:4'                            , ''  ],
+  ['strex{%c}{%q}'     , 'Rd, Rt, [Rn {, {#}????}]'              , 'A32: cond!=1111|0001|1000|Rn:4|Rd:4|1111|1001|Rt:4'                            , ''  ],
 
   # STREXB
   ['strexb{%c}{%q}'    , 'Rd, Rt, [Rn]'                          , 'T32: 1110|1000|1100|Rn:4|Rt:4|1111|0100|Rd:4'                                  , ''  ],
@@ -1761,5 +1761,860 @@ my @instructions = (
   ['yield{%c}{%q}'     , ''                                      , 'T16: 1011|1111|0001|0000'                                                      , ''  ],
   ['yield{%c}.W'       , ''                                      , 'T32: 1111|0011|1010|1111|1000|0000|0000|0001'                                  , ''  ],
   ['yield{%c}{%q}'     , ''                                      , 'A32: cond!=1111|0011|0010|0000|1111|0000|0000|0001'                            , ''  ],
+
+
+  # ===>                     AArch64.Base instructions                     <===
+
+  # ADC
+  ['adc'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|000|Wm:5|0000|00|Wn:5|Wd:5'                                     , ''  ],
+  ['adc'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|000|Xm:5|0000|00|Xn:5|Xd:5'                                     , ''  ],
+
+  # ADCS
+  ['adcs'              , 'Wd, Wn, Wm'                            , 'A64: 0011|1010|000|Wm:5|0000|00|Wn:5|Wd:5'                                     , ''  ],
+  ['adcs'              , 'Xd, Xn, Xm'                            , 'A64: 1011|1010|000|Xm:5|0000|00|Xn:5|Xd:5'                                     , ''  ],
+
+  # ADD (extended register)
+  ['add'               , '$Wd, $Wn, Wm{, extend {#amount}}'      , 'A64: 0000|1011|001|Wm:5|extend:3|amount:3|Wn:5|Wd:5'                           , ''  ],
+  ['add'               , '$Xd, $Xn, R.m{, extend {#amount}}'     , 'A64: 1000|1011|001|m:5|extend/R:3|amount:3|Xn:5|Xd:5'                          , ''  ],
+
+  # ADD (immediate)
+  ['add'               , '$Wd, $Wn, #imm.z{, shift {#amount}}'   , 'A64: 0001|0001|shift:2|imm:12|Wn:5|Wd:5'                                       , ''  ],
+  ['add'               , '$Xd, $Xn, #imm.z{, shift {#amount}}'   , 'A64: 1001|0001|shift:2|imm:12|Xn:5|Xd:5'                                       , ''  ],
+
+  # ADD (shifted register)
+  ['add'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0000|1011|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['add'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1000|1011|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # ADDS (extended register)
+  ['adds'              , 'Wd, $Wn, Wm{, extend {#amount}}'       , 'A64: 0010|1011|001|Wm:5|extend:3|amount:3|Wn:5|Wd:5'                           , ''  ],
+  ['adds'              , 'Xd, $Xn, R.m{, extend {#amount}}'      , 'A64: 1010|1011|001|m:5|R/extend:3|amount:3|Xn:5|Xd:5'                          , ''  ],
+
+  # ADDS (immediate)
+  ['adds'              , 'Wd, $Wn, #imm.z{, shift {#amount}}'    , 'A64: 0011|0001|shift:2|imm:12|Wn:5|Wd:5'                                       , ''  ],
+  ['adds'              , 'Xd, $Xn, #imm.z{, shift {#amount}}'    , 'A64: 1011|0001|shift:2|imm:12|Xn:5|Xd:5'                                       , ''  ],
+
+  # ADDS (shifted register)
+  ['adds'              , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0010|1011|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['adds'              , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1010|1011|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # ADR
+  ['adr'               , 'Xd, rel.s'                             , 'A64: 0|rel.B:2|1000|0|rel.A:19|Xd:5'                                           , ''  ],
+
+  # ADRP
+  ['adrp'              , 'Xd, rel.s'                             , 'A64: 1|rel.B:2|1000|0|rel.A:19|Xd:5'                                           , ''  ],
+
+  # AND (immediate)
+  ['and'               , '$Wd, Wn, #bimm'                        , 'A64: 0001|0010|00|bimm.B:6|bimm.A:6|Wn:5|Wd:5'                                 , ''  ],
+  ['and'               , '$Xd, Xn, #bimm'                        , 'A64: 1001|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|Xn:5|Xd:5'                         , ''  ],
+
+  # AND (shifted register)
+  ['and'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0000|1010|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['and'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1000|1010|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # ANDS (immediate)
+  ['ands'              , 'Wd, Wn, #bimm'                         , 'A64: 0111|0010|00|bimm.B:6|bimm.A:6|Wn:5|Wd:5'                                 , ''  ],
+  ['ands'              , 'Xd, Xn, #bimm'                         , 'A64: 1111|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|Xn:5|Xd:5'                         , ''  ],
+
+  # ANDS (shifted register)
+  ['ands'              , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0110|1010|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['ands'              , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1110|1010|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # ASR (register)
+  ['asr'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|10|Wn:5|Wd:5'                                     , ''  ],
+  ['asr'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|10|Xn:5|Xd:5'                                     , ''  ],
+
+  # ASR (immediate)
+  ['asr'               , 'Wd, Wn, #shift'                        , 'A64: 0001|0011|00|shift:6|0111|11|Wn:5|Wd:5'                                   , ''  ],
+  ['asr'               , 'Xd, Xn, #shift'                        , 'A64: 1001|0011|01|shift:6|1111|11|Xn:5|Xd:5'                                   , ''  ],
+
+  # ASRV
+  ['asrv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|10|Wn:5|Wd:5'                                     , ''  ],
+  ['asrv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|10|Xn:5|Xd:5'                                     , ''  ],
+
+  # AT
+  ['at'                , 'at_op, Xt'                             , 'A64: 1101|0101|0000|1|at_op.A:3|0111|CRm=100x|at_op.C:3|Xt:5'                  , ''  ],
+
+  # B.cond
+  ['b.%c'              , 'rel.s*4'                               , 'A64: 0101|0100|rel:19|0|cond:4'                                                , ''  ],
+
+  # B
+  ['b'                 , 'rel.s*4'                               , 'A64: 0001|01|rel:26'                                                           , ''  ],
+
+  # BFI
+  ['bfi'               , 'Wd, Wn, #lsb, #width'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn!=11111|Wd:5'                                , ''  ],
+  ['bfi'               , 'Xd, Xn, #lsb, #width'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn!=11111|Xd:5'                                , ''  ],
+
+  # BFM
+  ['bfm'               , 'Wd, Wn, #immr, #imms'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['bfm'               , 'Xd, Xn, #immr, #imms'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # BFXIL
+  ['bfxil'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['bfxil'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # BIC (shifted register)
+  ['bic'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0000|1010|shift:2|1|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['bic'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1000|1010|shift:2|1|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # BICS (shifted register)
+  ['bics'              , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0110|1010|shift:2|1|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['bics'              , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1110|1010|shift:2|1|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # BL
+  ['bl'                , 'rel.s*4'                               , 'A64: 1001|01|rel:26'                                                           , ''  ],
+
+  # BLR
+  ['blr'               , 'Xn'                                    , 'A64: 1101|0110|0011|1111|0000|00|Xn:5|0000|0'                                  , ''  ],
+
+  # BR
+  ['br'                , 'Xn'                                    , 'A64: 1101|0110|0001|1111|0000|00|Xn:5|0000|0'                                  , ''  ],
+
+  # BRK
+  ['brk'               , '#imm'                                  , 'A64: 1101|0100|001|imm:16|0000|0'                                              , ''  ],
+
+  # CBNZ
+  ['cbnz'              , 'Wt, rel.s*4'                           , 'A64: 0011|0101|rel:19|Wt:5'                                                    , ''  ],
+  ['cbnz'              , 'Xt, rel.s*4'                           , 'A64: 1011|0101|rel:19|Xt:5'                                                    , ''  ],
+
+  # CBZ
+  ['cbz'               , 'Wt, rel.s*4'                           , 'A64: 0011|0100|rel:19|Wt:5'                                                    , ''  ],
+  ['cbz'               , 'Xt, rel.s*4'                           , 'A64: 1011|0100|rel:19|Xt:5'                                                    , ''  ],
+
+  # CCMN (immediate)
+  ['ccmn'              , 'Wn, #imm.z, #nzcv, cond'               , 'A64: 0011|1010|010|imm:5|cond:4|10|Wn:5|0|nzcv:4'                              , ''  ],
+  ['ccmn'              , 'Xn, #imm.z, #nzcv, cond'               , 'A64: 1011|1010|010|imm:5|cond:4|10|Xn:5|0|nzcv:4'                              , ''  ],
+
+  # CCMN (register)
+  ['ccmn'              , 'Wn, Wm, #nzcv, cond'                   , 'A64: 0011|1010|010|Wm:5|cond:4|00|Wn:5|0|nzcv:4'                               , ''  ],
+  ['ccmn'              , 'Xn, Xm, #nzcv, cond'                   , 'A64: 1011|1010|010|Xm:5|cond:4|00|Xn:5|0|nzcv:4'                               , ''  ],
+
+  # CCMP (immediate)
+  ['ccmp'              , 'Wn, #imm.z, #nzcv, cond'               , 'A64: 0111|1010|010|imm:5|cond:4|10|Wn:5|0|nzcv:4'                              , ''  ],
+  ['ccmp'              , 'Xn, #imm.z, #nzcv, cond'               , 'A64: 1111|1010|010|imm:5|cond:4|10|Xn:5|0|nzcv:4'                              , ''  ],
+
+  # CCMP (register)
+  ['ccmp'              , 'Wn, Wm, #nzcv, cond'                   , 'A64: 0111|1010|010|Wm:5|cond:4|00|Wn:5|0|nzcv:4'                               , ''  ],
+  ['ccmp'              , 'Xn, Xm, #nzcv, cond'                   , 'A64: 1111|1010|010|Xm:5|cond:4|00|Xn:5|0|nzcv:4'                               , ''  ],
+
+  # CINC
+  ['cinc'              , 'Wd, Wn, cond'                          , 'A64: 0001|1010|100|cond!=11111|!=111x|01|!=11111|Wd:5'                         , ''  ],
+  ['cinc'              , 'Xd, Xn, cond'                          , 'A64: 1001|1010|100|cond!=11111|!=111x|01|!=11111|Xd:5'                         , ''  ],
+
+  # CINV
+  ['cinv'              , 'Wd, Wn, cond'                          , 'A64: 0101|1010|100|cond!=11111|!=111x|00|!=11111|Wd:5'                         , ''  ],
+  ['cinv'              , 'Xd, Xn, cond'                          , 'A64: 1101|1010|100|cond!=11111|!=111x|00|!=11111|Xd:5'                         , ''  ],
+
+  # CLREX
+  ['clrex'             , '{#imm}'                                , 'A64: 1101|0101|0000|0011|0011|imm:4|0101|1111'                                 , ''  ],
+
+  # CLS
+  ['cls'               , 'Wd, Wn'                                , 'A64: 0101|1010|1100|0000|0001|01|Wn:5|Wd:5'                                    , ''  ],
+  ['cls'               , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0001|01|Xn:5|Xd:5'                                    , ''  ],
+
+  # CLZ
+  ['clz'               , 'Wd, Wn'                                , 'A64: 0101|1010|1100|0000|0001|00|Wn:5|Wd:5'                                    , ''  ],
+  ['clz'               , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0001|00|Xn:5|Xd:5'                                    , ''  ],
+
+  # CMN (extended register)
+  ['cmn'               , '$Wn, Wm{, extend {#amount}}'           , 'A64: 0010|1011|001|Wm:5|extend:3|amount:3|Wn:5|1111|1'                         , ''  ],
+  ['cmn'               , '$Xn, R.m{, extend {#amount}}'          , 'A64: 1010|1011|001|m:5|extend/R:3|amount:3|Xn:5|1111|1'                        , ''  ],
+
+  # CMN (immediate)
+  ['cmn'               , '$Wn, #imm.z{, shift {#amount}}'        , 'A64: 0011|0001|shift:2|imm:12|Wn:5|1111|1'                                     , ''  ],
+  ['cmn'               , '$Xn, #imm.z{, shift {#amount}}'        , 'A64: 1011|0001|shift:2|imm:12|Xn:5|1111|1'                                     , ''  ],
+
+  # CMN (shifted register)
+  ['cmn'               , 'Wn, Wm{, shift #amount}'               , 'A64: 0010|1011|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , ''  ],
+  ['cmn'               , 'Xn, Xm{, shift #amount}'               , 'A64: 1010|1011|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , ''  ],
+
+  # CMP (extended register)
+  ['cmp'               , '$Wn, Wm{, extend {#amount}}'           , 'A64: 0110|1011|001|Wm:5|extend:3|amount:3|Wn:5|1111|1'                         , ''  ],
+  ['cmp'               , '$Xn, R.m{, extend {#amount}}'          , 'A64: 1110|1011|001|m:5|extend/R:3|amount:3|Xn:5|1111|1'                        , ''  ],
+
+  # CMP (immediate)
+  ['cmp'               , '$Wn, #imm.z{, shift {#amount}}'        , 'A64: 0111|0001|shift:2|imm:12|Wn:5|1111|1'                                     , ''  ],
+  ['cmp'               , '$Xn, #imm.z{, shift {#amount}}'        , 'A64: 1111|0001|shift:2|imm:12|Xn:5|1111|1'                                     , ''  ],
+
+  # CMP (shifted register)
+  ['cmp'               , 'Wn, Wm{, shift #amount}'               , 'A64: 0110|1011|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , ''  ],
+  ['cmp'               , 'Xn, Xm{, shift #amount}'               , 'A64: 1110|1011|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , ''  ],
+
+  # CNEG
+  ['cneg'              , 'Wd, Wn, cond'                          , 'A64: 0101|1010|100|Rm:5|cond!=111x|01|Rn:5|Wd:5'                               , ''  ],
+  ['cneg'              , 'Xd, Xn, cond'                          , 'A64: 1101|1010|100|Rm:5|cond!=111x|01|Rn:5|Xd:5'                               , ''  ],
+
+  # CRC32B, CRC32H, CRC32W, CRC32X
+  ['crc32b'            , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0100|00|Wn:5|Wd:5'                                     , ''  ],
+  ['crc32h'            , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0100|01|Wn:5|Wd:5'                                     , ''  ],
+  ['crc32w'            , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0100|10|Wn:5|Wd:5'                                     , ''  ],
+  ['crc32x'            , 'Wd, Wn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0100|11|Wn:5|Wd:5'                                     , ''  ],
+
+  # CRC32CB, CRC32CH, CRC32CW, CRC32CX
+  ['crc32cb'           , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0101|00|Wn:5|Wd:5'                                     , ''  ],
+  ['crc32ch'           , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0101|01|Wn:5|Wd:5'                                     , ''  ],
+  ['crc32cw'           , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0101|10|Wn:5|Wd:5'                                     , ''  ],
+  ['crc32cx'           , 'Wd, Wn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0101|11|Wn:5|Wd:5'                                     , ''  ],
+
+  # CSEL
+  ['csel'              , 'Wd, Wn, Wm, cond'                      , 'A64: 0001|1010|100|Wm:5|cond:4|00|Wn:5|Wd:5'                                   , ''  ],
+  ['csel'              , 'Xd, Xn, Xm, cond'                      , 'A64: 1001|1010|100|Xm:5|cond:4|00|Xn:5|Xd:5'                                   , ''  ],
+
+  # CSET
+  ['cset'              , 'Wd, cond'                              , 'A64: 0001|1010|1001|1111|cond!=111x|0111|111|Wd:5'                             , ''  ],
+  ['cset'              , 'Xd, cond'                              , 'A64: 1001|1010|1001|1111|cond!=111x|0111|111|Xd:5'                             , ''  ],
+
+  # CSETM
+  ['csetm'             , 'Wd, cond'                              , 'A64: 0101|1010|1001|1111|cond!=111x|0011|111|Wd:5'                             , ''  ],
+  ['csetm'             , 'Xd, cond'                              , 'A64: 1101|1010|1001|1111|cond!=111x|0011|111|Xd:5'                             , ''  ],
+
+  # CSINC
+  ['csinc'             , 'Wd, Wn, Wm, cond'                      , 'A64: 0001|1010|100|Wm:5|cond:4|01|Wn:5|Wd:5'                                   , ''  ],
+  ['csinc'             , 'Xd, Xn, Xm, cond'                      , 'A64: 1001|1010|100|Xm:5|cond:4|01|Xn:5|Xd:5'                                   , ''  ],
+
+  # CSINV
+  ['csinv'             , 'Wd, Wn, Wm, cond'                      , 'A64: 0101|1010|100|Wm:5|cond:4|00|Wn:5|Wd:5'                                   , ''  ],
+  ['csinv'             , 'Xd, Xn, Xm, cond'                      , 'A64: 1101|1010|100|Xm:5|cond:4|00|Xn:5|Xd:5'                                   , ''  ],
+
+  # CSNEG
+  ['csneg'             , 'Wd, Wn, Wm, cond'                      , 'A64: 0101|1010|100|Wm:5|cond:4|01|Wn:5|Wd:5'                                   , ''  ],
+  ['csneg'             , 'Xd, Xn, Xm, cond'                      , 'A64: 1101|1010|100|Xm:5|cond:4|01|Xn:5|Xd:5'                                   , ''  ],
+
+  # DC
+  ['dc'                , 'dc_op, Xt'                             , 'A64: 1101|0101|0000|1|dc_op:3|0111|dc_op:4|dc_op:3|Xt:5'                       , ''  ],
+
+  # DCPS1
+  ['dcps1'             , '{#imm}'                                , 'A64: 1101|0100|101|imm:16|0000|1'                                              , ''  ],
+
+  # DCPS2
+  ['dcps2'             , '{#imm}'                                , 'A64: 1101|0100|101|imm:16|0001|0'                                              , ''  ],
+
+  # DCPS3
+  ['dcps3'             , '{#imm}'                                , 'A64: 1101|0100|101|imm:16|0001|1'                                              , ''  ],
+
+  # DMB
+  ['dmb'               , 'option|#imm'                           , 'A64: 1101|0101|0000|0011|0011|imm:4|1011|1111'                                 , ''  ],
+
+  # DRPS
+  ['drps'              , ''                                      , 'A64: 1101|0110|1011|1111|0000|0011|1110|0000'                                  , ''  ],
+
+  # DSB
+  ['dsb'               , 'option|#imm'                           , 'A64: 1101|0101|0000|0011|0011|imm:4|1001|1111'                                 , ''  ],
+
+  # EON (shifted register)
+  ['eon'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0100|1010|shift:2|1|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['eon'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1100|1010|shift:2|1|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # EOR (immediate)
+  ['eor'               , '$Wd, Wn, #bimm'                        , 'A64: 0101|0010|00|bimm.B:6|bimm.A:6|Wn:5|Wd:5'                                 , ''  ],
+  ['eor'               , '$Xd, Xn, #bimm'                        , 'A64: 1101|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|Xn:5|Xd:5'                         , ''  ],
+
+  # EOR (shifted register)
+  ['eor'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0100|1010|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['eor'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1100|1010|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # ERET
+  ['eret'              , ''                                      , 'A64: 1101|0110|1001|1111|0000|0011|1110|0000'                                  , ''  ],
+
+  # EXTR
+  ['extr'              , 'Wd, Wn, Wm, #lsb'                      , 'A64: 0001|0011|100|Wm:5|lsb=0xxxxx|Wn:5|Wd:5'                                  , ''  ],
+  ['extr'              , 'Xd, Xn, Xm, #lsb'                      , 'A64: 1001|0011|110|Xm:5|lsb:6|Xn:5|Xd:5'                                       , ''  ],
+
+  # HINT
+  ['hint'              , '#imm'                                  , 'A64: 1101|0101|0000|0011|0010|0000|imm=11x|1111|1'                             , ''  ],
+  ['hint'              , '#imm'                                  , 'A64: 1101|0101|0000|0011|0010|imm!=0000|imm:3|1111|1'                          , ''  ],
+
+  # HLT
+  ['hlt'               , '#imm'                                  , 'A64: 1101|0100|010|imm:16|0000|0'                                              , ''  ],
+
+  # HVC
+  ['hvc'               , '#imm'                                  , 'A64: 1101|0100|000|imm:16|0001|0'                                              , ''  ],
+
+  # IC
+  ['ic'                , 'ic_op{, Xt}'                           , 'A64: 1101|0101|0000|1|ic_op:3|0111|ic_op:4|ic_op:3|Xt:5'                       , ''  ],
+
+  # ISB
+  ['isb'               , '{option|#imm}'                         , 'A64: 1101|0101|0000|0011|0011|imm:4|1101|1111'                                 , ''  ],
+
+  # LDAR
+  ['ldar'              , 'Wt, [$Xn{,#0}]'                        , 'A64: 1000|1000|1101|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+  ['ldar'              , 'Xt, [$Xn{,#0}]'                        , 'A64: 1100|1000|1101|1111|1111|11|Xn:5|Xt:5'                                    , ''  ],
+
+  # LDARB
+  ['ldarb'             , 'Wt, [$Xn{,#0}]'                        , 'A64: 0000|1000|1101|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # LDARH
+  ['ldarh'             , 'Wt, [$Xn{,#0}]'                        , 'A64: 0100|1000|1101|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # LDAXP
+  ['ldaxp'             , 'Wt1, Wt2, [$Xn{,#0}]'                  , 'A64: 1000|1000|0111|1111|1|Wt2:5|Xn:5|Wt1:5'                                   , ''  ],
+  ['ldaxp'             , 'Xt1, Xt2, [$Xn{,#0}]'                  , 'A64: 1100|1000|0111|1111|1|Xt2:5|Xn:5|Xt1:5'                                   , ''  ],
+
+  # LDAXR
+  ['ldaxr'             , 'Wt, [$Xn{,#0}]'                        , 'A64: 1000|1000|0101|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+  ['ldaxr'             , 'Xt, [$Xn{,#0}]'                        , 'A64: 1100|1000|0101|1111|1111|11|Xn:5|Xt:5'                                    , ''  ],
+
+  # LDAXRB
+  ['ldaxrb'            , 'Wt, [$Xn{,#0}]'                        , 'A64: 0000|1000|0101|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # LDAXRH
+  ['ldaxrh'            , 'Wt, [$Xn{,#0}]'                        , 'A64: 0100|1000|0101|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # LDNP
+  ['ldnp'              , 'Wt1, Wt2, [$Xn{, #imm*4}]'             , 'A64: 0010|1000|01|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['ldnp'              , 'Xt1, Xt2, [$Xn{, #imm*8}]'             , 'A64: 1010|1000|01|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+
+  # LDP
+  ['ldp'               , 'Wt1, Wt2, [$Xn], #imm*4'               , 'A64: 0010|1000|11|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['ldp'               , 'Xt1, Xt2, [$Xn], #imm*8'               , 'A64: 1010|1000|11|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+  ['ldp'               , 'Wt1, Wt2, [$Xn, #imm*4]!'              , 'A64: 0010|1001|11|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['ldp'               , 'Xt1, Xt2, [$Xn, #imm*8]!'              , 'A64: 1010|1001|11|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+  ['ldp'               , 'Wt1, Wt2, [$Xn{, #imm*4}]'             , 'A64: 0010|1001|01|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['ldp'               , 'Xt1, Xt2, [$Xn{, #imm*8}]'             , 'A64: 1010|1001|01|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+
+  # LDPSW
+  ['ldpsw'             , 'Xt1, Xt2, [$Xn], #imm*4'               , 'A64: 0110|1000|11|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+  ['ldpsw'             , 'Xt1, Xt2, [$Xn, #imm*4]!'              , 'A64: 0110|1001|11|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+  ['ldpsw'             , 'Xt1, Xt2, [$Xn{, #imm*4}]'             , 'A64: 0110|1001|01|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+
+  # LDR (immediate)
+  ['ldr'               , 'Wt, [$Xn], #imm.s'                     , 'A64: 1011|1000|010|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['ldr'               , 'Xt, [$Xn], #imm.s'                     , 'A64: 1111|1000|010|imm:9|01|Xn:5|Xt:5'                                         , ''  ],
+  ['ldr'               , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 1011|1000|010|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['ldr'               , 'Xt, [$Xn, #imm.s]!'                    , 'A64: 1111|1000|010|imm:9|11|Xn:5|Xt:5'                                         , ''  ],
+  ['ldr'               , 'Wt, [$Xn{, #imm.z*4}]'                 , 'A64: 1011|1001|01|imm:12|Xn:5|Wt:5'                                            , ''  ],
+  ['ldr'               , 'Xt, [$Xn{, #imm.z*8}]'                 , 'A64: 1111|1001|01|imm:12|Xn:5|Xt:5'                                            , ''  ],
+
+  # LDR (literal)
+  ['ldr'               , 'Wt, rel.s*4'                           , 'A64: 0001|1000|rel:19|Wt:5'                                                    , ''  ],
+  ['ldr'               , 'Xt, rel.s*4'                           , 'A64: 0101|1000|rel:19|Xt:5'                                                    , ''  ],
+
+  # LDR (register)
+  ['ldr'               , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1011|1000|011|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+  ['ldr'               , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1111|1000|011|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
+
+  # LDRB (immediate)
+  ['ldrb'              , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|010|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrb'              , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 0011|1000|010|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrb'              , 'Wt, [$Xn{, #imm.z}]'                   , 'A64: 0011|1001|01|imm:12|Xn:5|Wt:5'                                            , ''  ],
+
+  # LDRB (register)
+  ['ldrb'              , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|011|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , ''  ],
+  ['ldrb'              , 'Wt, [$Xn, Xm{, LSL amount}]'           , 'A64: 0011|1000|011|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , ''  ],
+
+  # LDRH (immediate)
+  ['ldrh'              , 'Wt, [$Xn], #imm.s'                     , 'A64: 0111|1000|010|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrh'              , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 0111|1000|010|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrh'              , 'Wt, [$Xn{, #imm.z*2}]'                 , 'A64: 0111|1001|01|imm:12|Xn:5|Wt:5'                                            , ''  ],
+
+  # LDRH (register)
+  ['ldrh'              , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|011|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+
+  # LDRSB (immediate)
+  ['ldrsb'             , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|110|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrsb'             , 'Xt, [$Xn], #imm.s'                     , 'A64: 0011|1000|100|imm:9|01|Xn:5|Xt:5'                                         , ''  ],
+  ['ldrsb'             , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 0011|1000|110|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrsb'             , 'Xt, [$Xn, #imm.s]!'                    , 'A64: 0011|1000|100|imm:9|11|Xn:5|Xt:5'                                         , ''  ],
+  ['ldrsb'             , 'Wt, [$Xn{, #imm.z}]'                   , 'A64: 0011|1001|11|imm:12|Xn:5|Wt:5'                                            , ''  ],
+  ['ldrsb'             , 'Xt, [$Xn{, #imm.z}]'                   , 'A64: 0011|1001|10|imm:12|Xn:5|Xt:5'                                            , ''  ],
+
+  # LDRSB (register)
+  ['ldrsb'             , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|111|Xm/Wm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , ''  ],
+  ['ldrsb'             , 'Wt, [$Xn, Xm{, LSL amount}]'           , 'A64: 0011|1000|111|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , ''  ],
+  ['ldrsb'             , 'Xt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|101|Xm/Wm:5|extend!=011|amount:1|10|Xn:5|Xt:5'                  , ''  ],
+  ['ldrsb'             , 'Xt, [$Xn, Xm{, LSL amount}]'           , 'A64: 0011|1000|101|Xm:5|011|amount:1|10|Xn:5|Xt:5'                             , ''  ],
+
+  # LDRSH (immediate)
+  ['ldrsh'             , 'Wt, [$Xn], #imm.s'                     , 'A64: 0111|1000|110|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrsh'             , 'Xt, [$Xn], #imm.s'                     , 'A64: 0111|1000|100|imm:9|01|Xn:5|Xt:5'                                         , ''  ],
+  ['ldrsh'             , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 0111|1000|110|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['ldrsh'             , 'Xt, [$Xn, #imm.s]!'                    , 'A64: 0111|1000|100|imm:9|11|Xn:5|Xt:5'                                         , ''  ],
+  ['ldrsh'             , 'Wt, [$Xn{, #imm.z*2}]'                 , 'A64: 0111|1001|11|imm:12|Xn:5|Wt:5'                                            , ''  ],
+  ['ldrsh'             , 'Xt, [$Xn{, #imm.z*2}]'                 , 'A64: 0111|1001|10|imm:12|Xn:5|Xt:5'                                            , ''  ],
+
+  # LDRSH (register)
+  ['ldrsh'             , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|111|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+  ['ldrsh'             , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
+
+  # LDRSW (immediate)
+  ['ldrsw'             , 'Xt, [$Xn], #imm.s'                     , 'A64: 1011|1000|100|imm:9|01|Xn:5|Xt:5'                                         , ''  ],
+  ['ldrsw'             , 'Xt, [$Xn, #imm.s]!'                    , 'A64: 1011|1000|100|imm:9|11|Xn:5|Xt:5'                                         , ''  ],
+  ['ldrsw'             , 'Xt, [$Xn{, #imm.z*4}]'                 , 'A64: 1011|1001|10|imm:12|Xn:5|Xt:5'                                            , ''  ],
+
+  # LDRSW (literal)
+  ['ldrsw'             , 'Xt, rel.s*4'                           , 'A64: 1001|1000|rel:19|Xt:5'                                                    , ''  ],
+
+  # LDRSW (register)
+  ['ldrsw'             , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1011|1000|101|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
+
+  # LDTR
+  ['ldtr'              , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 1011|1000|010|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+  ['ldtr'              , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 1111|1000|010|imm:9|10|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDTRB
+  ['ldtrb'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|010|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+
+  # LDTRH
+  ['ldtrh'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|010|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+
+  # LDTRSB
+  ['ldtrsb'            , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|110|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+  ['ldtrsb'            , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|100|imm:9|10|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDTRSH
+  ['ldtrsh'            , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|110|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+  ['ldtrsh'            , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|100|imm:9|10|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDTRSW
+  ['ldtrsw'            , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 1011|1000|100|imm:9|10|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDUR
+  ['ldur'              , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 1011|1000|010|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+  ['ldur'              , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 1111|1000|010|imm:9|00|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDURB
+  ['ldurb'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|010|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+
+  # LDURH
+  ['ldurh'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|010|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+
+  # LDURSB
+  ['ldursb'            , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|110|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+  ['ldursb'            , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|100|imm:9|00|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDURSH
+  ['ldursh'            , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|110|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+  ['ldursh'            , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|100|imm:9|00|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDURSW
+  ['ldursw'            , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 1011|1000|100|imm:9|00|Xn:5|Xt:5'                                         , ''  ],
+
+  # LDXP
+  ['ldxp'              , 'Wt1, Wt2, [$Xn{,#0}]'                  , 'A64: 1000|1000|0111|1111|0|Wt2:5|Xn:5|Wt1:5'                                   , ''  ],
+  ['ldxp'              , 'Xt1, Xt2, [$Xn{,#0}]'                  , 'A64: 1100|1000|0111|1111|0|Xt2:5|Xn:5|Xt1:5'                                   , ''  ],
+
+  # LDXR
+  ['ldxr'              , 'Wt, [$Xn{,#0}]'                        , 'A64: 1000|1000|0101|1111|0111|11|Xn:5|Wt:5'                                    , ''  ],
+  ['ldxr'              , 'Xt, [$Xn{,#0}]'                        , 'A64: 1100|1000|0101|1111|0111|11|Xn:5|Xt:5'                                    , ''  ],
+
+  # LDXRB
+  ['ldxrb'             , 'Wt, [$Xn{,#0}]'                        , 'A64: 0000|1000|0101|1111|0111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # LDXRH
+  ['ldxrh'             , 'Wt, [$Xn{,#0}]'                        , 'A64: 0100|1000|0101|1111|0111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # LSL (register)
+  ['lsl'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|00|Wn:5|Wd:5'                                     , ''  ],
+  ['lsl'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|00|Xn:5|Xd:5'                                     , ''  ],
+
+  # LSL (immediate)
+  ['lsl'               , 'Wd, Wn, #shift'                        , 'A64: 0101|0011|00|immr:6|imms!=011111|Wn:5|Wd:5'                               , ''  ],
+  ['lsl'               , 'Xd, Xn, #shift'                        , 'A64: 1101|0011|01|immr:6|imms!=111111|Xn:5|Xd:5'                               , ''  ],
+
+  # LSLV
+  ['lslv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|00|Wn:5|Wd:5'                                     , ''  ],
+  ['lslv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|00|Xn:5|Xd:5'                                     , ''  ],
+
+  # LSR (register)
+  ['lsr'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|01|Wn:5|Wd:5'                                     , ''  ],
+  ['lsr'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|01|Xn:5|Xd:5'                                     , ''  ],
+
+  # LSR (immediate)
+  ['lsr'               , 'Wd, Wn, #shift'                        , 'A64: 0101|0011|00|shift:6|0111|11|Wn:5|Wd:5'                                   , ''  ],
+  ['lsr'               , 'Xd, Xn, #shift'                        , 'A64: 1101|0011|01|shift:6|1111|11|Xn:5|Xd:5'                                   , ''  ],
+
+  # LSRV
+  ['lsrv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|01|Wn:5|Wd:5'                                     , ''  ],
+  ['lsrv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|01|Xn:5|Xd:5'                                     , ''  ],
+
+  # MADD
+  ['madd'              , 'Wd, Wn, Wm, Wa'                        , 'A64: 0001|1011|000|Wm:5|0|Wa:5|Wn:5|Wd:5'                                      , ''  ],
+  ['madd'              , 'Xd, Xn, Xm, Xa'                        , 'A64: 1001|1011|000|Xm:5|0|Xa:5|Xn:5|Xd:5'                                      , ''  ],
+
+  # MNEG
+  ['mneg'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1011|000|Wm:5|1111|11|Wn:5|Wd:5'                                     , ''  ],
+  ['mneg'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|000|Xm:5|1111|11|Xn:5|Xd:5'                                     , ''  ],
+
+  # MOV (to/from SP)
+  ['mov'               , '$Wd, $Wn'                              , 'A64: 0001|0001|0000|0000|0000|00|Wn:5|Wd:5'                                    , ''  ],
+  ['mov'               , '$Xd, $Xn'                              , 'A64: 1001|0001|0000|0000|0000|00|Xn:5|Xd:5'                                    , ''  ],
+
+  # MOV (inverted wide immediate)
+  ['mov'               , 'Wd, #imm'                              , 'A64: 0001|0010|1|imm.B:2|imm.A:16|Wd:5'                                        , ''  ],
+  ['mov'               , 'Xd, #imm'                              , 'A64: 1001|0010|1|imm.B:2|imm.A:16|Xd:5'                                        , ''  ],
+
+  # MOV (wide immediate)
+  ['mov'               , 'Wd, #imm'                              , 'A64: 0101|0010|1|imm.B:2|imm.A:16|Wd:5'                                        , ''  ],
+  ['mov'               , 'Xd, #imm'                              , 'A64: 1101|0010|1|imm.B:2|imm.A:16|Xd:5'                                        , ''  ],
+
+  # MOV (bitmask immediate)
+  ['mov'               , '$Wd, #bimm'                            , 'A64: 0011|0010|00|bimm.B:6|bimm.A:6|1111|1|Wd:5'                               , ''  ],
+  ['mov'               , '$Xd, #bimm'                            , 'A64: 1011|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|1111|1|Xd:5'                       , ''  ],
+
+  # MOV (register)
+  ['mov'               , 'Wd, Wm'                                , 'A64: 0010|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , ''  ],
+  ['mov'               , 'Xd, Xm'                                , 'A64: 1010|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , ''  ],
+
+  # MOVK
+  ['movk'              , 'Wd, #imm{, LSL #shift*16}'             , 'A64: 0111|0010|1|shift:2|imm:16|Wd:5'                                          , ''  ],
+  ['movk'              , 'Xd, #imm{, LSL #shift*16}'             , 'A64: 1111|0010|1|shift:2|imm:16|Xd:5'                                          , ''  ],
+
+  # MOVN
+  ['movn'              , 'Wd, #imm{, LSL #shift*16}'             , 'A64: 0001|0010|1|shift:2|imm:16|Wd:5'                                          , ''  ],
+  ['movn'              , 'Xd, #imm{, LSL #shift*16}'             , 'A64: 1001|0010|1|shift:2|imm:16|Xd:5'                                          , ''  ],
+
+  # MOVZ
+  ['movz'              , 'Wd, #imm{, LSL #shift*16}'             , 'A64: 0101|0010|1|shift:2|imm:16|Wd:5'                                          , ''  ],
+  ['movz'              , 'Xd, #imm{, LSL #shift*16}'             , 'A64: 1101|0010|1|shift:2|imm:16|Xd:5'                                          , ''  ],
+
+  # MRS
+  ['mrs'               , 'Xt, (systemreg|Sop0_op1_Cn_Cm_op2)'    , 'A64: 1101|0101|0011|op0:1|op1:3|Cn:4|Cm:4|op2:3|Xt:5'                          , ''  ],
+
+  # MSR (immediate)
+  ['msr'               , 'pstatefield, #imm'                     , 'A64: 1101|0101|0000|0|pstatefield:3|0100|imm:4|pstatefield:3|1111|1'           , ''  ],
+
+  # MSR (register)
+  ['msr'               , '(systemreg|Sop0_op1_Cn_Cm_op2), Xt'    , 'A64: 1101|0101|0001|op0:1|op1:3|Cn:4|Cm:4|op2:3|Xt:5'                          , ''  ],
+
+  # MSUB
+  ['msub'              , 'Wd, Wn, Wm, Wa'                        , 'A64: 0001|1011|000|Wm:5|1|Wa:5|Wn:5|Wd:5'                                      , ''  ],
+  ['msub'              , 'Xd, Xn, Xm, Xa'                        , 'A64: 1001|1011|000|Xm:5|1|Xa:5|Xn:5|Xd:5'                                      , ''  ],
+
+  # MUL
+  ['mul'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1011|000|Wm:5|0111|11|Wn:5|Wd:5'                                     , ''  ],
+  ['mul'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|000|Xm:5|0111|11|Xn:5|Xd:5'                                     , ''  ],
+
+  # MVN
+  ['mvn'               , 'Wd, Wm{, shift #amount}'               , 'A64: 0010|1010|shift:2|1|Wm:5|amount:6|1111|1|Wd:5'                            , ''  ],
+  ['mvn'               , 'Xd, Xm{, shift #amount}'               , 'A64: 1010|1010|shift:2|1|Xm:5|amount:6|1111|1|Xd:5'                            , ''  ],
+
+  # NEG (shifted register)
+  ['neg'               , 'Wd, Wm{, shift #amount}'               , 'A64: 0100|1011|shift:2|0|Wm:5|amount:6|1111|1|Wd:5'                            , ''  ],
+  ['neg'               , 'Xd, Xm{, shift #amount}'               , 'A64: 1100|1011|shift:2|0|Xm:5|amount:6|1111|1|Xd:5'                            , ''  ],
+
+  # NEGS
+  ['negs'              , 'Wd, Wm{, shift #amount}'               , 'A64: 0110|1011|shift:2|0|Wm:5|amount:6|1111|1|Wd:5'                            , ''  ],
+  ['negs'              , 'Xd, Xm{, shift #amount}'               , 'A64: 1110|1011|shift:2|0|Xm:5|amount:6|1111|1|Xd:5'                            , ''  ],
+
+  # NGC
+  ['ngc'               , 'Wd, Wm'                                , 'A64: 0101|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , ''  ],
+  ['ngc'               , 'Xd, Xm'                                , 'A64: 1101|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , ''  ],
+
+  # NGCS
+  ['ngcs'              , 'Wd, Wm'                                , 'A64: 0111|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , ''  ],
+  ['ngcs'              , 'Xd, Xm'                                , 'A64: 1111|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , ''  ],
+
+  # NOP
+  ['nop'               , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|0001|1111'                                  , ''  ],
+
+  # ORN (shifted register)
+  ['orn'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0010|1010|shift:2|1|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['orn'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1010|1010|shift:2|1|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # ORR (immediate)
+  ['orr'               , '$Wd, Wn, #bimm'                        , 'A64: 0011|0010|00|bimm.B:6|bimm.A:6|Wn:5|Wd:5'                                 , ''  ],
+  ['orr'               , '$Xd, Xn, #bimm'                        , 'A64: 1011|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|Xn:5|Xd:5'                         , ''  ],
+
+  # ORR (shifted register)
+  ['orr'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0010|1010|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['orr'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1010|1010|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # PRFM (immediate)
+  ['prfm'              , '(prfop|#imm.z), [$Xn{, #imm.z*8}]'     , 'A64: 1111|1001|10|imm:12|Xn:5|imm:5'                                           , ''  ],
+
+  # PRFM (literal)
+  ['prfm'              , '(prfop|#imm.s), rel.s*4'               , 'A64: 1101|1000|rel:19|imm:5'                                                   , ''  ],
+
+  # PRFM (register)
+  ['prfm'              , '(prfop|#imm), [$Xn, (Wm|Xm){, extend {amount}}]', 'A64: 1111|1000|101|Xm/Wm:5|extend:3|amount:1|10|Xn:5|imm:5'                    , ''  ],
+
+  # PRFM (unscaled offset)
+  ['prfum'             , '(prfop|#imm.s), [$Xn{, #imm.s}]'       , 'A64: 1111|1000|100|imm:9|00|Xn:5|imm:5'                                        , ''  ],
+
+  # RBIT
+  ['rbit'              , 'Wd, Wn'                                , 'A64: 0101|1010|1100|0000|0000|00|Wn:5|Wd:5'                                    , ''  ],
+  ['rbit'              , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|00|Xn:5|Xd:5'                                    , ''  ],
+
+  # RET
+  ['ret'               , '{Xn}'                                  , 'A64: 1101|0110|0101|1111|0000|00|Xn:5|0000|0'                                  , ''  ],
+
+  # REV
+  ['rev'               , 'Wd, Wn'                                , 'A64: 0101|1010|1100|0000|0000|10|Wn:5|Wd:5'                                    , ''  ],
+  ['rev'               , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|11|Xn:5|Xd:5'                                    , ''  ],
+
+  # REV16
+  ['rev16'             , 'Wd, Wn'                                , 'A64: 0101|1010|1100|0000|0000|01|Wn:5|Wd:5'                                    , ''  ],
+  ['rev16'             , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|01|Xn:5|Xd:5'                                    , ''  ],
+
+  # REV32
+  ['rev32'             , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|10|Xn:5|Xd:5'                                    , ''  ],
+
+  # REV64
+  ['rev64'             , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|11|Xn:5|Xd:5'                                    , ''  ],
+
+  # ROR (immediate)
+  ['ror'               , 'Wd, Ws, #shift'                        , 'A64: 0001|0011|100|Rm:5|shift=0xxxxx|Rn:5|Wd:5'                                , ''  ],
+  ['ror'               , 'Xd, Xs, #shift'                        , 'A64: 1001|0011|110|Rm:5|shift:6|Rn:5|Xd:5'                                     , ''  ],
+
+  # ROR (register)
+  ['ror'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|11|Wn:5|Wd:5'                                     , ''  ],
+  ['ror'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|11|Xn:5|Xd:5'                                     , ''  ],
+
+  # RORV
+  ['rorv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|11|Wn:5|Wd:5'                                     , ''  ],
+  ['rorv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|11|Xn:5|Xd:5'                                     , ''  ],
+
+  # SBC
+  ['sbc'               , 'Wd, Wn, Wm'                            , 'A64: 0101|1010|000|Wm:5|0000|00|Wn:5|Wd:5'                                     , ''  ],
+  ['sbc'               , 'Xd, Xn, Xm'                            , 'A64: 1101|1010|000|Xm:5|0000|00|Xn:5|Xd:5'                                     , ''  ],
+
+  # SBCS
+  ['sbcs'              , 'Wd, Wn, Wm'                            , 'A64: 0111|1010|000|Wm:5|0000|00|Wn:5|Wd:5'                                     , ''  ],
+  ['sbcs'              , 'Xd, Xn, Xm'                            , 'A64: 1111|1010|000|Xm:5|0000|00|Xn:5|Xd:5'                                     , ''  ],
+
+  # SBFIZ
+  ['sbfiz'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0001|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['sbfiz'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1001|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # SBFM
+  ['sbfm'              , 'Wd, Wn, #immr, #imms'                  , 'A64: 0001|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['sbfm'              , 'Xd, Xn, #immr, #imms'                  , 'A64: 1001|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # SBFX
+  ['sbfx'              , 'Wd, Wn, #lsb, #width'                  , 'A64: 0001|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['sbfx'              , 'Xd, Xn, #lsb, #width'                  , 'A64: 1001|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # SDIV
+  ['sdiv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0000|11|Wn:5|Wd:5'                                     , ''  ],
+  ['sdiv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0000|11|Xn:5|Xd:5'                                     , ''  ],
+
+  # SEV
+  ['sev'               , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|1001|1111'                                  , ''  ],
+
+  # SEVL
+  ['sevl'              , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|1011|1111'                                  , ''  ],
+
+  # SMADDL
+  ['smaddl'            , 'Xd, Wn, Wm, Xa'                        , 'A64: 1001|1011|001|Wm:5|0|Xa:5|Wn:5|Xd:5'                                      , ''  ],
+
+  # SMC
+  ['smc'               , '#imm'                                  , 'A64: 1101|0100|000|imm:16|0001|1'                                              , ''  ],
+
+  # SMNEGL
+  ['smnegl'            , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|001|Wm:5|1111|11|Wn:5|Xd:5'                                     , ''  ],
+
+  # SMSUBL
+  ['smsubl'            , 'Xd, Wn, Wm, Xa'                        , 'A64: 1001|1011|001|Wm:5|1|Xa:5|Wn:5|Xd:5'                                      , ''  ],
+
+  # SMULH
+  ['smulh'             , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|010|Xm:5|0111|11|Xn:5|Xd:5'                                     , ''  ],
+
+  # SMULL
+  ['smull'             , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|001|Wm:5|0111|11|Wn:5|Xd:5'                                     , ''  ],
+
+  # STLR
+  ['stlr'              , 'Wt, [$Xn{,#0}]'                        , 'A64: 1000|1000|1001|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+  ['stlr'              , 'Xt, [$Xn{,#0}]'                        , 'A64: 1100|1000|1001|1111|1111|11|Xn:5|Xt:5'                                    , ''  ],
+
+  # STLRB
+  ['stlrb'             , 'Wt, [$Xn{,#0}]'                        , 'A64: 0000|1000|1001|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # STLRH
+  ['stlrh'             , 'Wt, [$Xn{,#0}]'                        , 'A64: 0100|1000|1001|1111|1111|11|Xn:5|Wt:5'                                    , ''  ],
+
+  # STLXP
+  ['stlxp'             , 'Ws, Wt1, Wt2, [$Xn{,#0}]'              , 'A64: 1000|1000|001|Ws:5|1|Wt2:5|Xn:5|Wt1:5'                                    , ''  ],
+  ['stlxp'             , 'Ws, Xt1, Xt2, [$Xn{,#0}]'              , 'A64: 1100|1000|001|Ws:5|1|Xt2:5|Xn:5|Xt1:5'                                    , ''  ],
+
+  # STLXR
+  ['stlxr'             , 'Ws, Wt, [$Xn{,#0}]'                    , 'A64: 1000|1000|000|Ws:5|1111|11|Xn:5|Wt:5'                                     , ''  ],
+  ['stlxr'             , 'Ws, Xt, [$Xn{,#0}]'                    , 'A64: 1100|1000|000|Ws:5|1111|11|Xn:5|Xt:5'                                     , ''  ],
+
+  # STLXRB
+  ['stlxrb'            , 'Ws, Wt, [$Xn{,#0}]'                    , 'A64: 0000|1000|000|Ws:5|1111|11|Xn:5|Wt:5'                                     , ''  ],
+
+  # STLXRH
+  ['stlxrh'            , 'Ws, Wt, [$Xn{,#0}]'                    , 'A64: 0100|1000|000|Ws:5|1111|11|Xn:5|Wt:5'                                     , ''  ],
+
+  # STNP
+  ['stnp'              , 'Wt1, Wt2, [$Xn{, #imm*4}]'             , 'A64: 0010|1000|00|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['stnp'              , 'Xt1, Xt2, [$Xn{, #imm*8}]'             , 'A64: 1010|1000|00|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+
+  # STP
+  ['stp'               , 'Wt1, Wt2, [$Xn], #imm*4'               , 'A64: 0010|1000|10|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['stp'               , 'Xt1, Xt2, [$Xn], #imm*8'               , 'A64: 1010|1000|10|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+  ['stp'               , 'Wt1, Wt2, [$Xn, #imm*4]!'              , 'A64: 0010|1001|10|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['stp'               , 'Xt1, Xt2, [$Xn, #imm*8]!'              , 'A64: 1010|1001|10|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+  ['stp'               , 'Wt1, Wt2, [$Xn{, #imm*4}]'             , 'A64: 0010|1001|00|imm:7|Wt2:5|Xn:5|Wt1:5'                                      , ''  ],
+  ['stp'               , 'Xt1, Xt2, [$Xn{, #imm*8}]'             , 'A64: 1010|1001|00|imm:7|Xt2:5|Xn:5|Xt1:5'                                      , ''  ],
+
+  # STR (immediate)
+  ['str'               , 'Wt, [$Xn], #imm.s'                     , 'A64: 1011|1000|000|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['str'               , 'Xt, [$Xn], #imm.s'                     , 'A64: 1111|1000|000|imm:9|01|Xn:5|Xt:5'                                         , ''  ],
+  ['str'               , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 1011|1000|000|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['str'               , 'Xt, [$Xn, #imm.s]!'                    , 'A64: 1111|1000|000|imm:9|11|Xn:5|Xt:5'                                         , ''  ],
+  ['str'               , 'Wt, [$Xn{, #imm.z*4}]'                 , 'A64: 1011|1001|00|imm:12|Xn:5|Wt:5'                                            , ''  ],
+  ['str'               , 'Xt, [$Xn{, #imm.z*8}]'                 , 'A64: 1111|1001|00|imm:12|Xn:5|Xt:5'                                            , ''  ],
+
+  # STR (register)
+  ['str'               , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1011|1000|001|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+  ['str'               , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1111|1000|001|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
+
+  # STRB (immediate)
+  ['strb'              , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|000|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['strb'              , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 0011|1000|000|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['strb'              , 'Wt, [$Xn{, #imm.z}]'                   , 'A64: 0011|1001|00|imm:12|Xn:5|Wt:5'                                            , ''  ],
+
+  # STRB (register)
+  ['strb'              , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|001|Xm/Wm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , ''  ],
+  ['strb'              , 'Wt, [$Xn, Xm{, LSL amount}]'           , 'A64: 0011|1000|001|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , ''  ],
+
+  # STRH (immediate)
+  ['strh'              , 'Wt, [$Xn], #imm.s'                     , 'A64: 0111|1000|000|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
+  ['strh'              , 'Wt, [$Xn, #imm.s]!'                    , 'A64: 0111|1000|000|imm:9|11|Xn:5|Wt:5'                                         , ''  ],
+  ['strh'              , 'Wt, [$Xn{, #imm.z*2}]'                 , 'A64: 0111|1001|00|imm:12|Xn:5|Wt:5'                                            , ''  ],
+
+  # STRH (register)
+  ['strh'              , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|001|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+
+  # STTR
+  ['sttr'              , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 1011|1000|000|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+  ['sttr'              , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 1111|1000|000|imm:9|10|Xn:5|Xt:5'                                         , ''  ],
+
+  # STTRB
+  ['sttrb'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|000|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+
+  # STTRH
+  ['sttrh'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|000|imm:9|10|Xn:5|Wt:5'                                         , ''  ],
+
+  # STUR
+  ['stur'              , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 1011|1000|000|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+  ['stur'              , 'Xt, [$Xn{, #imm.s}]'                   , 'A64: 1111|1000|000|imm:9|00|Xn:5|Xt:5'                                         , ''  ],
+
+  # STURB
+  ['sturb'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0011|1000|000|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+
+  # STURH
+  ['sturh'             , 'Wt, [$Xn{, #imm.s}]'                   , 'A64: 0111|1000|000|imm:9|00|Xn:5|Wt:5'                                         , ''  ],
+
+  # STXP
+  ['stxp'              , 'Ws, Wt1, Wt2, [$Xn{,#0}]'              , 'A64: 1000|1000|001|Ws:5|0|Wt2:5|Xn:5|Wt1:5'                                    , ''  ],
+  ['stxp'              , 'Ws, Xt1, Xt2, [$Xn{,#0}]'              , 'A64: 1100|1000|001|Ws:5|0|Xt2:5|Xn:5|Xt1:5'                                    , ''  ],
+
+  # STXR
+  ['stxr'              , 'Ws, Wt, [$Xn{,#0}]'                    , 'A64: 1000|1000|000|Ws:5|0111|11|Xn:5|Wt:5'                                     , ''  ],
+  ['stxr'              , 'Ws, Xt, [$Xn{,#0}]'                    , 'A64: 1100|1000|000|Ws:5|0111|11|Xn:5|Xt:5'                                     , ''  ],
+
+  # STXRB
+  ['stxrb'             , 'Ws, Wt, [$Xn{,#0}]'                    , 'A64: 0000|1000|000|Ws:5|0111|11|Xn:5|Wt:5'                                     , ''  ],
+
+  # STXRH
+  ['stxrh'             , 'Ws, Wt, [$Xn{,#0}]'                    , 'A64: 0100|1000|000|Ws:5|0111|11|Xn:5|Wt:5'                                     , ''  ],
+
+  # SUB (extended register)
+  ['sub'               , '$Wd, $Wn, Wm{, extend {#amount}}'      , 'A64: 0100|1011|001|Wm:5|extend:3|amount:3|Wn:5|Wd:5'                           , ''  ],
+  ['sub'               , '$Xd, $Xn, R.m{, extend {#amount}}'     , 'A64: 1100|1011|001|m:5|extend/R:3|amount:3|Xn:5|Xd:5'                          , ''  ],
+
+  # SUB (immediate)
+  ['sub'               , '$Wd, $Wn, #imm.z{, shift {#amount}}'   , 'A64: 0101|0001|shift:2|imm:12|Wn:5|Wd:5'                                       , ''  ],
+  ['sub'               , '$Xd, $Xn, #imm.z{, shift {#amount}}'   , 'A64: 1101|0001|shift:2|imm:12|Xn:5|Xd:5'                                       , ''  ],
+
+  # SUB (shifted register)
+  ['sub'               , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0100|1011|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['sub'               , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1100|1011|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # SUBS (extended register)
+  ['subs'              , 'Wd, $Wn, Wm{, extend {#amount}}'       , 'A64: 0110|1011|001|Wm:5|extend:3|amount:3|Wn:5|Wd:5'                           , ''  ],
+  ['subs'              , 'Xd, $Xn, R.m{, extend {#amount}}'      , 'A64: 1110|1011|001|m:5|extend/R:3|amount:3|Xn:5|Xd:5'                          , ''  ],
+
+  # SUBS (immediate)
+  ['subs'              , 'Wd, $Wn, #imm.z{, shift {#amount}}'    , 'A64: 0111|0001|shift:2|imm:12|Wn:5|Wd:5'                                       , ''  ],
+  ['subs'              , 'Xd, $Xn, #imm.z{, shift {#amount}}'    , 'A64: 1111|0001|shift:2|imm:12|Xn:5|Xd:5'                                       , ''  ],
+
+  # SUBS (shifted register)
+  ['subs'              , 'Wd, Wn, Wm{, shift #amount}'           , 'A64: 0110|1011|shift:2|0|Wm:5|amount:6|Wn:5|Wd:5'                              , ''  ],
+  ['subs'              , 'Xd, Xn, Xm{, shift #amount}'           , 'A64: 1110|1011|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
+
+  # SVC
+  ['svc'               , '#imm'                                  , 'A64: 1101|0100|000|imm:16|0000|1'                                              , ''  ],
+
+  # SXTB
+  ['sxtb'              , 'Wd, Wn'                                , 'A64: 0001|0011|0000|0000|0001|11|Wn:5|Wd:5'                                    , ''  ],
+  ['sxtb'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0001|11|Wn:5|Xd:5'                                    , ''  ],
+
+  # SXTH
+  ['sxth'              , 'Wd, Wn'                                , 'A64: 0001|0011|0000|0000|0011|11|Wn:5|Wd:5'                                    , ''  ],
+  ['sxth'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0011|11|Wn:5|Xd:5'                                    , ''  ],
+
+  # SXTW
+  ['sxtw'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0111|11|Wn:5|Xd:5'                                    , ''  ],
+
+  # SYS
+  ['sys'               , '#op1, Cn, Cm, #op2{, Xt}'              , 'A64: 1101|0101|0000|1|op1:3|Cn:4|Cm:4|op2:3|Xt:5'                              , ''  ],
+
+  # SYSL
+  ['sysl'              , 'Xt, #op1, Cn, Cm, #op2'                , 'A64: 1101|0101|0010|1|op1:3|Cn:4|Cm:4|op2:3|Xt:5'                              , ''  ],
+
+  # TBNZ
+  ['tbnz'              , 'R.t, #imm.s, rel.s*4'                  , 'A64: imm/R:1|0110|111|imm:5|rel:14|t:5'                                        , ''  ],
+
+  # TBZ
+  ['tbz'               , 'R.t, #imm.s, rel.s*4'                  , 'A64: imm/R:1|0110|110|imm:5|rel:14|t:5'                                        , ''  ],
+
+  # TLBI
+  ['tlbi'              , 'tlbi_op{, Xt}'                         , 'A64: 1101|0101|0000|1|tlbi_op:3|1000|tlbi_op:4|tlbi_op:3|Xt:5'                 , ''  ],
+
+  # TST (immediate)
+  ['tst'               , 'Wn, #bimm'                             , 'A64: 0111|0010|00|bimm.B:6|bimm.A:6|Wn:5|1111|1'                               , ''  ],
+  ['tst'               , 'Xn, #bimm'                             , 'A64: 1111|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|Xn:5|1111|1'                       , ''  ],
+
+  # TST (shifted register)
+  ['tst'               , 'Wn, Wm{, shift #amount}'               , 'A64: 0110|1010|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , ''  ],
+  ['tst'               , 'Xn, Xm{, shift #amount}'               , 'A64: 1110|1010|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , ''  ],
+
+  # UBFIZ
+  ['ubfiz'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0101|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['ubfiz'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1101|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # UBFM
+  ['ubfm'              , 'Wd, Wn, #immr, #imms'                  , 'A64: 0101|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['ubfm'              , 'Xd, Xn, #immr, #imms'                  , 'A64: 1101|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # UBFX
+  ['ubfx'              , 'Wd, Wn, #lsb, #width'                  , 'A64: 0101|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , ''  ],
+  ['ubfx'              , 'Xd, Xn, #lsb, #width'                  , 'A64: 1101|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , ''  ],
+
+  # UDIV
+  ['udiv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0000|10|Wn:5|Wd:5'                                     , ''  ],
+  ['udiv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0000|10|Xn:5|Xd:5'                                     , ''  ],
+
+  # UMADDL
+  ['umaddl'            , 'Xd, Wn, Wm, Xa'                        , 'A64: 1001|1011|101|Wm:5|0|Xa:5|Wn:5|Xd:5'                                      , ''  ],
+
+  # UMNEGL
+  ['umnegl'            , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|101|Wm:5|1111|11|Wn:5|Xd:5'                                     , ''  ],
+
+  # UMSUBL
+  ['umsubl'            , 'Xd, Wn, Wm, Xa'                        , 'A64: 1001|1011|101|Wm:5|1|Xa:5|Wn:5|Xd:5'                                      , ''  ],
+
+  # UMULH
+  ['umulh'             , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|110|Xm:5|0111|11|Xn:5|Xd:5'                                     , ''  ],
+
+  # UMULL
+  ['umull'             , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|101|Wm:5|0111|11|Wn:5|Xd:5'                                     , ''  ],
+
+  # UXTB
+  ['uxtb'              , 'Wd, Wn'                                , 'A64: 0101|0011|0000|0000|0001|11|Wn:5|Wd:5'                                    , ''  ],
+
+  # UXTH
+  ['uxth'              , 'Wd, Wn'                                , 'A64: 0101|0011|0000|0000|0011|11|Wn:5|Wd:5'                                    , ''  ],
+
+  # WFE
+  ['wfe'               , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|0101|1111'                                  , ''  ],
+
+  # WFI
+  ['wfi'               , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|0111|1111'                                  , ''  ],
+
+  # YIELD
+  ['yield'             , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|0011|1111'                                  , ''  ],
 
 );
