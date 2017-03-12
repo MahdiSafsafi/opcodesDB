@@ -406,7 +406,7 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['isb{%c}{%q}'       , '{option}'                              , 'A32: 1111|0101|0111|1111|1111|0000|0110|option:4'                              , ''  ],
 
   # IT
-  ['it{%x{%y{%z}}}{%q}', 'cond'                                  , 'T16: 1011|1111|cond:4|x/z/y!=0000'                                             , ''  ],
+  ['it{%x{%y{%z}}}{%q}', 'cond'                                  , 'T16: 1011|1111|cond:4|x/y/z!=0000'                                             , ''  ],
 
   # LDA
   ['lda{%c}{%q}'       , 'Rt, [Rn]'                              , 'T32: 1110|1000|1101|Rn:4|Rt:4|1111|1010|1111'                                  , ''  ],
@@ -2089,8 +2089,8 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['ldr'               , 'Xt, rel.s*4'                           , 'A64: 0101|1000|rel:19|Xt:5'                                                    , ''  ],
 
   # LDR (register)
-  ['ldr'               , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1011|1000|011|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
-  ['ldr'               , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1111|1000|011|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
+  ['ldr'               , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1011|1000|011|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+  ['ldr'               , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 1111|1000|011|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
 
   # LDRB (immediate)
   ['ldrb'              , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|010|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
@@ -2107,7 +2107,7 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['ldrh'              , 'Wt, [$Xn{, #imm.z*2}]'                 , 'A64: 0111|1001|01|imm:12|Xn:5|Wt:5'                                            , ''  ],
 
   # LDRH (register)
-  ['ldrh'              , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|011|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+  ['ldrh'              , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|011|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
 
   # LDRSB (immediate)
   ['ldrsb'             , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|110|imm:9|01|Xn:5|Wt:5'                                         , ''  ],
@@ -2118,9 +2118,9 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['ldrsb'             , 'Xt, [$Xn{, #imm.z}]'                   , 'A64: 0011|1001|10|imm:12|Xn:5|Xt:5'                                            , ''  ],
 
   # LDRSB (register)
-  ['ldrsb'             , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|111|Xm/Wm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , ''  ],
+  ['ldrsb'             , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|111|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , ''  ],
   ['ldrsb'             , 'Wt, [$Xn, Xm{, LSL amount}]'           , 'A64: 0011|1000|111|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , ''  ],
-  ['ldrsb'             , 'Xt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|101|Xm/Wm:5|extend!=011|amount:1|10|Xn:5|Xt:5'                  , ''  ],
+  ['ldrsb'             , 'Xt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|101|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Xt:5'                  , ''  ],
   ['ldrsb'             , 'Xt, [$Xn, Xm{, LSL amount}]'           , 'A64: 0011|1000|101|Xm:5|011|amount:1|10|Xn:5|Xt:5'                             , ''  ],
 
   # LDRSH (immediate)
@@ -2132,8 +2132,8 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['ldrsh'             , 'Xt, [$Xn{, #imm.z*2}]'                 , 'A64: 0111|1001|10|imm:12|Xn:5|Xt:5'                                            , ''  ],
 
   # LDRSH (register)
-  ['ldrsh'             , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|111|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
-  ['ldrsh'             , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|101|Xm/Wm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
+  ['ldrsh'             , 'Wt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|111|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , ''  ],
+  ['ldrsh'             , 'Xt, [$Xn, (Wm|Xm){, extend {amount}}]' , 'A64: 0111|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , ''  ],
 
   # LDRSW (immediate)
   ['ldrsw'             , 'Xt, [$Xn], #imm.s'                     , 'A64: 1011|1000|100|imm:9|01|Xn:5|Xt:5'                                         , ''  ],
@@ -2325,7 +2325,7 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['prfm'              , '(prfop|#imm.s), rel.s*4'               , 'A64: 1101|1000|rel:19|imm:5'                                                   , ''  ],
 
   # PRFM (register)
-  ['prfm'              , '(prfop|#imm), [$Xn, (Wm|Xm){, extend {amount}}]', 'A64: 1111|1000|101|Xm/Wm:5|extend:3|amount:1|10|Xn:5|imm:5'                    , ''  ],
+  ['prfm'              , '(prfop|#imm), [$Xn, (Wm|Xm){, extend {amount}}]', 'A64: 1111|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|imm:5'                    , ''  ],
 
   # PRFM (unscaled offset)
   ['prfum'             , '(prfop|#imm.s), [$Xn{, #imm.s}]'       , 'A64: 1111|1000|100|imm:9|00|Xn:5|imm:5'                                        , ''  ],
@@ -2465,7 +2465,7 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['strb'              , 'Wt, [$Xn{, #imm.z}]'                   , 'A64: 0011|1001|00|imm:12|Xn:5|Wt:5'                                            , ''  ],
 
   # STRB (register)
-  ['strb'              , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|001|Xm/Wm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , ''  ],
+  ['strb'              , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|001|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , ''  ],
   ['strb'              , 'Wt, [$Xn, Xm{, LSL amount}]'           , 'A64: 0011|1000|001|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , ''  ],
 
   # STRH (immediate)
@@ -2512,7 +2512,7 @@ warn "Work still in progress and data may contain some bugs.\n";
 
   # SUB (extended register)
   ['sub'               , '$Wd, $Wn, Wm{, extend {#amount}}'      , 'A64: 0100|1011|001|Wm:5|extend:3|amount:3|Wn:5|Wd:5'                           , ''  ],
-  ['sub'               , '$Xd, $Xn, R.m{, extend {#amount}}'     , 'A64: 1100|1011|001|m:5|extend/R:3|amount:3|Xn:5|Xd:5'                          , ''  ],
+  ['sub'               , '$Xd, $Xn, R.m{, extend {#amount}}'     , 'A64: 1100|1011|001|m:5|R/extend:3|amount:3|Xn:5|Xd:5'                          , ''  ],
 
   # SUB (immediate)
   ['sub'               , '$Wd, $Wn, #imm.z{, shift {#amount}}'   , 'A64: 0101|0001|shift:2|imm:12|Wn:5|Wd:5'                                       , ''  ],
@@ -2524,7 +2524,7 @@ warn "Work still in progress and data may contain some bugs.\n";
 
   # SUBS (extended register)
   ['subs'              , 'Wd, $Wn, Wm{, extend {#amount}}'       , 'A64: 0110|1011|001|Wm:5|extend:3|amount:3|Wn:5|Wd:5'                           , ''  ],
-  ['subs'              , 'Xd, $Xn, R.m{, extend {#amount}}'      , 'A64: 1110|1011|001|m:5|extend/R:3|amount:3|Xn:5|Xd:5'                          , ''  ],
+  ['subs'              , 'Xd, $Xn, R.m{, extend {#amount}}'      , 'A64: 1110|1011|001|m:5|R/extend:3|amount:3|Xn:5|Xd:5'                          , ''  ],
 
   # SUBS (immediate)
   ['subs'              , 'Wd, $Wn, #imm.z{, shift {#amount}}'    , 'A64: 0111|0001|shift:2|imm:12|Wn:5|Wd:5'                                       , ''  ],
@@ -2555,10 +2555,10 @@ warn "Work still in progress and data may contain some bugs.\n";
   ['sysl'              , 'Xt, #op1, Cn, Cm, #op2'                , 'A64: 1101|0101|0010|1|op1:3|Cn:4|Cm:4|op2:3|Xt:5'                              , ''  ],
 
   # TBNZ
-  ['tbnz'              , 'R.t, #imm.s, rel.s*4'                  , 'A64: imm/R:1|0110|111|imm:5|rel:14|t:5'                                        , ''  ],
+  ['tbnz'              , 'R.t, #imm.s, rel.s*4'                  , 'A64: R/imm:1|0110|111|imm:5|rel:14|t:5'                                        , ''  ],
 
   # TBZ
-  ['tbz'               , 'R.t, #imm.s, rel.s*4'                  , 'A64: imm/R:1|0110|110|imm:5|rel:14|t:5'                                        , ''  ],
+  ['tbz'               , 'R.t, #imm.s, rel.s*4'                  , 'A64: R/imm:1|0110|110|imm:5|rel:14|t:5'                                        , ''  ],
 
   # TLBI
   ['tlbi'              , 'tlbi_op{, Xt}'                         , 'A64: 1101|0101|0000|1|tlbi_op:3|1000|tlbi_op:4|tlbi_op:3|Xt:5'                 , ''  ],
