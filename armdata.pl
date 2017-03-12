@@ -70,13 +70,13 @@ my @instructions = (
   ['adcs{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'A32: cond!=1111|0010|1011|Rn:4|Rd:4|cnst:12'                                   , ''  ],
 
   # ADC, ADCS (register)
-  ['adc%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|01|Rm:3|Rdn:3'                                                  , ''  ],
-  ['adcs{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|01|Rm:3|Rdn:3'                                                  , ''  ],
+  ['adc%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|01|Rm:3|Rdn:3'                                                  , 'IT:IN'  ],
+  ['adcs{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|01|Rm:3|Rdn:3'                                                  , 'IT:OUT'  ],
   ['adc{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|0100|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['adc%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0100|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['adc%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0100|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:IN'  ],
   ['adc{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|0100|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['adcs{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|0101|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['adcs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0101|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['adcs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0101|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:OUT'  ],
   ['adcs{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|0101|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['adc{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|1010|Rn:4|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['adc{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0000|1010|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -88,15 +88,15 @@ my @instructions = (
   ['adc{%c}{%q}'       , '{Rd}, Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|1010|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                      , ''  ],
 
   # ADD, ADDS (immediate)
-  ['add%c{%q}'         , 'Rd, Rn, #imm.z'                        , 'T16: 0001|110|imm:3|Rn:3|Rd:3'                                                 , ''  ],
-  ['adds{%q}'          , 'Rd, Rn, #imm.z'                        , 'T16: 0001|110|imm:3|Rn:3|Rd:3'                                                 , ''  ],
-  ['add%c{%q}'         , 'Rdn, #imm.z'                           , 'T16: 0011|0|Rdn:3|imm:8'                                                       , ''  ],
-  ['add%c{%q}'         , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|0|Rdn:3|imm:8'                                                       , ''  ],
-  ['adds{%q}'          , 'Rdn, #imm.z'                           , 'T16: 0011|0|Rdn:3|imm:8'                                                       , ''  ],
-  ['adds{%q}'          , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|0|Rdn:3|imm:8'                                                       , ''  ],
-  ['add%c.W'           , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0100|00|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['add%c{%q}'         , 'Rd, Rn, #imm.z'                        , 'T16: 0001|110|imm:3|Rn:3|Rd:3'                                                 , 'IT:IN'  ],
+  ['adds{%q}'          , 'Rd, Rn, #imm.z'                        , 'T16: 0001|110|imm:3|Rn:3|Rd:3'                                                 , 'IT:OUT'  ],
+  ['add%c{%q}'         , 'Rdn, #imm.z'                           , 'T16: 0011|0|Rdn:3|imm:8'                                                       , 'IT:IN'  ],
+  ['add%c{%q}'         , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|0|Rdn:3|imm:8'                                                       , 'IT:IN'  ],
+  ['adds{%q}'          , 'Rdn, #imm.z'                           , 'T16: 0011|0|Rdn:3|imm:8'                                                       , 'IT:OUT'  ],
+  ['adds{%q}'          , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|0|Rdn:3|imm:8'                                                       , 'IT:OUT'  ],
+  ['add%c.W'           , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0100|00|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , 'IT:IN'  ],
   ['add{%c}{%q}'       , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0100|00|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
-  ['adds.W'            , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0100|01|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
+  ['adds.W'            , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0100|01|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , 'IT:OUT'  ],
   ['adds{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0100|01|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
   ['add{%c}{%q}'       , '{Rd}, Rn, #imm.z'                      , 'T32: 1111|0|imm:1|1000|00|Rn!=11x1|0|imm:3|Rd:4|imm:8'                         , ''  ],
   ['addw{%c}{%q}'      , '{Rd}, Rn, #imm.z'                      , 'T32: 1111|0|imm:1|1000|00|Rn!=11x1|0|imm:3|Rd:4|imm:8'                         , ''  ],
@@ -104,16 +104,16 @@ my @instructions = (
   ['adds{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'A32: cond!=1111|0010|1001|Rn!=1101|Rd:4|cnst:12'                               , ''  ],
 
   # ADD, ADDS (register)
-  ['add%c{%q}'         , 'Rd, Rn, Rm'                            , 'T16: 0001|100|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
-  ['adds{%q}'          , '{Rd}, Rn, Rm'                          , 'T16: 0001|100|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
-  ['add%c{%q}'         , 'Rdn, Rm'                               , 'T16: 0100|0100|Rdn!=1|Rm!=1101|Rdn!=101'                                       , ''  ],
+  ['add%c{%q}'         , 'Rd, Rn, Rm'                            , 'T16: 0001|100|Rm:3|Rn:3|Rd:3'                                                  , 'IT:IN'  ],
+  ['adds{%q}'          , '{Rd}, Rn, Rm'                          , 'T16: 0001|100|Rm:3|Rn:3|Rd:3'                                                  , 'IT:OUT'  ],
+  ['add%c{%q}'         , 'Rdn, Rm'                               , 'T16: 0100|0100|Rdn!=1|Rm!=1101|Rdn!=101'                                       , 'IT:IN'  ],
   ['add{%c}{%q}'       , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0100|Rdn!=1|Rm!=1101|Rdn!=101'                                       , ''  ],
   ['add{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|0000|Rn!=1101|0000|Rd:4|0011|Rm:4'                              , ''  ],
-  ['add%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0000|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['add%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0000|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , 'IT:IN'  ],
   ['add{%c}.W'         , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0000|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
   ['add{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|0000|Rn!=1101|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
   ['adds{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|0001|Rn!=1101|0000|Rd!=1111|0011|Rm:4'                          , ''  ],
-  ['adds.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0001|Rn!=1101|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'      , ''  ],
+  ['adds.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0001|Rn!=1101|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'      , 'IT:OUT'  ],
   ['adds{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|0001|Rn!=1101|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4' , ''  ],
   ['add{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|1000|Rn!=1101|Rd:4|0000|0110|Rm:4'                        , ''  ],
   ['add{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0000|1000|Rn!=1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'        , ''  ],
@@ -169,13 +169,13 @@ my @instructions = (
   ['ands{%c}{%q}'      , '{Rd}, Rn, #cnst.c'                     , 'A32: cond!=1111|0010|0001|Rn:4|Rd:4|cnst:12'                                   , ''  ],
 
   # AND, ANDS (register)
-  ['and%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|00|Rm:3|Rdn:3'                                                  , ''  ],
-  ['ands{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|00|Rm:3|Rdn:3'                                                  , ''  ],
+  ['and%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|00|Rm:3|Rdn:3'                                                  , 'IT:IN'  ],
+  ['ands{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|00|Rm:3|Rdn:3'                                                  , 'IT:OUT'  ],
   ['and{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|0000|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['and%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0000|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['and%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0000|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:IN'  ],
   ['and{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|0000|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['ands{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|0001|Rn:4|0000|Rd!=1111|0011|Rm:4'                              , ''  ],
-  ['ands.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0001|Rn:4|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['ands.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0001|Rn:4|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'          , 'IT:OUT'  ],
   ['ands{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|0001|Rn:4|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4'     , ''  ],
   ['and{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|0000|Rn:4|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['and{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0000|0000|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -187,32 +187,32 @@ my @instructions = (
   ['and{%c}{%q}'       , '{Rd}, Rn, Rm, type Rs'                 , 'A32: cond!=1111|0000|0000|Rn:4|Rd:4|Rs:4|0|type:2|1|Rm:4'                      , ''  ],
 
   # ASR (immediate)
-  ['asr%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0001|0|imm:5|Rm:3|Rd:3'                                                   , ''  ],
-  ['asr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
+  ['asr%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0001|0|imm:5|Rm:3|Rd:3'                                                   , 'IT:IN'  ],
+  ['asr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'IT:IN'  ],
   ['asr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
   ['asr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm:5|100|Rm:4'                            , ''  ],
 
   # ASR (register)
-  ['asr%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , ''  ],
-  ['asr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0100|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['asr%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['asr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0100|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
   ['asr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0100|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['asr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0101|Rm:4'                            , ''  ],
 
   # ASRS (immediate)
-  ['asrs{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0001|0|imm:5|Rm:3|Rd:3'                                                   , ''  ],
-  ['asrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
+  ['asrs{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0001|0|imm:5|Rm:3|Rd:3'                                                   , 'IT:OUT'  ],
+  ['asrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'IT:OUT'  ],
   ['asrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , ''  ],
   ['asrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm:5|100|Rm:4'                            , ''  ],
 
   # ASRS (register)
-  ['asrs{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , ''  ],
-  ['asrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0101|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['asrs{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['asrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0101|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
   ['asrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0101|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['asrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0101|Rm:4'                            , ''  ],
 
   # B
   ['b%c{%q}'           , 'rel.s*2'                               , 'T16: 1101|cond!=111x|rel:8'                                                    , ''  ],
-  ['b{%c}{%q}'         , 'rel.s*2'                               , 'T16: 1110|0|rel:11'                                                            , ''  ],
+  ['b{%c}{%q}'         , 'rel.s*2'                               , 'T16: 1110|0|rel:11'                                                            , 'IT:IN:LAST:OUT'  ],
   ['b%c.W'             , 'rel.s*2'                               , 'T32: 1111|0|rel.A:1|cond!=111x|rel.D:6|10|rel.C:1|0|rel.B:1|rel.E:11'          , ''  ],
   ['b%c{%q}'           , 'rel.s*2'                               , 'T32: 1111|0|rel.A:1|cond!=111x|rel.D:6|10|rel.C:1|0|rel.B:1|rel.E:11'          , ''  ],
   ['b{%c}.W'           , 'rel.s*2'                               , 'T32: 1111|0|rel.A:1|rel.D:10|10|J1:1|1|J2:1|rel.E:11'                          , ''  ],
@@ -234,13 +234,13 @@ my @instructions = (
   ['bics{%c}{%q}'      , '{Rd}, Rn, #cnst.c'                     , 'A32: cond!=1111|0011|1101|Rn:4|Rd:4|cnst:12'                                   , ''  ],
 
   # BIC, BICS (register)
-  ['bic%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|10|Rm:3|Rdn:3'                                                  , ''  ],
-  ['bics{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|10|Rm:3|Rdn:3'                                                  , ''  ],
+  ['bic%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|10|Rm:3|Rdn:3'                                                  , 'IT:IN'  ],
+  ['bics{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|10|Rm:3|Rdn:3'                                                  , 'IT:OUT'  ],
   ['bic{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|0010|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['bic%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0010|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['bic%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0010|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:IN'  ],
   ['bic{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|0010|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['bics{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|0011|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['bics.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0011|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['bics.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0011|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:OUT'  ],
   ['bics{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|0011|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['bic{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0001|1100|Rn:4|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['bic{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0001|1100|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -372,13 +372,13 @@ my @instructions = (
   ['eors{%c}{%q}'      , '{Rd}, Rn, #cnst.c'                     , 'A32: cond!=1111|0010|0011|Rn:4|Rd:4|cnst:12'                                   , ''  ],
 
   # EOR, EORS (register)
-  ['eor%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|01|Rm:3|Rdn:3'                                                  , ''  ],
-  ['eors{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|01|Rm:3|Rdn:3'                                                  , ''  ],
+  ['eor%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|01|Rm:3|Rdn:3'                                                  , 'IT:IN'  ],
+  ['eors{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0000|01|Rm:3|Rdn:3'                                                  , 'IT:OUT'  ],
   ['eor{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|1000|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['eor%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|1000|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['eor%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|1000|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:IN'  ],
   ['eor{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|1000|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['eors{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|1001|Rn:4|0000|Rd!=1111|0011|Rm:4'                              , ''  ],
-  ['eors.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|1001|Rn:4|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['eors.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|1001|Rn:4|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'          , 'IT:OUT'  ],
   ['eors{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|1001|Rn:4|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4'     , ''  ],
   ['eor{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|0010|Rn:4|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['eor{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0000|0010|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -668,50 +668,50 @@ my @instructions = (
   ['ldrt{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm, {shift {#amount}}'  , 'A32: cond!=1111|0110|U|011|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'                  , ''  ],
 
   # LSL (immediate)
-  ['lsl%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0000|0|imm!=00000|Rm:3|Rd:3'                                              , ''  ],
-  ['lsl%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
+  ['lsl%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0000|0|imm!=00000|Rm:3|Rd:3'                                              , 'IT:IN'  ],
+  ['lsl%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'IT:IN'  ],
   ['lsl{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
   ['lsl{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm!=00000|000|Rm:4'                       , ''  ],
 
   # LSL (register)
-  ['lsl%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , ''  ],
-  ['lsl%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0000|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsl%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['lsl%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0000|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
   ['lsl{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0000|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['lsl{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0001|Rm:4'                            , ''  ],
 
   # LSLS (immediate)
-  ['lsls{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0000|0|imm!=00000|Rm:3|Rd:3'                                              , ''  ],
-  ['lsls.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
+  ['lsls{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0000|0|imm!=00000|Rm:3|Rd:3'                                              , 'IT:OUT'  ],
+  ['lsls.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'IT:OUT'  ],
   ['lsls{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , ''  ],
   ['lsls{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm!=00000|000|Rm:4'                       , ''  ],
 
   # LSLS (register)
-  ['lsls{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , ''  ],
-  ['lsls.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0001|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsls{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['lsls.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0001|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
   ['lsls{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0001|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['lsls{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0001|Rm:4'                            , ''  ],
 
   # LSR (immediate)
-  ['lsr%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0000|1|imm:5|Rm:3|Rd:3'                                                   , ''  ],
-  ['lsr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
+  ['lsr%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0000|1|imm:5|Rm:3|Rd:3'                                                   , 'IT:IN'  ],
+  ['lsr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'IT:IN'  ],
   ['lsr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
   ['lsr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm:5|010|Rm:4'                            , ''  ],
 
   # LSR (register)
-  ['lsr%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['lsr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0010|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsr%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['lsr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0010|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
   ['lsr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0010|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['lsr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0011|Rm:4'                            , ''  ],
 
   # LSRS (immediate)
-  ['lsrs{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0000|1|imm:5|Rm:3|Rd:3'                                                   , ''  ],
-  ['lsrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
+  ['lsrs{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0000|1|imm:5|Rm:3|Rd:3'                                                   , 'IT:OUT'  ],
+  ['lsrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'IT:OUT'  ],
   ['lsrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , ''  ],
   ['lsrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm:5|010|Rm:4'                            , ''  ],
 
   # LSRS (register)
-  ['lsrs{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['lsrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0011|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['lsrs{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['lsrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0011|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
   ['lsrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0011|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['lsrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0011|Rm:4'                            , ''  ],
 
@@ -733,11 +733,11 @@ my @instructions = (
   ['mls{%c}{%q}'       , 'Rd, Rn, Rm, Ra'                        , 'A32: cond!=1111|0000|0110|Rd:4|Ra:4|Rm:4|1001|Rn:4'                            , ''  ],
 
   # MOV, MOVS (immediate)
-  ['mov%c{%q}'         , 'Rd, #imm.z'                            , 'T16: 0010|0|Rd:3|imm:8'                                                        , ''  ],
-  ['movs{%q}'          , 'Rd, #imm.z'                            , 'T16: 0010|0|Rd:3|imm:8'                                                        , ''  ],
-  ['mov%c.W'           , 'Rd, #cnst.c'                           , 'T32: 1111|0|cnst:1|0001|0011|110|cnst:3|Rd:4|cnst:8'                           , ''  ],
+  ['mov%c{%q}'         , 'Rd, #imm.z'                            , 'T16: 0010|0|Rd:3|imm:8'                                                        , 'IT:IN'  ],
+  ['movs{%q}'          , 'Rd, #imm.z'                            , 'T16: 0010|0|Rd:3|imm:8'                                                        , 'IT:OUT'  ],
+  ['mov%c.W'           , 'Rd, #cnst.c'                           , 'T32: 1111|0|cnst:1|0001|0011|110|cnst:3|Rd:4|cnst:8'                           , 'IT:IN'  ],
   ['mov{%c}{%q}'       , 'Rd, #cnst.c'                           , 'T32: 1111|0|cnst:1|0001|0011|110|cnst:3|Rd:4|cnst:8'                           , ''  ],
-  ['movs.W'            , 'Rd, #cnst.c'                           , 'T32: 1111|0|cnst:1|0001|0111|110|cnst:3|Rd:4|cnst:8'                           , ''  ],
+  ['movs.W'            , 'Rd, #cnst.c'                           , 'T32: 1111|0|cnst:1|0001|0111|110|cnst:3|Rd:4|cnst:8'                           , 'IT:OUT'  ],
   ['movs{%c}{%q}'      , 'Rd, #cnst.c'                           , 'T32: 1111|0|cnst:1|0001|0111|110|cnst:3|Rd:4|cnst:8'                           , ''  ],
   ['mov{%c}{%q}'       , 'Rd, #imm.z'                            , 'T32: 1111|0|imm.B:1|1001|00|imm.A:4|0|imm.C:3|Rd:4|imm.D:8'                    , ''  ],
   ['movw{%c}{%q}'      , 'Rd, #imm.z'                            , 'T32: 1111|0|imm.B:1|1001|00|imm.A:4|0|imm.C:3|Rd:4|imm.D:8'                    , ''  ],
@@ -748,14 +748,14 @@ my @instructions = (
 
   # MOV, MOVS (register)
   ['mov{%c}{%q}'       , 'Rd, Rm'                                , 'T16: 0100|0110|Rd:1|Rm:3|Rd:4'                                                 , ''  ],
-  ['mov%c{%q}'         , 'Rd, Rm, {shift #amount}'               , 'T16: 000|shift!=11|amount:5|Rm:3|Rd:3'                                         , ''  ],
-  ['movs{%q}'          , 'Rd, Rm, {shift #amount}'               , 'T16: 000|shift!=11|amount:5|Rm:3|Rd:3'                                         , ''  ],
+  ['mov%c{%q}'         , 'Rd, Rm, {shift #amount}'               , 'T16: 000|shift!=11|amount:5|Rm:3|Rd:3'                                         , 'IT:IN'  ],
+  ['movs{%q}'          , 'Rd, Rm, {shift #amount}'               , 'T16: 000|shift!=11|amount:5|Rm:3|Rd:3'                                         , 'IT:OUT'  ],
   ['mov{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'T32: 1110|1010|0100|1111|0000|Rd:4|0011|Rm:4'                                  , ''  ],
   ['mov{%c}.W'         , 'Rd, Rm, {LSL #0}'                      , 'T32: 1110|1010|0100|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
-  ['mov%c.W'           , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0100|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['mov%c.W'           , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0100|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , 'IT:IN'  ],
   ['mov{%c}{%q}'       , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0100|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['movs{%c}{%q}'      , 'Rd, Rm, RRX'                           , 'T32: 1110|1010|0101|1111|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['movs.W'            , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0101|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
+  ['movs.W'            , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0101|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , 'IT:OUT'  ],
   ['movs{%c}{%q}'      , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0101|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['mov{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'A32: cond!=1111|0001|1010|0000|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['mov{%c}{%q}'       , 'Rd, Rm, {shift #amount}'               , 'A32: cond!=1111|0001|1010|0000|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -763,17 +763,17 @@ my @instructions = (
   ['movs{%c}{%q}'      , 'Rd, Rm, {shift #amount}'               , 'A32: cond!=1111|0001|1011|0000|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
 
   # MOV, MOVS (register-shifted register)
-  ['mov%c{%q}'         , 'Rdm, Rdm, ASR Rs'                      , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , ''  ],
-  ['movs{%q}'          , 'Rdm, Rdm, ASR Rs'                      , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , ''  ],
-  ['mov%c{%q}'         , 'Rdm, Rdm, LSL Rs'                      , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , ''  ],
-  ['movs{%q}'          , 'Rdm, Rdm, LSL Rs'                      , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , ''  ],
-  ['mov%c{%q}'         , 'Rdm, Rdm, LSR Rs'                      , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['movs{%q}'          , 'Rdm, Rdm, LSR Rs'                      , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['mov%c{%q}'         , 'Rdm, Rdm, ROR Rs'                      , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['movs{%q}'          , 'Rdm, Rdm, ROR Rs'                      , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['movs.W'            , 'Rd, Rm, type Rs'                       , 'T32: 1111|1010|0|type:2|1|Rm:4|1111|Rd:4|0000|Rs:4'                            , ''  ],
+  ['mov%c{%q}'         , 'Rdm, Rdm, ASR Rs'                      , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['movs{%q}'          , 'Rdm, Rdm, ASR Rs'                      , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['mov%c{%q}'         , 'Rdm, Rdm, LSL Rs'                      , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['movs{%q}'          , 'Rdm, Rdm, LSL Rs'                      , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['mov%c{%q}'         , 'Rdm, Rdm, LSR Rs'                      , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['movs{%q}'          , 'Rdm, Rdm, LSR Rs'                      , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['mov%c{%q}'         , 'Rdm, Rdm, ROR Rs'                      , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['movs{%q}'          , 'Rdm, Rdm, ROR Rs'                      , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['movs.W'            , 'Rd, Rm, type Rs'                       , 'T32: 1111|1010|0|type:2|1|Rm:4|1111|Rd:4|0000|Rs:4'                            , 'IT:OUT'  ],
   ['movs{%c}{%q}'      , 'Rd, Rm, type Rs'                       , 'T32: 1111|1010|0|type:2|1|Rm:4|1111|Rd:4|0000|Rs:4'                            , ''  ],
-  ['mov%c.W'           , 'Rd, Rm, type Rs'                       , 'T32: 1111|1010|0|type:2|0|Rm:4|1111|Rd:4|0000|Rs:4'                            , ''  ],
+  ['mov%c.W'           , 'Rd, Rm, type Rs'                       , 'T32: 1111|1010|0|type:2|0|Rm:4|1111|Rd:4|0000|Rs:4'                            , 'IT:IN'  ],
   ['mov{%c}{%q}'       , 'Rd, Rm, type Rs'                       , 'T32: 1111|1010|0|type:2|0|Rm:4|1111|Rd:4|0000|Rs:4'                            , ''  ],
   ['movs{%c}{%q}'      , 'Rd, Rm, type Rs'                       , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                      , ''  ],
   ['mov{%c}{%q}'       , 'Rd, Rm, type Rs'                       , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0|type:2|1|Rm:4'                      , ''  ],
@@ -810,9 +810,9 @@ my @instructions = (
   ['msr{%c}{%q}'       , 'sreg, Rn'                              , 'A32: cond!=1111|0001|0|R|10|mask:4|1111|0000|0000|Rn:4'                        , ''  ],
 
   # MUL, MULS
-  ['mul%c{%q}'         , 'Rdm, Rn, {Rdm}'                        , 'T16: 0100|0011|01|Rn:3|Rdm:3'                                                  , ''  ],
-  ['muls{%q}'          , 'Rdm, Rn, {Rdm}'                        , 'T16: 0100|0011|01|Rn:3|Rdm:3'                                                  , ''  ],
-  ['mul%c.W'           , 'Rd, Rn, {Rm}'                          , 'T32: 1111|1011|0000|Rn:4|1111|Rd:4|0000|Rm:4'                                  , ''  ],
+  ['mul%c{%q}'         , 'Rdm, Rn, {Rdm}'                        , 'T16: 0100|0011|01|Rn:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['muls{%q}'          , 'Rdm, Rn, {Rdm}'                        , 'T16: 0100|0011|01|Rn:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['mul%c.W'           , 'Rd, Rn, {Rm}'                          , 'T32: 1111|1011|0000|Rn:4|1111|Rd:4|0000|Rm:4'                                  , 'IT:IN'  ],
   ['mul{%c}{%q}'       , 'Rd, Rn, {Rm}'                          , 'T32: 1111|1011|0000|Rn:4|1111|Rd:4|0000|Rm:4'                                  , ''  ],
   ['muls{%c}{%q}'      , 'Rd, Rn, {Rm}'                          , 'A32: cond!=1111|0000|0001|Rd:4|0000|Rm:4|1001|Rn:4'                            , ''  ],
   ['mul{%c}{%q}'       , 'Rd, Rn, {Rm}'                          , 'A32: cond!=1111|0000|0000|Rd:4|0000|Rm:4|1001|Rn:4'                            , ''  ],
@@ -824,13 +824,13 @@ my @instructions = (
   ['mvns{%c}{%q}'      , 'Rd, #cnst.c'                           , 'A32: cond!=1111|0011|1111|0000|Rd:4|cnst:12'                                   , ''  ],
 
   # MVN, MVNS (register)
-  ['mvn%c{%q}'         , 'Rd, Rm'                                , 'T16: 0100|0011|11|Rm:3|Rd:3'                                                   , ''  ],
-  ['mvns{%q}'          , 'Rd, Rm'                                , 'T16: 0100|0011|11|Rm:3|Rd:3'                                                   , ''  ],
+  ['mvn%c{%q}'         , 'Rd, Rm'                                , 'T16: 0100|0011|11|Rm:3|Rd:3'                                                   , 'IT:IN'  ],
+  ['mvns{%q}'          , 'Rd, Rm'                                , 'T16: 0100|0011|11|Rm:3|Rd:3'                                                   , 'IT:OUT'  ],
   ['mvn{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'T32: 1110|1010|0110|1111|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['mvn%c.W'           , 'Rd, Rm'                                , 'T32: 1110|1010|0110|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['mvn%c.W'           , 'Rd, Rm'                                , 'T32: 1110|1010|0110|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:IN'  ],
   ['mvn{%c}{%q}'       , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0110|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['mvns{%c}{%q}'      , 'Rd, Rm, RRX'                           , 'T32: 1110|1010|0111|1111|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['mvns.W'            , 'Rd, Rm'                                , 'T32: 1110|1010|0111|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['mvns.W'            , 'Rd, Rm'                                , 'T32: 1110|1010|0111|1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:OUT'  ],
   ['mvns{%c}{%q}'      , 'Rd, Rm, {shift #amount}'               , 'T32: 1110|1010|0111|1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['mvn{%c}{%q}'       , 'Rd, Rm, RRX'                           , 'A32: cond!=1111|0001|1110|0000|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['mvn{%c}{%q}'       , 'Rd, Rm, {shift #amount}'               , 'A32: cond!=1111|0001|1110|0000|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -863,13 +863,13 @@ my @instructions = (
   ['orrs{%c}{%q}'      , '{Rd}, Rn, #cnst.c'                     , 'A32: cond!=1111|0011|1001|Rn:4|Rd:4|cnst:12'                                   , ''  ],
 
   # ORR, ORRS (register)
-  ['orr%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|00|Rm:3|Rdn:3'                                                  , ''  ],
-  ['orrs{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|00|Rm:3|Rdn:3'                                                  , ''  ],
+  ['orr%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|00|Rm:3|Rdn:3'                                                  , 'IT:IN'  ],
+  ['orrs{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0011|00|Rm:3|Rdn:3'                                                  , 'IT:OUT'  ],
   ['orr{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|0100|Rn!=1111|0000|Rd:4|0011|Rm:4'                              , ''  ],
-  ['orr%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0100|Rn!=1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['orr%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0100|Rn!=1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , 'IT:IN'  ],
   ['orr{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|0100|Rn!=1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
   ['orrs{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1010|0101|Rn!=1111|0000|Rd:4|0011|Rm:4'                              , ''  ],
-  ['orrs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0101|Rn!=1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['orrs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1010|0101|Rn!=1111|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , 'IT:OUT'  ],
   ['orrs{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1010|0101|Rn!=1111|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
   ['orr{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0001|1000|Rn:4|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['orr{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0001|1000|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -1011,8 +1011,8 @@ my @instructions = (
   ['revsh{%c}{%q}'     , 'Rd, Rm'                                , 'A32: cond!=1111|0110|1111|1111|Rd:4|1111|1011|Rm:4'                            , ''  ],
 
   # RFE, RFEDA, RFEDB, RFEIA, RFEIB
-  ['rfedb{%c}{%q}'     , 'Rn {!}'                                , 'T32: 1110|1000|00|W|1|Rn:4|1100|0000|0000|0000'                                , ''  ],
-  ['rfe{ia}{%c}{%q}'   , 'Rn {!}'                                , 'T32: 1110|1001|10|W|1|Rn:4|1100|0000|0000|0000'                                , ''  ],
+  ['rfedb{%c}{%q}'     , 'Rn {!}'                                , 'T32: 1110|1000|00|W|1|Rn:4|1100|0000|0000|0000'                                , 'IT:IN:LAST:OUT'  ],
+  ['rfe{ia}{%c}{%q}'   , 'Rn {!}'                                , 'T32: 1110|1001|10|W|1|Rn:4|1100|0000|0000|0000'                                , 'IT:IN:LAST:OUT'  ],
   ['rfeda{%c}{%q}'     , 'Rn {!}'                                , 'A32: 1111|1000|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
   ['rfedb{%c}{%q}'     , 'Rn {!}'                                , 'A32: 1111|1001|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
   ['rfe{ia}{%c}{%q}'   , 'Rn {!}'                                , 'A32: 1111|1000|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
@@ -1023,8 +1023,8 @@ my @instructions = (
   ['ror{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm!=00000|110|Rm:4'                       , ''  ],
 
   # ROR (register)
-  ['ror%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['ror%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0110|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['ror%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , 'IT:IN'  ],
+  ['ror%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0110|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:IN'  ],
   ['ror{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0110|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['ror{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0111|Rm:4'                            , ''  ],
 
@@ -1033,8 +1033,8 @@ my @instructions = (
   ['rors{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm!=00000|110|Rm:4'                       , ''  ],
 
   # RORS (register)
-  ['rors{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , ''  ],
-  ['rors.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0111|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
+  ['rors{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , 'IT:OUT'  ],
+  ['rors.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0111|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'IT:OUT'  ],
   ['rors{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0111|Rm:4|1111|Rd:4|0000|Rs:4'                                  , ''  ],
   ['rors{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0111|Rm:4'                            , ''  ],
 
@@ -1047,11 +1047,11 @@ my @instructions = (
   ['rrxs{%c}{%q}'      , '{Rd}, Rm'                              , 'A32: cond!=1111|0001|1011|0000|Rd:4|0000|0110|Rm:4'                            , ''  ],
 
   # RSB, RSBS (immediate)
-  ['rsb%c{%q}'         , '{Rd,}Rn, #0'                           , 'T16: 0100|0010|01|Rn:3|Rd:3'                                                   , ''  ],
-  ['rsbs{%q}'          , '{Rd,}Rn, #0'                           , 'T16: 0100|0010|01|Rn:3|Rd:3'                                                   , ''  ],
-  ['rsb%c.W'           , '{Rd}, Rn, #0'                          , 'T32: 1111|0|i|0111|00|Rn:4|0|imm3:3|Rd:4|imm8:8'                               , ''  ],
+  ['rsb%c{%q}'         , '{Rd,}Rn, #0'                           , 'T16: 0100|0010|01|Rn:3|Rd:3'                                                   , 'IT:IN'  ],
+  ['rsbs{%q}'          , '{Rd,}Rn, #0'                           , 'T16: 0100|0010|01|Rn:3|Rd:3'                                                   , 'IT:OUT'  ],
+  ['rsb%c.W'           , '{Rd}, Rn, #0'                          , 'T32: 1111|0|i|0111|00|Rn:4|0|imm3:3|Rd:4|imm8:8'                               , 'IT:IN'  ],
   ['rsb{%c}{%q}'       , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0111|00|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
-  ['rsbs.W'            , '{Rd}, Rn, #0'                          , 'T32: 1111|0|i|0111|01|Rn:4|0|imm3:3|Rd:4|imm8:8'                               , ''  ],
+  ['rsbs.W'            , '{Rd}, Rn, #0'                          , 'T32: 1111|0|i|0111|01|Rn:4|0|imm3:3|Rd:4|imm8:8'                               , 'IT:OUT'  ],
   ['rsbs{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0111|01|Rn:4|0|cnst:3|Rd:4|cnst:8'                          , ''  ],
   ['rsb{%c}{%q}'       , '{Rd}, Rn, #cnst.x'                     , 'A32: cond!=1111|0010|0110|Rn:4|Rd:4|cnst:12'                                   , ''  ],
   ['rsbs{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'A32: cond!=1111|0010|0111|Rn:4|Rd:4|cnst:12'                                   , ''  ],
@@ -1103,13 +1103,13 @@ my @instructions = (
   ['sbcs{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'A32: cond!=1111|0010|1101|Rn:4|Rd:4|cnst:12'                                   , ''  ],
 
   # SBC, SBCS (register)
-  ['sbc%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|10|Rm:3|Rdn:3'                                                  , ''  ],
-  ['sbcs{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|10|Rm:3|Rdn:3'                                                  , ''  ],
+  ['sbc%c{%q}'         , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|10|Rm:3|Rdn:3'                                                  , 'IT:IN'  ],
+  ['sbcs{%q}'          , '{Rdn}, Rdn, Rm'                        , 'T16: 0100|0001|10|Rm:3|Rdn:3'                                                  , 'IT:OUT'  ],
   ['sbc{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|0110|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['sbc%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0110|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['sbc%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0110|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:IN'  ],
   ['sbc{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|0110|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['sbcs{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|0111|Rn:4|0000|Rd:4|0011|Rm:4'                                  , ''  ],
-  ['sbcs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0111|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , ''  ],
+  ['sbcs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|0111|Rn:4|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'IT:OUT'  ],
   ['sbcs{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|0111|Rn:4|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'         , ''  ],
   ['sbc{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|1100|Rn:4|Rd:4|0000|0110|Rm:4'                            , ''  ],
   ['sbc{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0000|1100|Rn:4|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , ''  ],
@@ -1482,15 +1482,15 @@ my @instructions = (
   ['sub{%c}{%q}'       , 'Rd, PC, #cnst.x'                       , 'A32: cond!=1111|0010|0100|1111|Rd:4|cnst:12'                                   , ''  ],
 
   # SUB, SUBS (immediate)
-  ['sub%c{%q}'         , 'Rd, Rn, #imm.z'                        , 'T16: 0001|111|imm:3|Rn:3|Rd:3'                                                 , ''  ],
-  ['subs{%q}'          , 'Rd, Rn, #imm.z'                        , 'T16: 0001|111|imm:3|Rn:3|Rd:3'                                                 , ''  ],
-  ['sub%c{%q}'         , 'Rdn, #imm.z'                           , 'T16: 0011|1|Rdn:3|imm:8'                                                       , ''  ],
-  ['sub%c{%q}'         , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|1|Rdn:3|imm:8'                                                       , ''  ],
-  ['subs{%q}'          , 'Rdn, #imm.z'                           , 'T16: 0011|1|Rdn:3|imm:8'                                                       , ''  ],
-  ['subs{%q}'          , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|1|Rdn:3|imm:8'                                                       , ''  ],
-  ['sub%c.W'           , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0110|10|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
+  ['sub%c{%q}'         , 'Rd, Rn, #imm.z'                        , 'T16: 0001|111|imm:3|Rn:3|Rd:3'                                                 , 'IT:IN'  ],
+  ['subs{%q}'          , 'Rd, Rn, #imm.z'                        , 'T16: 0001|111|imm:3|Rn:3|Rd:3'                                                 , 'IT:OUT'  ],
+  ['sub%c{%q}'         , 'Rdn, #imm.z'                           , 'T16: 0011|1|Rdn:3|imm:8'                                                       , 'IT:IN'  ],
+  ['sub%c{%q}'         , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|1|Rdn:3|imm:8'                                                       , 'IT:IN'  ],
+  ['subs{%q}'          , 'Rdn, #imm.z'                           , 'T16: 0011|1|Rdn:3|imm:8'                                                       , 'IT:OUT'  ],
+  ['subs{%q}'          , '{Rdn}, Rdn, #imm.z'                    , 'T16: 0011|1|Rdn:3|imm:8'                                                       , 'IT:OUT'  ],
+  ['sub%c.W'           , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0110|10|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , 'IT:IN'  ],
   ['sub{%c}{%q}'       , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0110|10|Rn!=1101|0|cnst:3|Rd:4|cnst:8'                      , ''  ],
-  ['subs.W'            , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0110|11|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
+  ['subs.W'            , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0110|11|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , 'IT:OUT'  ],
   ['subs{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'T32: 1111|0|cnst:1|0110|11|Rn!=1101|0|cnst:3|Rd!=1111|cnst:8'                  , ''  ],
   ['sub{%c}{%q}'       , '{Rd}, Rn, #imm.z'                      , 'T32: 1111|0|imm:1|1010|10|Rn!=11x1|0|imm:3|Rd:4|imm:8'                         , ''  ],
   ['subw{%c}{%q}'      , '{Rd}, Rn, #imm.z'                      , 'T32: 1111|0|imm:1|1010|10|Rn!=11x1|0|imm:3|Rd:4|imm:8'                         , ''  ],
@@ -1499,13 +1499,13 @@ my @instructions = (
   ['subs{%c}{%q}'      , '{Rd}, Rn, #cnst.x'                     , 'A32: cond!=1111|0010|0101|Rn!=1101|Rd:4|cnst:12'                               , ''  ],
 
   # SUB, SUBS (register)
-  ['sub%c{%q}'         , 'Rd, Rn, Rm'                            , 'T16: 0001|101|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
-  ['subs{%q}'          , '{Rd}, Rn, Rm'                          , 'T16: 0001|101|Rm:3|Rn:3|Rd:3'                                                  , ''  ],
+  ['sub%c{%q}'         , 'Rd, Rn, Rm'                            , 'T16: 0001|101|Rm:3|Rn:3|Rd:3'                                                  , 'IT:IN'  ],
+  ['subs{%q}'          , '{Rd}, Rn, Rm'                          , 'T16: 0001|101|Rm:3|Rn:3|Rd:3'                                                  , 'IT:OUT'  ],
   ['sub{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|1010|Rn!=1101|0000|Rd:4|0011|Rm:4'                              , ''  ],
-  ['sub%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|1010|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , ''  ],
+  ['sub%c.W'           , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|1010|Rn!=1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'          , 'IT:IN'  ],
   ['sub{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|1010|Rn!=1101|0|amount!=000|Rd:4|amount!=00|shift!=11|Rm:4'     , ''  ],
   ['subs{%c}{%q}'      , '{Rd}, Rn, Rm, RRX'                     , 'T32: 1110|1011|1011|Rn!=1101|0000|Rd!=1111|0011|Rm:4'                          , ''  ],
-  ['subs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|1011|Rn!=1101|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'      , ''  ],
+  ['subs.W'            , '{Rd}, Rn, Rm'                          , 'T32: 1110|1011|1011|Rn!=1101|0|imm3!=000|Rd!=1111|imm2!=00|type!=11|Rm:4'      , 'IT:OUT'  ],
   ['subs{%c}{%q}'      , '{Rd}, Rn, Rm, {shift #amount}'         , 'T32: 1110|1011|1011|Rn!=1101|0|amount!=000|Rd!=1111|amount!=00|shift!=11|Rm:4' , ''  ],
   ['sub{%c}{%q}'       , '{Rd}, Rn, Rm, RRX'                     , 'A32: cond!=1111|0000|0100|Rn!=1101|Rd:4|0000|0110|Rm:4'                        , ''  ],
   ['sub{%c}{%q}'       , '{Rd}, Rn, Rm, {shift #amount}'         , 'A32: cond!=1111|0000|0100|Rn!=1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'        , ''  ],
@@ -1570,8 +1570,8 @@ my @instructions = (
   ['sxth{%c}{%q}'      , '{Rd}, Rm, {ROR #amount*8}'             , 'A32: cond!=1111|0110|1011|1111|Rd:4|amount:2|0001|11|Rm:4'                     , ''  ],
 
   # TBB, TBH
-  ['tbb{%c}{%q}'       , '[Rn, Rm]'                              , 'T32: 1110|1000|1101|Rn:4|1111|0000|0000|Rm:4'                                  , ''  ],
-  ['tbh{%c}{%q}'       , '[Rn, Rm, LSL #1]'                      , 'T32: 1110|1000|1101|Rn:4|1111|0000|0001|Rm:4'                                  , ''  ],
+  ['tbb{%c}{%q}'       , '[Rn, Rm]'                              , 'T32: 1110|1000|1101|Rn:4|1111|0000|0000|Rm:4'                                  , 'IT:IN:LAST:OUT'  ],
+  ['tbh{%c}{%q}'       , '[Rn, Rm, LSL #1]'                      , 'T32: 1110|1000|1101|Rn:4|1111|0000|0001|Rm:4'                                  , 'IT:IN:LAST:OUT'  ],
 
   # TEQ (immediate)
   ['teq{%c}{%q}'       , 'Rn, #cnst.c'                           , 'T32: 1111|0|cnst:1|0010|01|Rn:4|0|cnst:3|1111|cnst:8'                          , ''  ],
