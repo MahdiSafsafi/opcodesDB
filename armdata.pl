@@ -2319,16 +2319,16 @@ my @instructions = (
   ['orr'               , 'Xd, Xn, Xm, {shift #amount}'           , 'A64: 1010|1010|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , ''  ],
 
   # PRFM (immediate)
-  ['prfm'              , '(prfop|#imm.z), [$Xn, {#imm.z*8}]'     , 'A64: 1111|1001|10|imm:12|Xn:5|imm:5'                                           , ''  ],
+  ['prfm'              , 'prfop, [$Xn, {#imm.z*8}]'              , 'A64: 1111|1001|10|imm:12|Xn:5|prfop:5'                                         , ''  ],
 
   # PRFM (literal)
-  ['prfm'              , '(prfop|#imm.s), rel.s*4'               , 'A64: 1101|1000|rel:19|imm:5'                                                   , ''  ],
+  ['prfm'              , 'prfop, rel.s*4'                        , 'A64: 1101|1000|rel:19|prfop:5'                                                 , ''  ],
 
   # PRFM (register)
-  ['prfm'              , '(prfop|#imm), [$Xn, (Wm|Xm), {extend {amount}}]', 'A64: 1111|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|imm:5'                    , ''  ],
+  ['prfm'              , 'prfop, [$Xn, (Wm|Xm), {extend {amount}}]', 'A64: 1111|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|prfop:5'                  , ''  ],
 
   # PRFM (unscaled offset)
-  ['prfum'             , '(prfop|#imm.s), [$Xn, {#imm.s}]'       , 'A64: 1111|1000|100|imm:9|00|Xn:5|imm:5'                                        , ''  ],
+  ['prfum'             , 'prfop, [$Xn, {#imm.s}]'                , 'A64: 1111|1000|100|imm:9|00|Xn:5|prfop:5'                                      , ''  ],
 
   # RBIT
   ['rbit'              , 'Wd, Wn'                                , 'A64: 0101|1010|1100|0000|0000|00|Wn:5|Wd:5'                                    , ''  ],
