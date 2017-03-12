@@ -1,4 +1,3 @@
-my @instructions = (
 # ===>                          ARM instruction set                        <===
 
 # Author = Mahdi Safsafi.
@@ -60,6 +59,7 @@ my $locked = 1;  # Don't edit instructions until ($locked == 0) !
 
 warn "Work still in progress and data may contain some bugs.\n";
 
+my @instructions = (
 
   # ===>                     AArch32.Base instructions                     <===
 
