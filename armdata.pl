@@ -136,7 +136,7 @@ my @instructions = (
   ['adds{%c}{%q}'      , '{Rd}, SP, #cnst.x'                     , 'A32: cond!=1111|0010|1001|1101|Rd:4|cnst:12'                                   , 'BASE'  ],
 
   # ==> ADD, ADDS (SP plus register)
-  ['add{%c}{%q}'       , '{Rdm}, SP, Rdm'                        , 'T16: 0100|0100|DM:1|1101|Rdm:3'                                                , 'BASE'  ],
+  ['add{%c}{%q}'       , '{Rdm}, SP, Rdm'                        , 'T16: 0100|0100|Rdm:1|1101|Rdm:3'                                               , 'BASE'  ],
   ['add{%c}{%q}'       , '{SP}, SP, Rm'                          , 'T16: 0100|0100|1|Rm!=1101|101'                                                 , 'BASE'  ],
   ['add{%c}{%q}'       , '{Rd}, SP, Rm, RRX'                     , 'T32: 1110|1011|0000|1101|0000|Rd:4|0011|Rm:4'                                  , 'BASE'  ],
   ['add{%c}.W'         , '{Rd}, SP, Rm'                          , 'T32: 1110|1011|0000|1101|0|imm3!=000|Rd:4|imm2!=00|type!=11|Rm:4'              , 'BASE'  ],
