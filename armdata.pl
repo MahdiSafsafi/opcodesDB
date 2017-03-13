@@ -454,34 +454,34 @@ my @instructions = (
   ['ldc{%c}{%q}'       , 'p14, c5, [PC], option'                 , 'A32: cond!=1111|110|P!=0|U!=0|0|W!=0|1111|1010|1111|0|option:8'                , ''  ],
 
   # LDM, LDMIA, LDMFD
-  ['ldm{ia}{%c}{%q}'   , 'Rn {!}, list'                          , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
-  ['ldmfd{%c}{%q}'     , 'Rn {!}, list'                          , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
-  ['ldm{ia}{%c}.W'     , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldmfd{%c}.W'       , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldm{ia}{%c}{%q}'   , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldmfd{%c}{%q}'     , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldm{ia}{%c}{%q}'   , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|10|W|1|Rn:4|list:16'                                      , ''  ],
-  ['ldmfd{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|10|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
+  ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T16: 1100|1|Rn:3|list:8'                                                       , ''  ],
+  ['ldm{ia}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmfd{%c}.W'       , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|1|Rn:4|list:16'                                      , ''  ],
 
   # LDM (exception return)
-  ['ldm{%amode}{%c}{%q}', 'Rn {!}, list'                          , 'A32: cond!=1111|100|P|U|1|W|1|Rn:4|1|list:15'                                  , ''  ],
+  ['ldm{%amode}{%c}{%q}', 'Rn{!}, list'                           , 'A32: cond!=1111|100|P|U|1|W|1|Rn:4|1|list:15'                                  , ''  ],
 
   # LDM (User registers)
   ['ldm{%amode}{%c}{%q}', 'Rn, list'                              , 'A32: cond!=1111|100|P|U|101|Rn:4|0|list:15'                                    , ''  ],
 
   # LDMDA, LDMFA
-  ['ldmda{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|00|W|1|Rn:4|list:16'                                      , ''  ],
-  ['ldmfa{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|00|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldmda{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|00|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldmfa{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|00|W|1|Rn:4|list:16'                                      , ''  ],
 
   # LDMDB, LDMEA
-  ['ldmdb{%c}{%q}'     , 'Rn {!}, list'                          , 'T32: 1110|1001|00|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldmea{%c}{%q}'     , 'Rn {!}, list'                          , 'T32: 1110|1001|00|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
-  ['ldmdb{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|00|W|1|Rn:4|list:16'                                      , ''  ],
-  ['ldmea{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|00|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1001|00|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmea{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1001|00|W|1|Rn:4|list:1|list:1|0|list:13'                            , ''  ],
+  ['ldmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|00|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldmea{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|00|W|1|Rn:4|list:16'                                      , ''  ],
 
   # LDMIB, LDMED
-  ['ldmib{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|10|W|1|Rn:4|list:16'                                      , ''  ],
-  ['ldmed{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|10|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldmib{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|10|W|1|Rn:4|list:16'                                      , ''  ],
+  ['ldmed{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|10|W|1|Rn:4|list:16'                                      , ''  ],
 
   # LDR (immediate)
   ['ldr{%c}{%q}'       , 'Rt, [Rn, {#{+}imm.z*4}]'               , 'T16: 0110|1|imm:5|Rn:3|Rt:3'                                                   , ''  ],
@@ -1011,12 +1011,12 @@ my @instructions = (
   ['revsh{%c}{%q}'     , 'Rd, Rm'                                , 'A32: cond!=1111|0110|1111|1111|Rd:4|1111|1011|Rm:4'                            , ''  ],
 
   # RFE, RFEDA, RFEDB, RFEIA, RFEIB
-  ['rfedb{%c}{%q}'     , 'Rn {!}'                                , 'T32: 1110|1000|00|W|1|Rn:4|1100|0000|0000|0000'                                , 'IT:IN:LAST:OUT'  ],
-  ['rfe{ia}{%c}{%q}'   , 'Rn {!}'                                , 'T32: 1110|1001|10|W|1|Rn:4|1100|0000|0000|0000'                                , 'IT:IN:LAST:OUT'  ],
-  ['rfeda{%c}{%q}'     , 'Rn {!}'                                , 'A32: 1111|1000|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
-  ['rfedb{%c}{%q}'     , 'Rn {!}'                                , 'A32: 1111|1001|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
-  ['rfe{ia}{%c}{%q}'   , 'Rn {!}'                                , 'A32: 1111|1000|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
-  ['rfeib{%c}{%q}'     , 'Rn {!}'                                , 'A32: 1111|1001|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
+  ['rfedb{%c}{%q}'     , 'Rn{!}'                                 , 'T32: 1110|1000|00|W|1|Rn:4|1100|0000|0000|0000'                                , 'IT:IN:LAST:OUT'  ],
+  ['rfe{ia}{%c}{%q}'   , 'Rn{!}'                                 , 'T32: 1110|1001|10|W|1|Rn:4|1100|0000|0000|0000'                                , 'IT:IN:LAST:OUT'  ],
+  ['rfeda{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111|1000|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
+  ['rfedb{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111|1001|00|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
+  ['rfe{ia}{%c}{%q}'   , 'Rn{!}'                                 , 'A32: 1111|1000|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
+  ['rfeib{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111|1001|10|W|1|Rn:4|0000|1010|0000|0000'                                , ''  ],
 
   # ROR (immediate)
   ['ror{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm!=000|Rd:4|imm!=00|11|Rm:4'                      , ''  ],
@@ -1281,12 +1281,12 @@ my @instructions = (
   ['smusdx{%c}{%q}'    , '{Rd}, Rn, Rm'                          , 'A32: cond!=1111|0111|0000|Rd:4|1111|Rm:4|0111|Rn:4'                            , ''  ],
 
   # SRS, SRSDA, SRSDB, SRSIA, SRSIB
-  ['srsdb{%c}{%q}'     , 'SP {!}, #mode'                         , 'T32: 1110|1000|00|W|0110|1110|0000|0000|mode:5'                                , ''  ],
-  ['srs{ia}{%c}{%q}'   , 'SP {!}, #mode'                         , 'T32: 1110|1001|10|W|0110|1110|0000|0000|mode:5'                                , ''  ],
-  ['srsda{%c}{%q}'     , 'SP {!}, #mode'                         , 'A32: 1111|1000|01|W|0110|1000|0010|1000|mode:5'                                , ''  ],
-  ['srsdb{%c}{%q}'     , 'SP {!}, #mode'                         , 'A32: 1111|1001|01|W|0110|1000|0010|1000|mode:5'                                , ''  ],
-  ['srs{ia}{%c}{%q}'   , 'SP {!}, #mode'                         , 'A32: 1111|1000|11|W|0110|1000|0010|1000|mode:5'                                , ''  ],
-  ['srsib{%c}{%q}'     , 'SP {!}, #mode'                         , 'A32: 1111|1001|11|W|0110|1000|0010|1000|mode:5'                                , ''  ],
+  ['srsdb{%c}{%q}'     , 'SP{!}, #mode'                          , 'T32: 1110|1000|00|W|0110|1110|0000|0000|mode:5'                                , ''  ],
+  ['srs{ia}{%c}{%q}'   , 'SP{!}, #mode'                          , 'T32: 1110|1001|10|W|0110|1110|0000|0000|mode:5'                                , ''  ],
+  ['srsda{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111|1000|01|W|0110|1000|0010|1000|mode:5'                                , ''  ],
+  ['srsdb{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111|1001|01|W|0110|1000|0010|1000|mode:5'                                , ''  ],
+  ['srs{ia}{%c}{%q}'   , 'SP{!}, #mode'                          , 'A32: 1111|1000|11|W|0110|1000|0010|1000|mode:5'                                , ''  ],
+  ['srsib{%c}{%q}'     , 'SP{!}, #mode'                          , 'A32: 1111|1001|11|W|0110|1000|0010|1000|mode:5'                                , ''  ],
 
   # SSAT
   ['ssat{%c}{%q}'      , 'Rd, #sat+1, Rn, ASR #amount'           , 'T32: 1111|0011|0010|Rn:4|0|amount!=000|Rd:4|amount!=00|0|sat:5'                , ''  ],
@@ -1351,29 +1351,29 @@ my @instructions = (
   # STM, STMIA, STMEA
   ['stm{ia}{%c}{%q}'   , 'Rn!, list'                             , 'T16: 1100|0|Rn:3|list:8'                                                       , ''  ],
   ['stmea{%c}{%q}'     , 'Rn!, list'                             , 'T16: 1100|0|Rn:3|list:8'                                                       , ''  ],
-  ['stm{ia}{%c}.W'     , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stmea{%c}.W'       , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stm{ia}{%c}{%q}'   , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stmea{%c}{%q}'     , 'Rn {!}, list'                          , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stm{ia}{%c}{%q}'   , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|10|W|0|Rn:4|list:16'                                      , ''  ],
-  ['stmea{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|10|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stm{ia}{%c}.W'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmea{%c}.W'       , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmea{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1000|10|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stm{ia}{%c}{%q}'   , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stmea{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|10|W|0|Rn:4|list:16'                                      , ''  ],
 
   # STM (User registers)
   ['stm{%amode}{%c}{%q}', 'Rn, list'                              , 'A32: cond!=1111|100|P|U|100|Rn:4|list:16'                                      , ''  ],
 
   # STMDA, STMED
-  ['stmda{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|00|W|0|Rn:4|list:16'                                      , ''  ],
-  ['stmed{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1000|00|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stmda{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|00|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stmed{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1000|00|W|0|Rn:4|list:16'                                      , ''  ],
 
   # STMDB, STMFD
-  ['stmdb{%c}{%q}'     , 'Rn {!}, list'                          , 'T32: 1110|1001|00|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stmfd{%c}{%q}'     , 'Rn {!}, list'                          , 'T32: 1110|1001|00|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
-  ['stmdb{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|00|W|0|Rn:4|list:16'                                      , ''  ],
-  ['stmfd{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|00|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1001|00|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'T32: 1110|1001|00|W|0|Rn:4|0|list.B:1|0|list.C:13'                             , ''  ],
+  ['stmdb{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|00|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stmfd{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|00|W|0|Rn:4|list:16'                                      , ''  ],
 
   # STMIB, STMFA
-  ['stmib{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|10|W|0|Rn:4|list:16'                                      , ''  ],
-  ['stmfa{%c}{%q}'     , 'Rn {!}, list'                          , 'A32: cond!=1111|1001|10|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stmib{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|10|W|0|Rn:4|list:16'                                      , ''  ],
+  ['stmfa{%c}{%q}'     , 'Rn{!}, list'                           , 'A32: cond!=1111|1001|10|W|0|Rn:4|list:16'                                      , ''  ],
 
   # STR (immediate)
   ['str{%c}{%q}'       , 'Rt, [Rn, {#{+}imm.z*4}]'               , 'T16: 0110|0|imm:5|Rn:3|Rt:3'                                                   , ''  ],
