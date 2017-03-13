@@ -1832,7 +1832,7 @@ my @instructions = (
   ['asrv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|10|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # ==> AT
-  ['at'                , 'at_op, Xt'                             , 'A64: 1101|0101|0000|1|at_op.A:3|0111|CRm=100x|at_op.C:3|Xt:5'                  , 'ARMv8+ BASE ALIAS_OF=sys PREFERRED_IF=SysOp(at_op.A,0111,CRm,at_op.C)==Sys_AT'  ],
+  ['at'                , 'at_op, Xt'                             , 'A64: 1101|0101|0000|1|at_op:3|0111|at_op=100x|at_op:3|Xt:5'                    , 'ARMv8+ BASE ALIAS_OF=sys PREFERRED_IF=SysOp(at_op,0111,at_op,at_op)==Sys_AT'  ],
 
   # ==> B.cond
   ['b.%c'              , 'rel.s*4'                               , 'A64: 0101|0100|rel:19|0|cond:4'                                                , 'ARMv8+ BASE'  ],
@@ -2089,8 +2089,8 @@ my @instructions = (
   ['ldr'               , 'Xt, rel.s*4'                           , 'A64: 0101|1000|rel:19|Xt:5'                                                    , 'ARMv8+ BASE'  ],
 
   # ==> LDR (register)
-  ['ldr'               , 'Wt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 1011|1000|011|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , 'ARMv8+ BASE'  ],
-  ['ldr'               , 'Xt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 1111|1000|011|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , 'ARMv8+ BASE'  ],
+  ['ldr'               , 'Wt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 1011|1000|011|m:5|R<0>/extend:3|amount:1|10|Xn:5|Wt:5'                    , 'ARMv8+ BASE'  ],
+  ['ldr'               , 'Xt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 1111|1000|011|m:5|R<0>/extend:3|amount:1|10|Xn:5|Xt:5'                    , 'ARMv8+ BASE'  ],
 
   # ==> LDRB (immediate)
   ['ldrb'              , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|010|imm:9|01|Xn:5|Wt:5'                                         , 'ARMv8+ BASE'  ],
@@ -2098,7 +2098,7 @@ my @instructions = (
   ['ldrb'              , 'Wt, [$Xn, {#imm.z}]'                   , 'A64: 0011|1001|01|imm:12|Xn:5|Wt:5'                                            , 'ARMv8+ BASE'  ],
 
   # ==> LDRB (register)
-  ['ldrb'              , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|011|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , 'ARMv8+ BASE'  ],
+  ['ldrb'              , 'Wt, [$Xn, R.m, extend {amount}]'       , 'A64: 0011|1000|011|m:5|R<0>/extend!=011|amount:1|10|Xn:5|Wt:5'                 , 'ARMv8+ BASE'  ],
   ['ldrb'              , 'Wt, [$Xn, Xm, {LSL amount}]'           , 'A64: 0011|1000|011|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , 'ARMv8+ BASE'  ],
 
   # ==> LDRH (immediate)
@@ -2107,7 +2107,7 @@ my @instructions = (
   ['ldrh'              , 'Wt, [$Xn, {#imm.z*2}]'                 , 'A64: 0111|1001|01|imm:12|Xn:5|Wt:5'                                            , 'ARMv8+ BASE'  ],
 
   # ==> LDRH (register)
-  ['ldrh'              , 'Wt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 0111|1000|011|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , 'ARMv8+ BASE'  ],
+  ['ldrh'              , 'Wt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 0111|1000|011|m:5|R<0>/extend:3|amount:1|10|Xn:5|Wt:5'                    , 'ARMv8+ BASE'  ],
 
   # ==> LDRSB (immediate)
   ['ldrsb'             , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|110|imm:9|01|Xn:5|Wt:5'                                         , 'ARMv8+ BASE'  ],
@@ -2118,9 +2118,9 @@ my @instructions = (
   ['ldrsb'             , 'Xt, [$Xn, {#imm.z}]'                   , 'A64: 0011|1001|10|imm:12|Xn:5|Xt:5'                                            , 'ARMv8+ BASE'  ],
 
   # ==> LDRSB (register)
-  ['ldrsb'             , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|111|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , 'ARMv8+ BASE'  ],
+  ['ldrsb'             , 'Wt, [$Xn, R.m, extend {amount}]'       , 'A64: 0011|1000|111|m:5|R<0>/extend!=011|amount:1|10|Xn:5|Wt:5'                 , 'ARMv8+ BASE'  ],
   ['ldrsb'             , 'Wt, [$Xn, Xm, {LSL amount}]'           , 'A64: 0011|1000|111|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , 'ARMv8+ BASE'  ],
-  ['ldrsb'             , 'Xt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|101|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Xt:5'                  , 'ARMv8+ BASE'  ],
+  ['ldrsb'             , 'Xt, [$Xn, R.m, extend {amount}]'       , 'A64: 0011|1000|101|m:5|R<0>/extend!=011|amount:1|10|Xn:5|Xt:5'                 , 'ARMv8+ BASE'  ],
   ['ldrsb'             , 'Xt, [$Xn, Xm, {LSL amount}]'           , 'A64: 0011|1000|101|Xm:5|011|amount:1|10|Xn:5|Xt:5'                             , 'ARMv8+ BASE'  ],
 
   # ==> LDRSH (immediate)
@@ -2132,8 +2132,8 @@ my @instructions = (
   ['ldrsh'             , 'Xt, [$Xn, {#imm.z*2}]'                 , 'A64: 0111|1001|10|imm:12|Xn:5|Xt:5'                                            , 'ARMv8+ BASE'  ],
 
   # ==> LDRSH (register)
-  ['ldrsh'             , 'Wt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 0111|1000|111|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , 'ARMv8+ BASE'  ],
-  ['ldrsh'             , 'Xt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 0111|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , 'ARMv8+ BASE'  ],
+  ['ldrsh'             , 'Wt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 0111|1000|111|m:5|R<0>/extend:3|amount:1|10|Xn:5|Wt:5'                    , 'ARMv8+ BASE'  ],
+  ['ldrsh'             , 'Xt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 0111|1000|101|m:5|R<0>/extend:3|amount:1|10|Xn:5|Xt:5'                    , 'ARMv8+ BASE'  ],
 
   # ==> LDRSW (immediate)
   ['ldrsw'             , 'Xt, [$Xn], #imm.s'                     , 'A64: 1011|1000|100|imm:9|01|Xn:5|Xt:5'                                         , 'ARMv8+ BASE'  ],
@@ -2144,7 +2144,7 @@ my @instructions = (
   ['ldrsw'             , 'Xt, rel.s*4'                           , 'A64: 1001|1000|rel:19|Xt:5'                                                    , 'ARMv8+ BASE'  ],
 
   # ==> LDRSW (register)
-  ['ldrsw'             , 'Xt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 1011|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , 'ARMv8+ BASE'  ],
+  ['ldrsw'             , 'Xt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 1011|1000|101|m:5|R<0>/extend:3|amount:1|10|Xn:5|Xt:5'                    , 'ARMv8+ BASE'  ],
 
   # ==> LDTR
   ['ldtr'              , 'Wt, [$Xn, {#imm.s}]'                   , 'A64: 1011|1000|010|imm:9|10|Xn:5|Wt:5'                                         , 'ARMv8+ BASE'  ],
@@ -2325,7 +2325,7 @@ my @instructions = (
   ['prfm'              , 'prfop, rel.s*4'                        , 'A64: 1101|1000|rel:19|prfop:5'                                                 , 'ARMv8+ BASE'  ],
 
   # ==> PRFM (register)
-  ['prfm'              , 'prfop, [$Xn, (Wm|Xm), {extend {amount}}]', 'A64: 1111|1000|101|Wm/Xm:5|extend:3|amount:1|10|Xn:5|prfop:5'                  , 'ARMv8+ BASE'  ],
+  ['prfm'              , 'prfop, [$Xn, R.m, {extend {amount}}]'  , 'A64: 1111|1000|101|m:5|R<0>/extend:3|amount:1|10|Xn:5|prfop:5'                 , 'ARMv8+ BASE'  ],
 
   # ==> PRFM (unscaled offset)
   ['prfum'             , 'prfop, [$Xn, {#imm.s}]'                , 'A64: 1111|1000|100|imm:9|00|Xn:5|prfop:5'                                      , 'ARMv8+ BASE'  ],
@@ -2456,8 +2456,8 @@ my @instructions = (
   ['str'               , 'Xt, [$Xn, {#imm.z*8}]'                 , 'A64: 1111|1001|00|imm:12|Xn:5|Xt:5'                                            , 'ARMv8+ BASE'  ],
 
   # ==> STR (register)
-  ['str'               , 'Wt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 1011|1000|001|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , 'ARMv8+ BASE'  ],
-  ['str'               , 'Xt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 1111|1000|001|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Xt:5'                     , 'ARMv8+ BASE'  ],
+  ['str'               , 'Wt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 1011|1000|001|m:5|R<0>/extend:3|amount:1|10|Xn:5|Wt:5'                    , 'ARMv8+ BASE'  ],
+  ['str'               , 'Xt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 1111|1000|001|m:5|R<0>/extend:3|amount:1|10|Xn:5|Xt:5'                    , 'ARMv8+ BASE'  ],
 
   # ==> STRB (immediate)
   ['strb'              , 'Wt, [$Xn], #imm.s'                     , 'A64: 0011|1000|000|imm:9|01|Xn:5|Wt:5'                                         , 'ARMv8+ BASE'  ],
@@ -2465,7 +2465,7 @@ my @instructions = (
   ['strb'              , 'Wt, [$Xn, {#imm.z}]'                   , 'A64: 0011|1001|00|imm:12|Xn:5|Wt:5'                                            , 'ARMv8+ BASE'  ],
 
   # ==> STRB (register)
-  ['strb'              , 'Wt, [$Xn, (Wm|Xm), extend {amount}]'   , 'A64: 0011|1000|001|Wm/Xm:5|extend!=011|amount:1|10|Xn:5|Wt:5'                  , 'ARMv8+ BASE'  ],
+  ['strb'              , 'Wt, [$Xn, R.m, extend {amount}]'       , 'A64: 0011|1000|001|m:5|R<0>/extend!=011|amount:1|10|Xn:5|Wt:5'                 , 'ARMv8+ BASE'  ],
   ['strb'              , 'Wt, [$Xn, Xm, {LSL amount}]'           , 'A64: 0011|1000|001|Xm:5|011|amount:1|10|Xn:5|Wt:5'                             , 'ARMv8+ BASE'  ],
 
   # ==> STRH (immediate)
@@ -2474,7 +2474,7 @@ my @instructions = (
   ['strh'              , 'Wt, [$Xn, {#imm.z*2}]'                 , 'A64: 0111|1001|00|imm:12|Xn:5|Wt:5'                                            , 'ARMv8+ BASE'  ],
 
   # ==> STRH (register)
-  ['strh'              , 'Wt, [$Xn, (Wm|Xm), {extend {amount}}]' , 'A64: 0111|1000|001|Wm/Xm:5|extend:3|amount:1|10|Xn:5|Wt:5'                     , 'ARMv8+ BASE'  ],
+  ['strh'              , 'Wt, [$Xn, R.m, {extend {amount}}]'     , 'A64: 0111|1000|001|m:5|R<0>/extend:3|amount:1|10|Xn:5|Wt:5'                    , 'ARMv8+ BASE'  ],
 
   # ==> STTR
   ['sttr'              , 'Wt, [$Xn, {#imm.s}]'                   , 'A64: 1011|1000|000|imm:9|10|Xn:5|Wt:5'                                         , 'ARMv8+ BASE'  ],
