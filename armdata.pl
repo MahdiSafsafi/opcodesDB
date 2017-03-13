@@ -149,10 +149,10 @@ my @instructions = (
   ['adds{%c}{%q}'      , '{Rd}, SP, Rm, {shift #amount}'         , 'A32: cond!=1111|0000|1001|1101|Rd:4|amount!=00000|shift!=11|0|Rm:4'            , 'BASE'  ],
 
   # ADD (immediate, to PC)
-  ['add{%c}{%q}'       , 'Rd, PC, #imm.z*4'                      , 'T16: 1010|0|Rd:3|imm:8'                                                        , 'BASE ALIAS_OF=adr'  ],
-  ['addw{%c}{%q}'      , 'Rd, PC, #imm.z'                        , 'T32: 1111|0|imm:1|1000|0011|110|imm:3|Rd:4|imm:8'                              , 'BASE ALIAS_OF=adr'  ],
-  ['add{%c}{%q}'       , 'Rd, PC, #imm.z'                        , 'T32: 1111|0|imm:1|1000|0011|110|imm:3|Rd:4|imm:8'                              , 'BASE ALIAS_OF=adr'  ],
-  ['add{%c}{%q}'       , 'Rd, PC, #cnst.x'                       , 'A32: cond!=1111|0010|1000|1111|Rd:4|cnst:12'                                   , 'BASE ALIAS_OF=adr'  ],
+  ['add{%c}{%q}'       , 'Rd, PC, #imm.z*4'                      , 'T16: 1010|0|Rd:3|imm:8'                                                        , 'BASE ALIAS_OF=adr PREFERRED_IF=NEVER'  ],
+  ['addw{%c}{%q}'      , 'Rd, PC, #imm.z'                        , 'T32: 1111|0|imm:1|1000|0011|110|imm:3|Rd:4|imm:8'                              , 'BASE ALIAS_OF=adr PREFERRED_IF=NEVER'  ],
+  ['add{%c}{%q}'       , 'Rd, PC, #imm.z'                        , 'T32: 1111|0|imm:1|1000|0011|110|imm:3|Rd:4|imm:8'                              , 'BASE ALIAS_OF=adr PREFERRED_IF=NEVER'  ],
+  ['add{%c}{%q}'       , 'Rd, PC, #cnst.x'                       , 'A32: cond!=1111|0010|1000|1111|Rd:4|cnst:12'                                   , 'BASE ALIAS_OF=adr PREFERRED_IF=NEVER'  ],
 
   # ADR
   ['adr{%c}{%q}'       , 'Rd, rel.z*4'                           , 'T16: 1010|0|Rd:3|rel:8'                                                        , 'BASE'  ],
@@ -188,27 +188,27 @@ my @instructions = (
 
   # ASR (immediate)
   ['asr%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0001|0|imm:5|Rm:3|Rd:3'                                                   , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['asr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['asr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=mov'  ],
-  ['asr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm:5|100|Rm:4'                            , 'BASE ALIAS_OF=mov'  ],
+  ['asr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS IT=IN'  ],
+  ['asr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['asr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm:5|100|Rm:4'                            , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # ASR (register)
   ['asr%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['asr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0100|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['asr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0100|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov'  ],
-  ['asr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0101|Rm:4'                            , 'BASE ALIAS_OF=mov'  ],
+  ['asr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0100|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS IT=IN'  ],
+  ['asr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0100|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['asr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0101|Rm:4'                            , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # ASRS (immediate)
   ['asrs{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0001|0|imm:5|Rm:3|Rd:3'                                                   , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['asrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['asrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=movs'  ],
-  ['asrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm:5|100|Rm:4'                            , 'BASE ALIAS_OF=movs'  ],
+  ['asrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS IT=OUT'  ],
+  ['asrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|10|Rm:4'                           , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['asrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm:5|100|Rm:4'                            , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # ASRS (register)
   ['asrs{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|00|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['asrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0101|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['asrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0101|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs'  ],
-  ['asrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0101|Rm:4'                            , 'BASE ALIAS_OF=movs'  ],
+  ['asrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0101|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS IT=OUT'  ],
+  ['asrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0101|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['asrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0101|Rm:4'                            , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # B
   ['b%c{%q}'           , 'rel.s*2'                               , 'T16: 1101|cond!=111x|rel:8'                                                    , 'BASE IT=OUT'  ],
@@ -669,51 +669,51 @@ my @instructions = (
 
   # LSL (immediate)
   ['lsl%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0000|0|imm!=00000|Rm:3|Rd:3'                                              , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsl%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsl{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=mov'  ],
-  ['lsl{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm!=00000|000|Rm:4'                       , 'BASE ALIAS_OF=mov'  ],
+  ['lsl%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS IT=IN'  ],
+  ['lsl{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['lsl{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm!=00000|000|Rm:4'                       , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # LSL (register)
   ['lsl%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsl%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0000|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsl{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0000|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov'  ],
-  ['lsl{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0001|Rm:4'                            , 'BASE ALIAS_OF=mov'  ],
+  ['lsl%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0000|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS IT=IN'  ],
+  ['lsl{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0000|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['lsl{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0001|Rm:4'                            , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # LSLS (immediate)
   ['lsls{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0000|0|imm!=00000|Rm:3|Rd:3'                                              , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsls.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsls{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=movs'  ],
-  ['lsls{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm!=00000|000|Rm:4'                       , 'BASE ALIAS_OF=movs'  ],
+  ['lsls.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS IT=OUT'  ],
+  ['lsls{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|00|Rm:4'                           , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['lsls{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm!=00000|000|Rm:4'                       , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # LSLS (register)
   ['lsls{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|10|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsls.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0001|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsls{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0001|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs'  ],
-  ['lsls{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0001|Rm:4'                            , 'BASE ALIAS_OF=movs'  ],
+  ['lsls.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0001|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS IT=OUT'  ],
+  ['lsls{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0001|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['lsls{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0001|Rm:4'                            , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # LSR (immediate)
   ['lsr%c{%q}'         , '{Rd}, Rm, #imm'                        , 'T16: 0000|1|imm:5|Rm:3|Rd:3'                                                   , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=mov'  ],
-  ['lsr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm:5|010|Rm:4'                            , 'BASE ALIAS_OF=mov'  ],
+  ['lsr%c.W'           , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS IT=IN'  ],
+  ['lsr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['lsr{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm:5|010|Rm:4'                            , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # LSR (register)
   ['lsr%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0010|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['lsr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0010|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov'  ],
-  ['lsr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0011|Rm:4'                            , 'BASE ALIAS_OF=mov'  ],
+  ['lsr%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0010|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS IT=IN'  ],
+  ['lsr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0010|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['lsr{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0011|Rm:4'                            , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # LSRS (immediate)
   ['lsrs{%q}'          , '{Rd}, Rm, #imm'                        , 'T16: 0000|1|imm:5|Rm:3|Rd:3'                                                   , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=movs'  ],
-  ['lsrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm:5|010|Rm:4'                            , 'BASE ALIAS_OF=movs'  ],
+  ['lsrs.W'            , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS IT=OUT'  ],
+  ['lsrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm:3|Rd:4|imm:2|01|Rm:4'                           , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['lsrs{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm:5|010|Rm:4'                            , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # LSRS (register)
   ['lsrs{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0000|11|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0011|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['lsrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0011|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs'  ],
-  ['lsrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0011|Rm:4'                            , 'BASE ALIAS_OF=movs'  ],
+  ['lsrs.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0011|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS IT=OUT'  ],
+  ['lsrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0011|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['lsrs{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0011|Rm:4'                            , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # MCR
   ['mcr{%c}{%q}'       , 'coproc, {#}opc1, Rt, CRn, CRm, {{#}opc2}', 'T32: 1110|1110|opc1:3|0|CRn:4|Rt:4|coproc=111x|opc2:3|1|CRm:4'                 , 'BASE'  ],
@@ -927,26 +927,26 @@ my @instructions = (
   ['ldm{%c}{%q}'       , 'SP!, list'                             , 'T16: 1011|110|list.A:1|list.I:8'                                               , 'BASE FORM=ALTERNATIVE'  ],
 
   # POP (multiple registers)
-  ['pop{%c}.W'         , 'list'                                  , 'T32: 1110|1000|1011|1101|list:1|list:1|0|list:13'                              , 'BASE ALIAS_OF=ldm'  ],
-  ['pop{%c}{%q}'       , 'list'                                  , 'T32: 1110|1000|1011|1101|list:1|list:1|0|list:13'                              , 'BASE ALIAS_OF=ldm'  ],
-  ['pop{%c}{%q}'       , 'list'                                  , 'A32: cond!=1111|1000|1011|1101|list:16'                                        , 'BASE ALIAS_OF=ldm'  ],
+  ['pop{%c}.W'         , 'list'                                  , 'T32: 1110|1000|1011|1101|list:1|list:1|0|list:13'                              , 'BASE ALIAS_OF=ldm PREFERRED_IF=BitCount(list)>1'  ],
+  ['pop{%c}{%q}'       , 'list'                                  , 'T32: 1110|1000|1011|1101|list:1|list:1|0|list:13'                              , 'BASE ALIAS_OF=ldm PREFERRED_IF=BitCount(list)>1'  ],
+  ['pop{%c}{%q}'       , 'list'                                  , 'A32: cond!=1111|1000|1011|1101|list:16'                                        , 'BASE ALIAS_OF=ldm PREFERRED_IF=BitCount(list)>1'  ],
 
   # POP (single register)
-  ['pop{%c}{%q}'       , 'RtList'                                , 'T32: 1111|1000|0101|1101|Rt:4|1011|0000|0100'                                  , 'BASE ALIAS_OF=ldr'  ],
-  ['pop{%c}{%q}'       , 'RtList'                                , 'A32: cond!=1111|0100|1001|1101|Rt:4|0000|0000|0100'                            , 'BASE ALIAS_OF=ldr'  ],
+  ['pop{%c}{%q}'       , 'RtList'                                , 'T32: 1111|1000|0101|1101|Rt:4|1011|0000|0100'                                  , 'BASE ALIAS_OF=ldr PREFERRED_IF=ALWAYS'  ],
+  ['pop{%c}{%q}'       , 'RtList'                                , 'A32: cond!=1111|0100|1001|1101|Rt:4|0000|0000|0100'                            , 'BASE ALIAS_OF=ldr PREFERRED_IF=ALWAYS'  ],
 
   # PUSH
   ['push{%c}{%q}'      , 'list'                                  , 'T16: 1011|010|list.A:1|list.H:8'                                               , 'BASE FORM=PREFERRED'  ],
   ['stmdb{%c}{%q}'     , 'SP!, list'                             , 'T16: 1011|010|list.A:1|list.H:8'                                               , 'BASE FORM=ALTERNATIVE'  ],
 
   # PUSH (multiple registers)
-  ['push{%c}.W'        , 'list'                                  , 'T32: 1110|1001|0010|1101|0|list.B:1|0|list.C:13'                               , 'BASE ALIAS_OF=stmdb'  ],
-  ['push{%c}{%q}'      , 'list'                                  , 'T32: 1110|1001|0010|1101|0|list.B:1|0|list.C:13'                               , 'BASE ALIAS_OF=stmdb'  ],
-  ['push{%c}{%q}'      , 'list'                                  , 'A32: cond!=1111|1001|0010|1101|list:16'                                        , 'BASE ALIAS_OF=stmdb'  ],
+  ['push{%c}.W'        , 'list'                                  , 'T32: 1110|1001|0010|1101|0|list.B:1|0|list.C:13'                               , 'BASE ALIAS_OF=stmdb PREFERRED_IF=BitCount(list.B:list.C)>1'  ],
+  ['push{%c}{%q}'      , 'list'                                  , 'T32: 1110|1001|0010|1101|0|list.B:1|0|list.C:13'                               , 'BASE ALIAS_OF=stmdb PREFERRED_IF=BitCount(list.B:list.C)>1'  ],
+  ['push{%c}{%q}'      , 'list'                                  , 'A32: cond!=1111|1001|0010|1101|list:16'                                        , 'BASE ALIAS_OF=stmdb PREFERRED_IF=BitCount(list)>1'  ],
 
   # PUSH (single register)
-  ['push{%c}{%q}'      , 'RtList'                                , 'T32: 1111|1000|0100|1101|Rt:4|1101|0000|0100'                                  , 'BASE ALIAS_OF=str'  ],
-  ['push{%c}{%q}'      , 'RtList'                                , 'A32: cond!=1111|0101|0010|1101|Rt:4|0000|0000|0100'                            , 'BASE ALIAS_OF=str'  ],
+  ['push{%c}{%q}'      , 'RtList'                                , 'T32: 1111|1000|0100|1101|Rt:4|1101|0000|0100'                                  , 'BASE ALIAS_OF=str PREFERRED_IF=ALWAYS'  ],
+  ['push{%c}{%q}'      , 'RtList'                                , 'A32: cond!=1111|0101|0010|1101|Rt:4|0000|0000|0100'                            , 'BASE ALIAS_OF=str PREFERRED_IF=ALWAYS'  ],
 
   # QADD
   ['qadd{%c}{%q}'      , '{Rd}, Rm, Rn'                          , 'T32: 1111|1010|1000|Rn:4|1111|Rd:4|1000|Rm:4'                                  , 'BASE'  ],
@@ -1019,32 +1019,32 @@ my @instructions = (
   ['rfeib{%c}{%q}'     , 'Rn{!}'                                 , 'A32: 1111|1001|10|W|1|Rn:4|0000|1010|0000|0000'                                , 'BASE'  ],
 
   # ROR (immediate)
-  ['ror{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm!=000|Rd:4|imm!=00|11|Rm:4'                      , 'BASE ALIAS_OF=mov'  ],
-  ['ror{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm!=00000|110|Rm:4'                       , 'BASE ALIAS_OF=mov'  ],
+  ['ror{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0100|1111|0|imm!=000|Rd:4|imm!=00|11|Rm:4'                      , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['ror{%c}{%q}'       , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1010|0000|Rd:4|imm!=00000|110|Rm:4'                       , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # ROR (register)
   ['ror%c{%q}'         , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['ror%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0110|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov IT=IN'  ],
-  ['ror{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0110|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov'  ],
-  ['ror{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0111|Rm:4'                            , 'BASE ALIAS_OF=mov'  ],
+  ['ror%c.W'           , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0110|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS IT=IN'  ],
+  ['ror{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0110|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['ror{%c}{%q}'       , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1010|0000|Rd:4|Rs:4|0111|Rm:4'                            , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # RORS (immediate)
-  ['rors{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm!=000|Rd:4|imm!=00|11|Rm:4'                      , 'BASE ALIAS_OF=movs'  ],
-  ['rors{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm!=00000|110|Rm:4'                       , 'BASE ALIAS_OF=movs'  ],
+  ['rors{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'T32: 1110|1010|0101|1111|0|imm!=000|Rd:4|imm!=00|11|Rm:4'                      , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['rors{%c}{%q}'      , '{Rd}, Rm, #imm'                        , 'A32: cond!=1111|0001|1011|0000|Rd:4|imm!=00000|110|Rm:4'                       , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # RORS (register)
   ['rors{%q}'          , '{Rdm}, Rdm, Rs'                        , 'T16: 0100|0001|11|Rs:3|Rdm:3'                                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['rors.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0111|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs IT=OUT'  ],
-  ['rors{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0111|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs'  ],
-  ['rors{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0111|Rm:4'                            , 'BASE ALIAS_OF=movs'  ],
+  ['rors.W'            , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0111|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS IT=OUT'  ],
+  ['rors{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'T32: 1111|1010|0111|Rm:4|1111|Rd:4|0000|Rs:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['rors{%c}{%q}'      , '{Rd}, Rm, Rs'                          , 'A32: cond!=1111|0001|1011|0000|Rd:4|Rs:4|0111|Rm:4'                            , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # RRX
-  ['rrx{%c}{%q}'       , '{Rd}, Rm'                              , 'T32: 1110|1010|0100|1111|0000|Rd:4|0011|Rm:4'                                  , 'BASE ALIAS_OF=mov'  ],
-  ['rrx{%c}{%q}'       , '{Rd}, Rm'                              , 'A32: cond!=1111|0001|1010|0000|Rd:4|0000|0110|Rm:4'                            , 'BASE ALIAS_OF=mov'  ],
+  ['rrx{%c}{%q}'       , '{Rd}, Rm'                              , 'T32: 1110|1010|0100|1111|0000|Rd:4|0011|Rm:4'                                  , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
+  ['rrx{%c}{%q}'       , '{Rd}, Rm'                              , 'A32: cond!=1111|0001|1010|0000|Rd:4|0000|0110|Rm:4'                            , 'BASE ALIAS_OF=mov PREFERRED_IF=ALWAYS'  ],
 
   # RRXS
-  ['rrxs{%c}{%q}'      , '{Rd}, Rm'                              , 'T32: 1110|1010|0101|1111|0000|Rd:4|0011|Rm:4'                                  , 'BASE ALIAS_OF=movs'  ],
-  ['rrxs{%c}{%q}'      , '{Rd}, Rm'                              , 'A32: cond!=1111|0001|1011|0000|Rd:4|0000|0110|Rm:4'                            , 'BASE ALIAS_OF=movs'  ],
+  ['rrxs{%c}{%q}'      , '{Rd}, Rm'                              , 'T32: 1110|1010|0101|1111|0000|Rd:4|0011|Rm:4'                                  , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
+  ['rrxs{%c}{%q}'      , '{Rd}, Rm'                              , 'A32: cond!=1111|0001|1011|0000|Rd:4|0000|0110|Rm:4'                            , 'BASE ALIAS_OF=movs PREFERRED_IF=ALWAYS'  ],
 
   # RSB, RSBS (immediate)
   ['rsb%c{%q}'         , '{Rd,}Rn, #0'                           , 'T16: 0100|0010|01|Rn:3|Rd:3'                                                   , 'BASE IT=IN'  ],
@@ -1478,8 +1478,8 @@ my @instructions = (
   ['strt{%c}{%q}'      , 'Rt, [Rn], {+/-}Rm, {shift {#amount}}'  , 'A32: cond!=1111|0110|U|010|Rn:4|Rt:4|amount:5|shift:2|0|Rm:4'                  , 'BASE'  ],
 
   # SUB (immediate, from PC)
-  ['sub{%c}{%q}'       , 'Rd, PC, #imm.z'                        , 'T32: 1111|0|imm:1|1010|1011|110|imm:3|Rd:4|imm:8'                              , 'BASE ALIAS_OF=adr'  ],
-  ['sub{%c}{%q}'       , 'Rd, PC, #cnst.x'                       , 'A32: cond!=1111|0010|0100|1111|Rd:4|cnst:12'                                   , 'BASE ALIAS_OF=adr'  ],
+  ['sub{%c}{%q}'       , 'Rd, PC, #imm.z'                        , 'T32: 1111|0|imm:1|1010|1011|110|imm:3|Rd:4|imm:8'                              , 'BASE ALIAS_OF=adr PREFERRED_IF=imm==000000000000'  ],
+  ['sub{%c}{%q}'       , 'Rd, PC, #cnst.x'                       , 'A32: cond!=1111|0010|0100|1111|Rd:4|cnst:12'                                   , 'BASE ALIAS_OF=adr PREFERRED_IF=cnst==000000000000'  ],
 
   # SUB, SUBS (immediate)
   ['sub%c{%q}'         , 'Rd, Rn, #imm.z'                        , 'T16: 0001|111|imm:3|Rn:3|Rd:3'                                                 , 'BASE IT=IN'  ],
@@ -1820,19 +1820,19 @@ my @instructions = (
   ['ands'              , 'Xd, Xn, Xm, {shift #amount}'           , 'A64: 1110|1010|shift:2|0|Xm:5|amount:6|Xn:5|Xd:5'                              , 'ARMv8+ BASE'  ],
 
   # ASR (register)
-  ['asr'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|10|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=asrv'  ],
-  ['asr'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|10|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=asrv'  ],
+  ['asr'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|10|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=asrv PREFERRED_IF=ALWAYS'  ],
+  ['asr'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|10|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=asrv PREFERRED_IF=ALWAYS'  ],
 
   # ASR (immediate)
-  ['asr'               , 'Wd, Wn, #shift'                        , 'A64: 0001|0011|00|shift:6|0111|11|Wn:5|Wd:5'                                   , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
-  ['asr'               , 'Xd, Xn, #shift'                        , 'A64: 1001|0011|01|shift:6|1111|11|Xn:5|Xd:5'                                   , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
+  ['asr'               , 'Wd, Wn, #shift'                        , 'A64: 0001|0011|00|shift:6|0111|11|Wn:5|Wd:5'                                   , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=ALWAYS'  ],
+  ['asr'               , 'Xd, Xn, #shift'                        , 'A64: 1001|0011|01|shift:6|1111|11|Xn:5|Xd:5'                                   , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=ALWAYS'  ],
 
   # ASRV
   ['asrv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|10|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
   ['asrv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|10|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # AT
-  ['at'                , 'at_op, Xt'                             , 'A64: 1101|0101|0000|1|at_op.A:3|0111|CRm=100x|at_op.C:3|Xt:5'                  , 'ARMv8+ BASE ALIAS_OF=sys'  ],
+  ['at'                , 'at_op, Xt'                             , 'A64: 1101|0101|0000|1|at_op.A:3|0111|CRm=100x|at_op.C:3|Xt:5'                  , 'ARMv8+ BASE ALIAS_OF=sys PREFERRED_IF=SysOp(at_op.A,0111,CRm,at_op.C)==Sys_AT'  ],
 
   # B.cond
   ['b.%c'              , 'rel.s*4'                               , 'A64: 0101|0100|rel:19|0|cond:4'                                                , 'ARMv8+ BASE'  ],
@@ -1841,16 +1841,16 @@ my @instructions = (
   ['b'                 , 'rel.s*4'                               , 'A64: 0001|01|rel:26'                                                           , 'ARMv8+ BASE'  ],
 
   # BFI
-  ['bfi'               , 'Wd, Wn, #lsb, #width'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn!=11111|Wd:5'                                , 'ARMv8+ BASE ALIAS_OF=bfm'  ],
-  ['bfi'               , 'Xd, Xn, #lsb, #width'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn!=11111|Xd:5'                                , 'ARMv8+ BASE ALIAS_OF=bfm'  ],
+  ['bfi'               , 'Wd, Wn, #lsb, #width'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn!=11111|Wd:5'                                , 'ARMv8+ BASE ALIAS_OF=bfm PREFERRED_IF=UInt(imms)<UInt(immr)'  ],
+  ['bfi'               , 'Xd, Xn, #lsb, #width'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn!=11111|Xd:5'                                , 'ARMv8+ BASE ALIAS_OF=bfm PREFERRED_IF=UInt(imms)<UInt(immr)'  ],
 
   # BFM
   ['bfm'               , 'Wd, Wn, #immr, #imms'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
   ['bfm'               , 'Xd, Xn, #immr, #imms'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # BFXIL
-  ['bfxil'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=bfm'  ],
-  ['bfxil'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=bfm'  ],
+  ['bfxil'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0011|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=bfm PREFERRED_IF=UInt(imms)>=UInt(immr)'  ],
+  ['bfxil'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1011|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=bfm PREFERRED_IF=UInt(imms)>=UInt(immr)'  ],
 
   # BIC (shifted register)
   ['bic'               , 'Wd, Wn, Wm, {shift #amount}'           , 'A64: 0000|1010|shift:2|1|Wm:5|amount:6|Wn:5|Wd:5'                              , 'ARMv8+ BASE'  ],
@@ -1897,12 +1897,12 @@ my @instructions = (
   ['ccmp'              , 'Xn, Xm, #nzcv, cond'                   , 'A64: 1111|1010|010|Xm:5|cond:4|00|Xn:5|0|nzcv:4'                               , 'ARMv8+ BASE'  ],
 
   # CINC
-  ['cinc'              , 'Wd, Wn, cond'                          , 'A64: 0001|1010|100|cond!=11111|!=111x|01|!=11111|Wd:5'                         , 'ARMv8+ BASE ALIAS_OF=csinc'  ],
-  ['cinc'              , 'Xd, Xn, cond'                          , 'A64: 1001|1010|100|cond!=11111|!=111x|01|!=11111|Xd:5'                         , 'ARMv8+ BASE ALIAS_OF=csinc'  ],
+  ['cinc'              , 'Wd, Wn, cond'                          , 'A64: 0001|1010|100|Rm!=11111|cond!=111x|01|Wn!=11111|Wd:5'                     , 'ARMv8+ BASE ALIAS_OF=csinc PREFERRED_IF=Wn==Rm'  ],
+  ['cinc'              , 'Xd, Xn, cond'                          , 'A64: 1001|1010|100|Rm!=11111|cond!=111x|01|Xn!=11111|Xd:5'                     , 'ARMv8+ BASE ALIAS_OF=csinc PREFERRED_IF=Xn==Rm'  ],
 
   # CINV
-  ['cinv'              , 'Wd, Wn, cond'                          , 'A64: 0101|1010|100|cond!=11111|!=111x|00|!=11111|Wd:5'                         , 'ARMv8+ BASE ALIAS_OF=csinv'  ],
-  ['cinv'              , 'Xd, Xn, cond'                          , 'A64: 1101|1010|100|cond!=11111|!=111x|00|!=11111|Xd:5'                         , 'ARMv8+ BASE ALIAS_OF=csinv'  ],
+  ['cinv'              , 'Wd, Wn, cond'                          , 'A64: 0101|1010|100|Rm!=11111|cond!=111x|00|Wn!=11111|Wd:5'                     , 'ARMv8+ BASE ALIAS_OF=csinv PREFERRED_IF=Wn==Rm'  ],
+  ['cinv'              , 'Xd, Xn, cond'                          , 'A64: 1101|1010|100|Rm!=11111|cond!=111x|00|Xn!=11111|Xd:5'                     , 'ARMv8+ BASE ALIAS_OF=csinv PREFERRED_IF=Xn==Rm'  ],
 
   # CLREX
   ['clrex'             , '{#imm}'                                , 'A64: 1101|0101|0000|0011|0011|imm:4|0101|1111'                                 , 'ARMv8+ BASE'  ],
@@ -1916,32 +1916,32 @@ my @instructions = (
   ['clz'               , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0001|00|Xn:5|Xd:5'                                    , 'ARMv8+ BASE'  ],
 
   # CMN (extended register)
-  ['cmn'               , '$Wn, Wm, {extend {#amount}}'           , 'A64: 0010|1011|001|Wm:5|extend:3|amount:3|Wn:5|1111|1'                         , 'ARMv8+ BASE ALIAS_OF=adds'  ],
-  ['cmn'               , '$Xn, R.m, {extend {#amount}}'          , 'A64: 1010|1011|001|m:5|R/extend:3|amount:3|Xn:5|1111|1'                        , 'ARMv8+ BASE ALIAS_OF=adds'  ],
+  ['cmn'               , '$Wn, Wm, {extend {#amount}}'           , 'A64: 0010|1011|001|Wm:5|extend:3|amount:3|Wn:5|1111|1'                         , 'ARMv8+ BASE ALIAS_OF=adds PREFERRED_IF=ALWAYS'  ],
+  ['cmn'               , '$Xn, R.m, {extend {#amount}}'          , 'A64: 1010|1011|001|m:5|R/extend:3|amount:3|Xn:5|1111|1'                        , 'ARMv8+ BASE ALIAS_OF=adds PREFERRED_IF=ALWAYS'  ],
 
   # CMN (immediate)
-  ['cmn'               , '$Wn, #imm.z, {shift {#amount}}'        , 'A64: 0011|0001|shift:2|imm:12|Wn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=adds'  ],
-  ['cmn'               , '$Xn, #imm.z, {shift {#amount}}'        , 'A64: 1011|0001|shift:2|imm:12|Xn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=adds'  ],
+  ['cmn'               , '$Wn, #imm.z, {shift {#amount}}'        , 'A64: 0011|0001|shift:2|imm:12|Wn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=adds PREFERRED_IF=ALWAYS'  ],
+  ['cmn'               , '$Xn, #imm.z, {shift {#amount}}'        , 'A64: 1011|0001|shift:2|imm:12|Xn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=adds PREFERRED_IF=ALWAYS'  ],
 
   # CMN (shifted register)
-  ['cmn'               , 'Wn, Wm, {shift #amount}'               , 'A64: 0010|1011|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=adds'  ],
-  ['cmn'               , 'Xn, Xm, {shift #amount}'               , 'A64: 1010|1011|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=adds'  ],
+  ['cmn'               , 'Wn, Wm, {shift #amount}'               , 'A64: 0010|1011|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=adds PREFERRED_IF=ALWAYS'  ],
+  ['cmn'               , 'Xn, Xm, {shift #amount}'               , 'A64: 1010|1011|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=adds PREFERRED_IF=ALWAYS'  ],
 
   # CMP (extended register)
-  ['cmp'               , '$Wn, Wm, {extend {#amount}}'           , 'A64: 0110|1011|001|Wm:5|extend:3|amount:3|Wn:5|1111|1'                         , 'ARMv8+ BASE ALIAS_OF=subs'  ],
-  ['cmp'               , '$Xn, R.m, {extend {#amount}}'          , 'A64: 1110|1011|001|m:5|R/extend:3|amount:3|Xn:5|1111|1'                        , 'ARMv8+ BASE ALIAS_OF=subs'  ],
+  ['cmp'               , '$Wn, Wm, {extend {#amount}}'           , 'A64: 0110|1011|001|Wm:5|extend:3|amount:3|Wn:5|1111|1'                         , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
+  ['cmp'               , '$Xn, R.m, {extend {#amount}}'          , 'A64: 1110|1011|001|m:5|R/extend:3|amount:3|Xn:5|1111|1'                        , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
 
   # CMP (immediate)
-  ['cmp'               , '$Wn, #imm.z, {shift {#amount}}'        , 'A64: 0111|0001|shift:2|imm:12|Wn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=subs'  ],
-  ['cmp'               , '$Xn, #imm.z, {shift {#amount}}'        , 'A64: 1111|0001|shift:2|imm:12|Xn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=subs'  ],
+  ['cmp'               , '$Wn, #imm.z, {shift {#amount}}'        , 'A64: 0111|0001|shift:2|imm:12|Wn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
+  ['cmp'               , '$Xn, #imm.z, {shift {#amount}}'        , 'A64: 1111|0001|shift:2|imm:12|Xn:5|1111|1'                                     , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
 
   # CMP (shifted register)
-  ['cmp'               , 'Wn, Wm, {shift #amount}'               , 'A64: 0110|1011|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=subs'  ],
-  ['cmp'               , 'Xn, Xm, {shift #amount}'               , 'A64: 1110|1011|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=subs'  ],
+  ['cmp'               , 'Wn, Wm, {shift #amount}'               , 'A64: 0110|1011|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
+  ['cmp'               , 'Xn, Xm, {shift #amount}'               , 'A64: 1110|1011|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
 
   # CNEG
-  ['cneg'              , 'Wd, Wn, cond'                          , 'A64: 0101|1010|100|Rm:5|cond!=111x|01|Rn:5|Wd:5'                               , 'ARMv8+ BASE ALIAS_OF=csneg'  ],
-  ['cneg'              , 'Xd, Xn, cond'                          , 'A64: 1101|1010|100|Rm:5|cond!=111x|01|Rn:5|Xd:5'                               , 'ARMv8+ BASE ALIAS_OF=csneg'  ],
+  ['cneg'              , 'Wd, Wn, cond'                          , 'A64: 0101|1010|100|Rm:5|cond!=111x|01|Wn:5|Wd:5'                               , 'ARMv8+ BASE ALIAS_OF=csneg PREFERRED_IF=Wn==Rm'  ],
+  ['cneg'              , 'Xd, Xn, cond'                          , 'A64: 1101|1010|100|Rm:5|cond!=111x|01|Xn:5|Xd:5'                               , 'ARMv8+ BASE ALIAS_OF=csneg PREFERRED_IF=Xn==Rm'  ],
 
   # CRC32B, CRC32H, CRC32W, CRC32X
   ['crc32b'            , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0100|00|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
@@ -1960,12 +1960,12 @@ my @instructions = (
   ['csel'              , 'Xd, Xn, Xm, cond'                      , 'A64: 1001|1010|100|Xm:5|cond:4|00|Xn:5|Xd:5'                                   , 'ARMv8+ BASE'  ],
 
   # CSET
-  ['cset'              , 'Wd, cond'                              , 'A64: 0001|1010|1001|1111|cond!=111x|0111|111|Wd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinc'  ],
-  ['cset'              , 'Xd, cond'                              , 'A64: 1001|1010|1001|1111|cond!=111x|0111|111|Xd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinc'  ],
+  ['cset'              , 'Wd, cond'                              , 'A64: 0001|1010|1001|1111|cond!=111x|0111|111|Wd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinc PREFERRED_IF=ALWAYS'  ],
+  ['cset'              , 'Xd, cond'                              , 'A64: 1001|1010|1001|1111|cond!=111x|0111|111|Xd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinc PREFERRED_IF=ALWAYS'  ],
 
   # CSETM
-  ['csetm'             , 'Wd, cond'                              , 'A64: 0101|1010|1001|1111|cond!=111x|0011|111|Wd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinv'  ],
-  ['csetm'             , 'Xd, cond'                              , 'A64: 1101|1010|1001|1111|cond!=111x|0011|111|Xd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinv'  ],
+  ['csetm'             , 'Wd, cond'                              , 'A64: 0101|1010|1001|1111|cond!=111x|0011|111|Wd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinv PREFERRED_IF=ALWAYS'  ],
+  ['csetm'             , 'Xd, cond'                              , 'A64: 1101|1010|1001|1111|cond!=111x|0011|111|Xd:5'                             , 'ARMv8+ BASE ALIAS_OF=csinv PREFERRED_IF=ALWAYS'  ],
 
   # CSINC
   ['csinc'             , 'Wd, Wn, Wm, cond'                      , 'A64: 0001|1010|100|Wm:5|cond:4|01|Wn:5|Wd:5'                                   , 'ARMv8+ BASE'  ],
@@ -1980,7 +1980,7 @@ my @instructions = (
   ['csneg'             , 'Xd, Xn, Xm, cond'                      , 'A64: 1101|1010|100|Xm:5|cond:4|01|Xn:5|Xd:5'                                   , 'ARMv8+ BASE'  ],
 
   # DC
-  ['dc'                , 'dc_op, Xt'                             , 'A64: 1101|0101|0000|1|dc_op:3|0111|dc_op:4|dc_op:3|Xt:5'                       , 'ARMv8+ BASE ALIAS_OF=sys'  ],
+  ['dc'                , 'dc_op, Xt'                             , 'A64: 1101|0101|0000|1|dc_op:3|0111|dc_op:4|dc_op:3|Xt:5'                       , 'ARMv8+ BASE ALIAS_OF=sys PREFERRED_IF=SysOp(dc_op,0111,dc_op,dc_op)==Sys_DC'  ],
 
   # DCPS1
   ['dcps1'             , '{#imm}'                                , 'A64: 1101|0100|101|imm:16|0000|1'                                              , 'ARMv8+ BASE'  ],
@@ -2030,7 +2030,7 @@ my @instructions = (
   ['hvc'               , '#imm'                                  , 'A64: 1101|0100|000|imm:16|0001|0'                                              , 'ARMv8+ BASE'  ],
 
   # IC
-  ['ic'                , 'ic_op, {Xt}'                           , 'A64: 1101|0101|0000|1|ic_op:3|0111|ic_op:4|ic_op:3|Xt:5'                       , 'ARMv8+ BASE ALIAS_OF=sys'  ],
+  ['ic'                , 'ic_op, {Xt}'                           , 'A64: 1101|0101|0000|1|ic_op:3|0111|ic_op:4|ic_op:3|Xt:5'                       , 'ARMv8+ BASE ALIAS_OF=sys PREFERRED_IF=SysOp(ic_op,0111,ic_op,ic_op)==Sys_IC'  ],
 
   # ISB
   ['isb'               , '{option|#imm}'                         , 'A64: 1101|0101|0000|0011|0011|imm:4|1101|1111'                                 , 'ARMv8+ BASE'  ],
@@ -2203,24 +2203,24 @@ my @instructions = (
   ['ldxrh'             , 'Wt, [$Xn, {#0}]'                       , 'A64: 0100|1000|0101|1111|0111|11|Xn:5|Wt:5'                                    , 'ARMv8+ BASE'  ],
 
   # LSL (register)
-  ['lsl'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|00|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lslv'  ],
-  ['lsl'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|00|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lslv'  ],
+  ['lsl'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|00|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lslv PREFERRED_IF=ALWAYS'  ],
+  ['lsl'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|00|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lslv PREFERRED_IF=ALWAYS'  ],
 
   # LSL (immediate)
-  ['lsl'               , 'Wd, Wn, #shift'                        , 'A64: 0101|0011|00|immr:6|imms!=011111|Wn:5|Wd:5'                               , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
-  ['lsl'               , 'Xd, Xn, #shift'                        , 'A64: 1101|0011|01|immr:6|imms!=111111|Xn:5|Xd:5'                               , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
+  ['lsl'               , 'Wd, Wn, #shift'                        , 'A64: 0101|0011|00|immr:6|imms!=011111|Wn:5|Wd:5'                               , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=imms+1==immr'  ],
+  ['lsl'               , 'Xd, Xn, #shift'                        , 'A64: 1101|0011|01|immr:6|imms!=111111|Xn:5|Xd:5'                               , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=imms+1==immr'  ],
 
   # LSLV
   ['lslv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|00|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
   ['lslv'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|00|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # LSR (register)
-  ['lsr'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|01|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lsrv'  ],
-  ['lsr'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|01|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lsrv'  ],
+  ['lsr'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|01|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lsrv PREFERRED_IF=ALWAYS'  ],
+  ['lsr'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|01|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=lsrv PREFERRED_IF=ALWAYS'  ],
 
   # LSR (immediate)
-  ['lsr'               , 'Wd, Wn, #shift'                        , 'A64: 0101|0011|00|shift:6|0111|11|Wn:5|Wd:5'                                   , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
-  ['lsr'               , 'Xd, Xn, #shift'                        , 'A64: 1101|0011|01|shift:6|1111|11|Xn:5|Xd:5'                                   , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
+  ['lsr'               , 'Wd, Wn, #shift'                        , 'A64: 0101|0011|00|shift:6|0111|11|Wn:5|Wd:5'                                   , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=ALWAYS'  ],
+  ['lsr'               , 'Xd, Xn, #shift'                        , 'A64: 1101|0011|01|shift:6|1111|11|Xn:5|Xd:5'                                   , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=ALWAYS'  ],
 
   # LSRV
   ['lsrv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|01|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
@@ -2231,28 +2231,28 @@ my @instructions = (
   ['madd'              , 'Xd, Xn, Xm, Xa'                        , 'A64: 1001|1011|000|Xm:5|0|Xa:5|Xn:5|Xd:5'                                      , 'ARMv8+ BASE'  ],
 
   # MNEG
-  ['mneg'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1011|000|Wm:5|1111|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=msub'  ],
-  ['mneg'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|000|Xm:5|1111|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=msub'  ],
+  ['mneg'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1011|000|Wm:5|1111|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=msub PREFERRED_IF=ALWAYS'  ],
+  ['mneg'              , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|000|Xm:5|1111|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=msub PREFERRED_IF=ALWAYS'  ],
 
   # MOV (to/from SP)
-  ['mov'               , '$Wd, $Wn'                              , 'A64: 0001|0001|0000|0000|0000|00|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=add'  ],
-  ['mov'               , '$Xd, $Xn'                              , 'A64: 1001|0001|0000|0000|0000|00|Xn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=add'  ],
+  ['mov'               , '$Wd, $Wn'                              , 'A64: 0001|0001|0000|0000|0000|00|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=add PREFERRED_IF=(Wd==11111||Wn==11111)'  ],
+  ['mov'               , '$Xd, $Xn'                              , 'A64: 1001|0001|0000|0000|0000|00|Xn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=add PREFERRED_IF=(Xd==11111||Xn==11111)'  ],
 
   # MOV (inverted wide immediate)
-  ['mov'               , 'Wd, #imm'                              , 'A64: 0001|0010|1|imm.B:2|imm.A:16|Wd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movn'  ],
-  ['mov'               , 'Xd, #imm'                              , 'A64: 1001|0010|1|imm.B:2|imm.A:16|Xd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movn'  ],
+  ['mov'               , 'Wd, #imm'                              , 'A64: 0001|0010|1|imm.B:2|imm.A:16|Wd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movn PREFERRED_IF="!(IsZero(imm.A) && imm.B!=00) && !IsOnes(imm.A)"'  ],
+  ['mov'               , 'Xd, #imm'                              , 'A64: 1001|0010|1|imm.B:2|imm.A:16|Xd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movn PREFERRED_IF="!(IsZero(imm.A) && imm.B!=00)"'  ],
 
   # MOV (wide immediate)
-  ['mov'               , 'Wd, #imm'                              , 'A64: 0101|0010|1|imm.B:2|imm.A:16|Wd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movz'  ],
-  ['mov'               , 'Xd, #imm'                              , 'A64: 1101|0010|1|imm.B:2|imm.A:16|Xd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movz'  ],
+  ['mov'               , 'Wd, #imm'                              , 'A64: 0101|0010|1|imm.B:2|imm.A:16|Wd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movz PREFERRED_IF="!(IsZero(imm.A) && imm.B!=00)"'  ],
+  ['mov'               , 'Xd, #imm'                              , 'A64: 1101|0010|1|imm.B:2|imm.A:16|Xd:5'                                        , 'ARMv8+ BASE ALIAS_OF=movz PREFERRED_IF="!(IsZero(imm.A) && imm.B!=00)"'  ],
 
   # MOV (bitmask immediate)
-  ['mov'               , '$Wd, #bimm'                            , 'A64: 0011|0010|00|bimm.B:6|bimm.A:6|1111|1|Wd:5'                               , 'ARMv8+ BASE ALIAS_OF=orr'  ],
-  ['mov'               , '$Xd, #bimm'                            , 'A64: 1011|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|1111|1|Xd:5'                       , 'ARMv8+ BASE ALIAS_OF=orr'  ],
+  ['mov'               , '$Wd, #bimm'                            , 'A64: sf=0|0110|0100|N=0|bimm.B:6|bimm.A:6|1111|1|Wd:5'                         , 'ARMv8+ BASE ALIAS_OF=orr PREFERRED_IF=!MoveWidePreferred(sf,N,bimm.A,bimm.B)'  ],
+  ['mov'               , '$Xd, #bimm'                            , 'A64: sf=1|0110|0100|bimm.A:1|bimm.C:6|bimm.B:6|1111|1|Xd:5'                    , 'ARMv8+ BASE ALIAS_OF=orr PREFERRED_IF=!MoveWidePreferred(sf,bimm.A,bimm.B,bimm.C)'  ],
 
   # MOV (register)
-  ['mov'               , 'Wd, Wm'                                , 'A64: 0010|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=orr'  ],
-  ['mov'               , 'Xd, Xm'                                , 'A64: 1010|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=orr'  ],
+  ['mov'               , 'Wd, Wm'                                , 'A64: 0010|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=orr PREFERRED_IF=ALWAYS'  ],
+  ['mov'               , 'Xd, Xm'                                , 'A64: 1010|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=orr PREFERRED_IF=ALWAYS'  ],
 
   # MOVK
   ['movk'              , 'Wd, #imm, {LSL #shift*16}'             , 'A64: 0111|0010|1|shift:2|imm:16|Wd:5'                                          , 'ARMv8+ BASE'  ],
@@ -2280,28 +2280,28 @@ my @instructions = (
   ['msub'              , 'Xd, Xn, Xm, Xa'                        , 'A64: 1001|1011|000|Xm:5|1|Xa:5|Xn:5|Xd:5'                                      , 'ARMv8+ BASE'  ],
 
   # MUL
-  ['mul'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1011|000|Wm:5|0111|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=madd'  ],
-  ['mul'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|000|Xm:5|0111|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=madd'  ],
+  ['mul'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1011|000|Wm:5|0111|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=madd PREFERRED_IF=ALWAYS'  ],
+  ['mul'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|000|Xm:5|0111|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=madd PREFERRED_IF=ALWAYS'  ],
 
   # MVN
-  ['mvn'               , 'Wd, Wm, {shift #amount}'               , 'A64: 0010|1010|shift:2|1|Wm:5|amount:6|1111|1|Wd:5'                            , 'ARMv8+ BASE ALIAS_OF=orn'  ],
-  ['mvn'               , 'Xd, Xm, {shift #amount}'               , 'A64: 1010|1010|shift:2|1|Xm:5|amount:6|1111|1|Xd:5'                            , 'ARMv8+ BASE ALIAS_OF=orn'  ],
+  ['mvn'               , 'Wd, Wm, {shift #amount}'               , 'A64: 0010|1010|shift:2|1|Wm:5|amount:6|1111|1|Wd:5'                            , 'ARMv8+ BASE ALIAS_OF=orn PREFERRED_IF=ALWAYS'  ],
+  ['mvn'               , 'Xd, Xm, {shift #amount}'               , 'A64: 1010|1010|shift:2|1|Xm:5|amount:6|1111|1|Xd:5'                            , 'ARMv8+ BASE ALIAS_OF=orn PREFERRED_IF=ALWAYS'  ],
 
   # NEG (shifted register)
-  ['neg'               , 'Wd, Wm, {shift #amount}'               , 'A64: 0100|1011|shift:2|0|Wm:5|amount:6|1111|1|Wd:5'                            , 'ARMv8+ BASE ALIAS_OF=sub'  ],
-  ['neg'               , 'Xd, Xm, {shift #amount}'               , 'A64: 1100|1011|shift:2|0|Xm:5|amount:6|1111|1|Xd:5'                            , 'ARMv8+ BASE ALIAS_OF=sub'  ],
+  ['neg'               , 'Wd, Wm, {shift #amount}'               , 'A64: 0100|1011|shift:2|0|Wm:5|amount:6|1111|1|Wd:5'                            , 'ARMv8+ BASE ALIAS_OF=sub PREFERRED_IF=ALWAYS'  ],
+  ['neg'               , 'Xd, Xm, {shift #amount}'               , 'A64: 1100|1011|shift:2|0|Xm:5|amount:6|1111|1|Xd:5'                            , 'ARMv8+ BASE ALIAS_OF=sub PREFERRED_IF=ALWAYS'  ],
 
   # NEGS
-  ['negs'              , 'Wd, Wm, {shift #amount}'               , 'A64: 0110|1011|shift:2|0|Wm:5|amount:6|1111|1|Wd:5'                            , 'ARMv8+ BASE ALIAS_OF=subs'  ],
-  ['negs'              , 'Xd, Xm, {shift #amount}'               , 'A64: 1110|1011|shift:2|0|Xm:5|amount:6|1111|1|Xd:5'                            , 'ARMv8+ BASE ALIAS_OF=subs'  ],
+  ['negs'              , 'Wd, Wm, {shift #amount}'               , 'A64: 0110|1011|shift:2|0|Wm:5|amount:6|1111|1|Wd:5'                            , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
+  ['negs'              , 'Xd, Xm, {shift #amount}'               , 'A64: 1110|1011|shift:2|0|Xm:5|amount:6|1111|1|Xd:5'                            , 'ARMv8+ BASE ALIAS_OF=subs PREFERRED_IF=ALWAYS'  ],
 
   # NGC
-  ['ngc'               , 'Wd, Wm'                                , 'A64: 0101|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbc'  ],
-  ['ngc'               , 'Xd, Xm'                                , 'A64: 1101|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbc'  ],
+  ['ngc'               , 'Wd, Wm'                                , 'A64: 0101|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbc PREFERRED_IF=ALWAYS'  ],
+  ['ngc'               , 'Xd, Xm'                                , 'A64: 1101|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbc PREFERRED_IF=ALWAYS'  ],
 
   # NGCS
-  ['ngcs'              , 'Wd, Wm'                                , 'A64: 0111|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbcs'  ],
-  ['ngcs'              , 'Xd, Xm'                                , 'A64: 1111|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbcs'  ],
+  ['ngcs'              , 'Wd, Wm'                                , 'A64: 0111|1010|000|Wm:5|0000|0011|111|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbcs PREFERRED_IF=ALWAYS'  ],
+  ['ngcs'              , 'Xd, Xm'                                , 'A64: 1111|1010|000|Xm:5|0000|0011|111|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbcs PREFERRED_IF=ALWAYS'  ],
 
   # NOP
   ['nop'               , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|0001|1111'                                  , 'ARMv8+ BASE'  ],
@@ -2349,15 +2349,15 @@ my @instructions = (
   ['rev32'             , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|10|Xn:5|Xd:5'                                    , 'ARMv8+ BASE'  ],
 
   # REV64
-  ['rev64'             , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|11|Xn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=rev'  ],
+  ['rev64'             , 'Xd, Xn'                                , 'A64: 1101|1010|1100|0000|0000|11|Xn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=rev PREFERRED_IF=NEVER'  ],
 
   # ROR (immediate)
-  ['ror'               , 'Wd, Ws, #shift'                        , 'A64: 0001|0011|100|Rm:5|shift=0xxxxx|Rn:5|Wd:5'                                , 'ARMv8+ BASE ALIAS_OF=extr'  ],
-  ['ror'               , 'Xd, Xs, #shift'                        , 'A64: 1001|0011|110|Rm:5|shift:6|Rn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=extr'  ],
+  ['ror'               , 'Wd, Ws, #shift'                        , 'A64: 0001|0011|100|Rm:5|shift=0xxxxx|Ws:5|Wd:5'                                , 'ARMv8+ BASE ALIAS_OF=extr PREFERRED_IF=Ws==Rm'  ],
+  ['ror'               , 'Xd, Xs, #shift'                        , 'A64: 1001|0011|110|Rm:5|shift:6|Xs:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=extr PREFERRED_IF=Xs==Rm'  ],
 
   # ROR (register)
-  ['ror'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=rorv'  ],
-  ['ror'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=rorv'  ],
+  ['ror'               , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=rorv PREFERRED_IF=ALWAYS'  ],
+  ['ror'               , 'Xd, Xn, Xm'                            , 'A64: 1001|1010|110|Xm:5|0010|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=rorv PREFERRED_IF=ALWAYS'  ],
 
   # RORV
   ['rorv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0010|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
@@ -2372,16 +2372,16 @@ my @instructions = (
   ['sbcs'              , 'Xd, Xn, Xm'                            , 'A64: 1111|1010|000|Xm:5|0000|00|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # SBFIZ
-  ['sbfiz'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0001|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
-  ['sbfiz'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1001|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
+  ['sbfiz'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0001|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=UInt(imms)<UInt(immr)'  ],
+  ['sbfiz'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1001|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=UInt(imms)<UInt(immr)'  ],
 
   # SBFM
   ['sbfm'              , 'Wd, Wn, #immr, #imms'                  , 'A64: 0001|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
   ['sbfm'              , 'Xd, Xn, #immr, #imms'                  , 'A64: 1001|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # SBFX
-  ['sbfx'              , 'Wd, Wn, #lsb, #width'                  , 'A64: 0001|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
-  ['sbfx'              , 'Xd, Xn, #lsb, #width'                  , 'A64: 1001|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
+  ['sbfx'              , 'Wd, Wn, #lsb, #width'                  , 'A64: sf=0|opc=00|1001|100|immr:6|imms:6|Wn:5|Wd:5'                             , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=BFXPreferred(sf,opc<1>,imms,immr)'  ],
+  ['sbfx'              , 'Xd, Xn, #lsb, #width'                  , 'A64: sf=1|opc=00|1001|101|immr:6|imms:6|Xn:5|Xd:5'                             , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=BFXPreferred(sf,opc<1>,imms,immr)'  ],
 
   # SDIV
   ['sdiv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0000|11|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
@@ -2400,7 +2400,7 @@ my @instructions = (
   ['smc'               , '#imm'                                  , 'A64: 1101|0100|000|imm:16|0001|1'                                              , 'ARMv8+ BASE'  ],
 
   # SMNEGL
-  ['smnegl'            , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|001|Wm:5|1111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=smsubl'  ],
+  ['smnegl'            , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|001|Wm:5|1111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=smsubl PREFERRED_IF=ALWAYS'  ],
 
   # SMSUBL
   ['smsubl'            , 'Xd, Wn, Wm, Xa'                        , 'A64: 1001|1011|001|Wm:5|1|Xa:5|Wn:5|Xd:5'                                      , 'ARMv8+ BASE'  ],
@@ -2409,7 +2409,7 @@ my @instructions = (
   ['smulh'             , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|010|Xm:5|0111|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # SMULL
-  ['smull'             , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|001|Wm:5|0111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=smaddl'  ],
+  ['smull'             , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|001|Wm:5|0111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=smaddl PREFERRED_IF=ALWAYS'  ],
 
   # STLR
   ['stlr'              , 'Wt, [$Xn, {#0}]'                       , 'A64: 1000|1000|1001|1111|1111|11|Xn:5|Wt:5'                                    , 'ARMv8+ BASE'  ],
@@ -2538,15 +2538,15 @@ my @instructions = (
   ['svc'               , '#imm'                                  , 'A64: 1101|0100|000|imm:16|0000|1'                                              , 'ARMv8+ BASE'  ],
 
   # SXTB
-  ['sxtb'              , 'Wd, Wn'                                , 'A64: 0001|0011|0000|0000|0001|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
-  ['sxtb'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0001|11|Wn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
+  ['sxtb'              , 'Wd, Wn'                                , 'A64: 0001|0011|0000|0000|0001|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=ALWAYS'  ],
+  ['sxtb'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0001|11|Wn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=ALWAYS'  ],
 
   # SXTH
-  ['sxth'              , 'Wd, Wn'                                , 'A64: 0001|0011|0000|0000|0011|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
-  ['sxth'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0011|11|Wn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
+  ['sxth'              , 'Wd, Wn'                                , 'A64: 0001|0011|0000|0000|0011|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=ALWAYS'  ],
+  ['sxth'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0011|11|Wn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=ALWAYS'  ],
 
   # SXTW
-  ['sxtw'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0111|11|Wn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm'  ],
+  ['sxtw'              , 'Xd, Wn'                                , 'A64: 1001|0011|0100|0000|0111|11|Wn:5|Xd:5'                                    , 'ARMv8+ BASE ALIAS_OF=sbfm PREFERRED_IF=ALWAYS'  ],
 
   # SYS
   ['sys'               , '#op1, Cn, Cm, #op2, {Xt}'              , 'A64: 1101|0101|0000|1|op1:3|Cn:4|Cm:4|op2:3|Xt:5'                              , 'ARMv8+ BASE'  ],
@@ -2561,27 +2561,27 @@ my @instructions = (
   ['tbz'               , 'R.t, #imm.s, rel.s*4'                  , 'A64: R/imm:1|0110|110|imm:5|rel:14|t:5'                                        , 'ARMv8+ BASE'  ],
 
   # TLBI
-  ['tlbi'              , 'tlbi_op, {Xt}'                         , 'A64: 1101|0101|0000|1|tlbi_op:3|1000|tlbi_op:4|tlbi_op:3|Xt:5'                 , 'ARMv8+ BASE ALIAS_OF=sys'  ],
+  ['tlbi'              , 'tlbi_op, {Xt}'                         , 'A64: 1101|0101|0000|1|tlbi_op:3|1000|tlbi_op:4|tlbi_op:3|Xt:5'                 , 'ARMv8+ BASE ALIAS_OF=sys PREFERRED_IF=SysOp(tlbi_op,1000,tlbi_op,tlbi_op)==Sys_TLBI'  ],
 
   # TST (immediate)
-  ['tst'               , 'Wn, #bimm'                             , 'A64: 0111|0010|00|bimm.B:6|bimm.A:6|Wn:5|1111|1'                               , 'ARMv8+ BASE ALIAS_OF=ands'  ],
-  ['tst'               , 'Xn, #bimm'                             , 'A64: 1111|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|Xn:5|1111|1'                       , 'ARMv8+ BASE ALIAS_OF=ands'  ],
+  ['tst'               , 'Wn, #bimm'                             , 'A64: 0111|0010|00|bimm.B:6|bimm.A:6|Wn:5|1111|1'                               , 'ARMv8+ BASE ALIAS_OF=ands PREFERRED_IF=ALWAYS'  ],
+  ['tst'               , 'Xn, #bimm'                             , 'A64: 1111|0010|0|bimm.A:1|bimm.C:6|bimm.B:6|Xn:5|1111|1'                       , 'ARMv8+ BASE ALIAS_OF=ands PREFERRED_IF=ALWAYS'  ],
 
   # TST (shifted register)
-  ['tst'               , 'Wn, Wm, {shift #amount}'               , 'A64: 0110|1010|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=ands'  ],
-  ['tst'               , 'Xn, Xm, {shift #amount}'               , 'A64: 1110|1010|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=ands'  ],
+  ['tst'               , 'Wn, Wm, {shift #amount}'               , 'A64: 0110|1010|shift:2|0|Wm:5|amount:6|Wn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=ands PREFERRED_IF=ALWAYS'  ],
+  ['tst'               , 'Xn, Xm, {shift #amount}'               , 'A64: 1110|1010|shift:2|0|Xm:5|amount:6|Xn:5|1111|1'                            , 'ARMv8+ BASE ALIAS_OF=ands PREFERRED_IF=ALWAYS'  ],
 
   # UBFIZ
-  ['ubfiz'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0101|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
-  ['ubfiz'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1101|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
+  ['ubfiz'             , 'Wd, Wn, #lsb, #width'                  , 'A64: 0101|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=UInt(imms)<UInt(immr)'  ],
+  ['ubfiz'             , 'Xd, Xn, #lsb, #width'                  , 'A64: 1101|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=UInt(imms)<UInt(immr)'  ],
 
   # UBFM
   ['ubfm'              , 'Wd, Wn, #immr, #imms'                  , 'A64: 0101|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
   ['ubfm'              , 'Xd, Xn, #immr, #imms'                  , 'A64: 1101|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # UBFX
-  ['ubfx'              , 'Wd, Wn, #lsb, #width'                  , 'A64: 0101|0011|00|immr:6|imms:6|Wn:5|Wd:5'                                     , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
-  ['ubfx'              , 'Xd, Xn, #lsb, #width'                  , 'A64: 1101|0011|01|immr:6|imms:6|Xn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
+  ['ubfx'              , 'Wd, Wn, #lsb, #width'                  , 'A64: sf=0|opc=10|1001|100|immr:6|imms:6|Wn:5|Wd:5'                             , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=BFXPreferred(sf,opc<1>,imms,immr)'  ],
+  ['ubfx'              , 'Xd, Xn, #lsb, #width'                  , 'A64: sf=1|opc=10|1001|101|immr:6|imms:6|Xn:5|Xd:5'                             , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=BFXPreferred(sf,opc<1>,imms,immr)'  ],
 
   # UDIV
   ['udiv'              , 'Wd, Wn, Wm'                            , 'A64: 0001|1010|110|Wm:5|0000|10|Wn:5|Wd:5'                                     , 'ARMv8+ BASE'  ],
@@ -2591,7 +2591,7 @@ my @instructions = (
   ['umaddl'            , 'Xd, Wn, Wm, Xa'                        , 'A64: 1001|1011|101|Wm:5|0|Xa:5|Wn:5|Xd:5'                                      , 'ARMv8+ BASE'  ],
 
   # UMNEGL
-  ['umnegl'            , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|101|Wm:5|1111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=umsubl'  ],
+  ['umnegl'            , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|101|Wm:5|1111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=umsubl PREFERRED_IF=ALWAYS'  ],
 
   # UMSUBL
   ['umsubl'            , 'Xd, Wn, Wm, Xa'                        , 'A64: 1001|1011|101|Wm:5|1|Xa:5|Wn:5|Xd:5'                                      , 'ARMv8+ BASE'  ],
@@ -2600,13 +2600,13 @@ my @instructions = (
   ['umulh'             , 'Xd, Xn, Xm'                            , 'A64: 1001|1011|110|Xm:5|0111|11|Xn:5|Xd:5'                                     , 'ARMv8+ BASE'  ],
 
   # UMULL
-  ['umull'             , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|101|Wm:5|0111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=umaddl'  ],
+  ['umull'             , 'Xd, Wn, Wm'                            , 'A64: 1001|1011|101|Wm:5|0111|11|Wn:5|Xd:5'                                     , 'ARMv8+ BASE ALIAS_OF=umaddl PREFERRED_IF=ALWAYS'  ],
 
   # UXTB
-  ['uxtb'              , 'Wd, Wn'                                , 'A64: 0101|0011|0000|0000|0001|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
+  ['uxtb'              , 'Wd, Wn'                                , 'A64: 0101|0011|0000|0000|0001|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=ALWAYS'  ],
 
   # UXTH
-  ['uxth'              , 'Wd, Wn'                                , 'A64: 0101|0011|0000|0000|0011|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=ubfm'  ],
+  ['uxth'              , 'Wd, Wn'                                , 'A64: 0101|0011|0000|0000|0011|11|Wn:5|Wd:5'                                    , 'ARMv8+ BASE ALIAS_OF=ubfm PREFERRED_IF=ALWAYS'  ],
 
   # WFE
   ['wfe'               , ''                                      , 'A64: 1101|0101|0000|0011|0010|0000|0101|1111'                                  , 'ARMv8+ BASE'  ],
