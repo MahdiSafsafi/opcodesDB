@@ -52,7 +52,13 @@
 #   the gap in between (previous and next suffix) must be filled by zero !
 #   eg: Foo.B|xx|Foo.A|Foo.E => Foo operand is encoded as : Foo.A:Foo.B:0:0:Foo.E 
  
+# META-DATA
+# --------
+# IT = [IN|OUT|LAST]        => Instruction IT block execution.
+# ALIAS_OF = X              => The instruction is an alias to X instruction.
+# PREFERRED_IF = Conditions => Conditions required to decode the alias instruction.
  
+
 # Page's title was added just for bugs tracking ! 
 
 my $locked = 1;  # Don't edit instructions until ($locked == 0) !
