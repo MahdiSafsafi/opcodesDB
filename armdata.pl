@@ -557,7 +557,7 @@ my @instructions = (
 
   # ==> LDRD (literal)
   ['ldrd{%c}{%q}'      , 'Rt, Rt2, rel.z*4'                      , 'T32: 1110|100|P!=0|U|1|W!=0|1111|1|Rt:4|Rt2:4|rel:8'                           , 'BASE FORM=PREFERRED'  ],
-  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [PC, #{+/-}imm.z]'            , 'T32: 1110|100|P!=0|U|1|W!=0|1111|1|Rt:4|Rt2:4|imm:8'                           , 'BASE FORM=ALTERNATIVE'  ],
+  ['ldrd{%c}{%q}'      , 'Rt, Rt2, [PC, #{+/-}imm.z*4]'          , 'T32: 1110|100|P!=0|U|1|W!=0|1111|1|Rt:4|Rt2:4|imm:8'                           , 'BASE FORM=ALTERNATIVE'  ],
   ['ldrd{%c}{%q}'      , 'Rt, Rt2, rel.z'                        , 'A32: cond!=1111|0001|U|1001|111|Rt:4|rel:4|1101|rel:4'                         , 'BASE FORM=PREFERRED'  ],
   ['ldrd{%c}{%q}'      , 'Rt, Rt2, [PC, #{+/-}imm.z]'            , 'A32: cond!=1111|0001|U|1001|111|Rt:4|imm:4|1101|imm:4'                         , 'BASE FORM=ALTERNATIVE'  ],
 
@@ -1807,7 +1807,7 @@ my @instructions = (
   ['adr'               , 'Xd, rel.s'                             , 'A64: 0|rel.B:2|1000|0|rel.A:19|Xd:5'                                           , 'ARMv8+ BASE'  ],
 
   # ==> ADRP
-  ['adrp'              , 'Xd, rel.s'                             , 'A64: 1|rel.B:2|1000|0|rel.A:19|Xd:5'                                           , 'ARMv8+ BASE'  ],
+  ['adrp'              , 'Xd, rel.s*4096'                        , 'A64: 1|rel.B:2|1000|0|rel.A:19|Xd:5'                                           , 'ARMv8+ BASE'  ],
 
   # ==> AND (immediate)
   ['and'               , '$Wd, Wn, #bimm'                        , 'A64: 0001|0010|00|bimm.B:6|bimm.A:6|Wn:5|Wd:5'                                 , 'ARMv8+ BASE'  ],
