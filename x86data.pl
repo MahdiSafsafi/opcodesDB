@@ -96,13 +96,13 @@
 
 use strict;
 use warnings;
+use File::Basename;
 
 my $PLATFORM_SIZE = qw(PLATFORM_SIZE);
 
 my %architectures = (
-	'x86-64' => { default => 1, size => 0 },
-	'x86'    => { default => 0, size => 32 },
-	'x64'    => { default => 0, size => 64 },
+	'x86' => { size => 32 },
+	'x64' => { size => 64 },
 );
 
 my %registers = (
@@ -129,6 +129,8 @@ my %flags = (
 	x87sw  => { size => 16,             names => [qw/B C3 TOP C2 C1 C0 ES SF PE UE OE ZE DE IE/] },
 	eflags => { size => $PLATFORM_SIZE, names => [qw/ID VIP VIF AC VM RF NT IOPL OF DF IF TF SF ZF AF PF CF/] },
 );
+
+my @shortcuts = ( 'amd' => 'vendor=$', );
 
 my %template = (
 	mnemonic     => '',
@@ -159,15 +161,22 @@ my @instructions = ();
 
 # ===> Export <===
 
+require 'x86.parser.pl';
+
 our $environment = {
-	name          => 'x86-64',
+	name          => 'x86',
 	version       => $version,
 	architectures => \%architectures,
 	registers     => \%registers,
 	flags         => \%flags,
 	template      => \%template,
 	instructions  => \@instructions,
+	private       => {
+		shortcuts => \@shortcuts,
+		parser    => \&parser,
+	},
 };
+
 
 @instructions = (
 
@@ -3850,9 +3859,9 @@ our $environment = {
   ['vcvttpd2qq' , 'W:zmm {kz}, zmm/m512/b64 {sae}' , 'rm:fv: evex.512.66.0f.w1 7a /r  '       , 'cpuid=avx512dq'],
 
   # => VCVTTPD2UDQ-Convert with Truncation Packed Double-Precision Floating-Point Values to Packed Unsigned Doubleword Integers
-  ['vcvttpd2udq' , 'W:xmm {kz}, xmm/m128/b64'       , 'rm:fv: evex.128.0f.w1 78 /r     '       , 'cpuid=avx512f-vl'],
-  ['vcvttpd2udq' , 'W:xmm {kz}, ymm/m256/b64'       , 'rm:fv: evex.256.0f.w1 78 02 /r  '       , 'cpuid=avx512f-vl'],
-  ['vcvttpd2udq' , 'W:ymm {kz}, zmm/m512/b64 {sae}' , 'rm:fv: evex.512.0f.w1 78 /r     '       , 'cpuid=avx512f'],
+  ['vcvttpd2udq' , 'W:xmm {kz}, xmm/m128/b64'       , 'rm:fv: evex.128.0f.w1 78 /r  '          , 'cpuid=avx512f-vl'],
+  ['vcvttpd2udq' , 'W:xmm {kz}, ymm/m256/b64'       , 'rm:fv: evex.256.0f.w1 78 /r  '          , 'cpuid=avx512f-vl'],
+  ['vcvttpd2udq' , 'W:ymm {kz}, zmm/m512/b64 {sae}' , 'rm:fv: evex.512.0f.w1 78 /r  '          , 'cpuid=avx512f'],
 
   # => VCVTTPD2UQQ-Convert with Truncation Packed Double-Precision Floating-Point Values to Packed Unsigned Quadword Integers
   ['vcvttpd2uqq' , 'W:xmm {kz}, xmm/m128/b64'       , 'rm:fv: evex.128.66.0f.w1 78 /r  '       , 'cpuid=avx512dq-vl'],
