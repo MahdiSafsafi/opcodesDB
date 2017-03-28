@@ -39,75 +39,73 @@ opcodesDB supports all instructions found in Intel and AMD documentation. Includ
 - FMA, FMA4, AVX, AVX2, AVX512 instructions.
 
 Each instruction is represented as a hash and contains the following info:
--	**mnemonic**: instruction mnemonic (name).
--	**architecture**: required architecture for instruction.
--	**deprecated**: if true, it means that manufacturing (Intel or AMD) stopped supporting such instruction.
--       **abandoned**: abandoned instruction.
--       **undocumented**: instruction was not documented in official (AMD|Intel) documentations.
--	**bnd|rep|repe|repne**: if true, instruction supports that prefix.
--	**level**: privilege level required to execute the instruction (3 or 0).
--	**aliasOf** = X: instruction is an alias to X instruction.
--	**cupid**: a list of required flags of cupid to run this instruction.
--	**suppressAllExceptions**: AVX512 instruction supports suppressing all exceptions {sae}.
--	**embeddedRounding**: AVX512 instruction supports embedded rounding {er}.
--	**stackPtr|fpuStackPtr** = +/- N: instruction increments/decrements stack pointer by N byte.
--	**branchType**: if instruction is branch, this field contains branch type (short|near|far).
--       **form**: Instruction has more than one form for encoding and decoding. disassembler should select either the preferred form or the alternative form.
--	**lock**: provides lock info for the instruction. Instruction is lockable if **hardware|legacy** is set.
-	  - **hardware** : hardware lock is supported.
-	  - **legacy** : locking using legacy lock prefix is supported. 
-	  - **implied** : instruction is lockable either with or without the presence of the lock.
-	  - **explicit** : lock prefix is required for hardware lock.
-	  - **ignore** : accept lock but ignore it because memory is not the destination operand.
--	**opcodes**: 
-	  - encoding = instruction prefix encoding: (rex|drex|vex|evex|xop).
-	  - escape = escape opcodes. It can be one of this:
-	  	- 0f = twoByte.
-		- 0f0f = 3dnow.
-		- 0f38 = threeByte38.
-		- 0f3a = threeByte3A.
-		- m8 = xop.m8.
-		- m9 = xop.m9.
-		- [d8-df] = fpu.
-	  - opsize = instruction opsize: (16|32|64).
-	  - addressSize = instruction address size: (16|32|64).
-	  - vvvv = vector vvvv field: (nds|ndd|dds).
-	  - length = vector length: (128|256|512).
-	  - w = (vector|rex).w field: (0,1,ignore).
-	  - oc0 = drex.oc0 field: (0|1).
-	  - regcode = registed operand is encoded in opcodes. It can be one of this:
-	  	- rw = 16 byte register.
-		- rd = 32 byte register.
-		- i  = fpu register.
-	  - modrm = if set, instruction has a modrm field.
-	  - vsib = if set, instruction has a vsib field.
-	  - opcodes = list of instruction opcodes. If a slash(/N) used, it means that modrm.reg must be equal to N.
-	  - mandatoryPrefixes = list of mandatory prefixes required to encode the instruction: (66|f0|f2|f3).
-	  - fields = dynamic fields: (imm|offset|moffs).
-	  
--	**operands**: a list of hash representing arguments used by the instruction.
-  -	**optional**: if true, it means that this argument is optional and assembler/dissembler may omit it.
-  -	**embedded**: argument is built-in instruction and it does not require encoding.
-  -	**encoding**: info about how to encode/decode this argument.
-  -	**value**:  if(embedded) it contains register name or immediate value.
-  -	**read**: if true, the operand is read.
-  -	**write**: if true, the operand is written.
-  -	**size**: argument size in bits.
-  -	**type**: argument type (reg, imm,…).
-  -	**masking**: register|memory supports AVX512 masking.
-  -	**zeroing**: register supports masking with zeroing.
-  -     **signed**: if set, argument is signed. Otherwise it is unsigned.
-  -	**mem**: if defined, it means that argument IS a memory OR supports memory addressing. It contains the following info:
+- **mnemonic**: instruction mnemonic (name).
+- **architecture**: required architecture for instruction.
+- **deprecated**: if true, it means that manufacturing (Intel or AMD) stopped supporting such instruction.
+- **abandoned**: abandoned instruction.
+- **undocumented**: instruction was not documented in official (AMD|Intel) documentations.
+- **bnd|rep|repe|repne**: if true, instruction supports that prefix.
+- **level**: privilege level required to execute the instruction (3 or 0).
+- **aliasOf** = X: instruction is an alias to X instruction.
+- **cupid**: a list of required flags of cupid to run this instruction.
+- **suppressAllExceptions**: AVX512 instruction supports suppressing all exceptions {sae}.
+- **embeddedRounding**: AVX512 instruction supports embedded rounding {er}.
+- **stackPtr|fpuStackPtr** = +/- N: instruction increments/decrements stack pointer by N byte.
+- **branchType**: if instruction is branch, this field contains branch type (short|near|far).
+- **form**: Instruction has more than one form for encoding and decoding. disassembler should select either the preferred form or the alternative form.
+- **lock**: provides lock info for the instruction. Instruction is lockable if **hardware|legacy** is set.
+  - **hardware** : hardware lock is supported.
+  - **legacy** : locking using legacy lock prefix is supported.
+  - **implied** : instruction is lockable either with or without the presence of the lock.
+  - **explicit** : lock prefix is required for hardware lock.
+  - **ignore** : accept lock but ignore it because memory is not the destination operand.
+- **opcodes**: 
+  - encoding = instruction prefix encoding: (rex|drex|vex|evex|xop).
+  - escape = escape opcodes. It can be one of this:
+    - 0f = twoByte.
+    - 0f0f = 3dnow.
+    - 0f38 = threeByte38.
+    - 0f3a = threeByte3A.
+    - m8 = xop.m8.
+    - m9 = xop.m9.
+    - [d8-df] = fpu.
+  - opsize = instruction opsize: (16|32|64).
+  - addressSize = instruction address size: (16|32|64).
+  - vvvv = vector vvvv field: (nds|ndd|dds).
+  - length = vector length: (128|256|512).
+  - w = (vector|rex).w field: (0,1,ignore).
+  - oc0 = drex.oc0 field: (0|1).
+  - regcode = registed operand is encoded in opcodes. It can be one of this:
+    - rw = 16 byte register.
+    - rd = 32 byte register.
+    - i  = fpu register.
+  - modrm = if set, instruction has a modrm field.
+  - vsib = if set, instruction has a vsib field.
+  - opcodes = list of instruction opcodes. If a slash(/N) used, it means that modrm.reg must be equal to N.
+  - mandatoryPrefixes = list of mandatory prefixes required to encode the instruction: (66|f0|f2|f3).
+  - fields = dynamic fields: (imm|offset|moffs).	  
+- **operands**: a list of hash representing arguments used by the instruction.
+  - **optional**: if true, it means that this argument is optional and assembler/dissembler may omit it.
+  - **embedded**: argument is built-in instruction and it does not require encoding.
+  - **encoding**: info about how to encode/decode this argument.
+  - **value**:  if(embedded) it contains register name or immediate value.
+  - **read**: if true, the operand is read.
+  - **write**: if true, the operand is written.
+  - **size**: argument size in bits.
+  - **type**: argument type (reg, imm,…).
+  - **masking**: register|memory supports AVX512 masking.
+  - **zeroing**: register supports masking with zeroing.
+  - **signed**: if set, argument is signed. Otherwise it is unsigned.
+  - **mem**: if defined, it means that argument IS a memory OR supports memory addressing. It contains the following info:
     - size : size of memory in bits.
     - segment: memory segment.
-    -	index: memory index register.
-    -	base: memory base register.
+    - index: memory index register.
+    - base: memory base register.
     - tuple: AVX512 tuple used to encode/decode compressed displacement (DISP8*N).
     - broadcast : AVX512 memory broadcast size.
     - vsibSize: AVX vsib size (128|256|512).
     - type: memory type (m8,m128, ptr16,m16-m32,...).
-
--	**eflags|x87Flags|mxcsr**: modified flags by instruction. Each flag is represented as follow :
+- **eflags|x87Flags|mxcsr**: modified flags by instruction. Each flag is represented as follow :
   - **T** = instruction Tests flag.
   - **M** = instruction Modifies flag.
   - **C** = instruction sets flag to zero (Clear).
