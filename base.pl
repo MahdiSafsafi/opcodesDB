@@ -18,7 +18,6 @@ sub setData($$$) {
 		$hash->{$name}->{$_} = 1 foreach ( split /\|/ );
 	}
 	else {
-		print ref( $hash->{$name} ) . "\n";
 		$hash->{$name} = $_;
 	}
 }

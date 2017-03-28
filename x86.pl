@@ -1585,11 +1585,11 @@ our $environment = {
   # ===>                               M to U instructions                               <===
 
   # => MASKMOVDQU-Store Selected Bytes of Double Quadword
-  ['maskmovdqu'  , 'W:<[ds:*di)]>, xmm, xmm' , 'rm: 66 0f f7 /r              '          , 'cpuid=sse2'],
-  ['vmaskmovdqu' , 'W:<[ds:*di)]>, xmm, xmm' , 'rm: vex.128.66.0f.wig f7 /r  '          , 'cpuid=avx'],
+  ['maskmovdqu'  , 'W:<[ds:*di]>, xmm, xmm' , 'rm: 66 0f f7 /r              '          , 'cpuid=sse2'],
+  ['vmaskmovdqu' , 'W:<[ds:*di]>, xmm, xmm' , 'rm: vex.128.66.0f.wig f7 /r  '          , 'cpuid=avx'],
 
   # => MASKMOVQ-Store Selected Bytes of Quadword
-  ['maskmovq' , 'W:<[ds:*di)]>, mm, mm' , 'rm: 0f f7 /r'                           , ''],
+  ['maskmovq' , 'W:<[ds:*di]>, mm, mm' , 'rm: 0f f7 /r'                           , ''],
 
   # => MAXPD-Maximum of Packed Double-Precision Floating-Point Values
   ['maxpd'    , 'xmm, xmm/m128'                       , 'rm:     66 0f 5f /r                  '  , 'cpuid=sse2'],

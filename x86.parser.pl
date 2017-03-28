@@ -92,7 +92,7 @@ sub processOperands($$) {
 				( $arg->{mem}->{size}, $arg->{mem}->{type} ) = ( $sz, $type );
 				push( @types, "mem" );
 			}
-			elsif ( s/\[(.+)\]/$1/ && s/(?:(\w+):)*(\**\w+)*(?:\+(\w+))*// ) {
+			elsif (s/\[(?:(\w+):)*(\**\w+)*(?:\+(\w+))*\]//) {
 
 				# memory = [seg:base+index]
 				$initMem->($arg);
