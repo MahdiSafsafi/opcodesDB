@@ -198,7 +198,7 @@ sub processOpcodes($$) {
 		$opcodes->{vsib}        = 1  if (s/^vsib$//);
 		push( @{ $opcodes->{fields} }, 'imm8' ) if (s/^is4$//);
 
-		if (s/^([0-9a-f]+)\+*(\w+)*//) {
+		if (s/^([0-9a-f]+)\+*(\w+)*$//) {
 			push( @{ $opcodes->{opcodes} }, $1 );
 			$opcodes->{regcode} = $2 if ( defined $2 );
 		}
