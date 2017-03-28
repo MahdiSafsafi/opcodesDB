@@ -124,9 +124,13 @@ sub processOperands($$) {
 				warn "symbol '$_' not handled in operands.";
 			}
 		}
+
+		# Add argument type.
 		@types = rmdup( sort { ( $a =~ /mem/ ) - ( $b =~ /mem/ ) } @types );
 		@types = grep( !/mem/, @types ) if ( scalar @types > 1 );
 		$arg->{type} = join( '|', @types );
+
+		# Apply encoding.
 		if ( !$arg->{embedded} && $encoding =~ s/^(.)// ) {
 			local $_ = $1;
 			my %char2encoding = (
@@ -152,7 +156,7 @@ sub processOperands($$) {
 
 sub processOpcodes($$) {
 	( my $insn, local $_ ) = @_;
-	
+
 	my $architectures = $insn->{private}->{environment}->{architectures};
 	$insn->{architecture} = join( '|', sort keys %$architectures );
 	$insn->{architecture} = $1 if ( /^\s*(\w+):/ && exists $architectures->{$1} && $_ =~ s/^\s*(\w+):\s*// );
