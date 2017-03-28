@@ -78,7 +78,7 @@ sub processOperands($$) {
 				( $arg->{value}, $arg->{size}, $arg->{embedded} ) = ( $_, 8, 1 );
 				push( @types, "imm8" );
 			}
-			elsif (/^(rel|moffs|[p]*imm|ptr)(\d+):*(\d+)*$/) {
+			elsif (/^(rel|moffs|p*imm|ptr)(\d+):*(\d+)*$/) {
 				$arg->{size} = my $sz = $2 + ( $3 // 0 );
 				push( @types, "$1$sz" );
 				$arg->{signed} = !/pimm/ || 0;
@@ -186,7 +186,7 @@ sub processOpcodes($$) {
 
 	while (s/\s*(\S+)\s*//) {
 		local $_ = $1;
-		$opcodes->{encoding} = $1 if (s/^([e]*vex|xop|[d]*rex)$//);
+		$opcodes->{encoding} = $1 if (s/^(e*vex|xop|d*rex)$//);
 		$opcodes->{vvvv}     = $1 if (s/^(nds|ndd|dds)$//);
 		$opcodes->{length} = ( $1 // { lig => 0, l0 => 128, lz => 128, l1 => 256 }->{$2} ) if (s/^(128|256|512)|(lz|l0|l1|lig)$//);
 		$opcodes->{oc0} = $1 if (s/^oc(\d+)$//);
