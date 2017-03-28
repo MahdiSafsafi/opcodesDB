@@ -1,81 +1,50 @@
 use strict;
 use warnings;
-
-sub unpackShortCuts($) {
-	my $packed    = shift;
-	my @shortcuts = ();
-	foreach (@$packed) {
-		my @names = ();
-		my ($type) = grep( /^(expand|map)$/, keys %$_ );
-		my $to = $_->{to};
-		push( @names, ref( $_->{$type} ) eq 'ARRAY' ? @{ $_->{$type} } : $_->{$type} );
-		push( @shortcuts, { name => $_, $type => $to } ) foreach (@names);
-	}
-	\@shortcuts;
-}
-
-sub mapShortCuts($$) {
-	my ( $fields, $shortcuts ) = @_;
-	foreach (@$fields) {
-		foreach my $shortcut (@$shortcuts) {
-			if ( exists $shortcut->{map} && $shortcut->{name} eq $_ ) {
-				$_ = "$shortcut->{map}=$_";
-				last;
-			}
-		}
-	}
-}
-
-sub expandShortCuts($$) {
-	my ( $fields, $shortcuts ) = @_;
-	foreach (@$fields) {
-		/^(\S+?)=/;
-		my $name = $1;
-		foreach my $shortcut (@$shortcuts) {
-			if ( exists $shortcut->{expand} && $shortcut->{name} eq $name ) {
-				s/\Q$_\E/$shortcut->{expand}.$_/;
-				last;
-			}
-		}
-	}
-}
+use Data::Dumper;
+no warnings 'experimental::smartmatch';
 
 sub getParent($$) {
-	my ( $hash, $name ) = @_;
-	my @names = split( /\./, $name );
-	my $i = 0;
-	foreach (@names) {
-		return $hash if ( $i == $#names );
-		$hash = $hash->{$_};
-		$i++;
-	}
-	return undef;
+	( my $hash, local $_ ) = @_;
+	$hash = $hash->{$1} while (s/^([^\.]+)\.//);
+	return $hash;
 }
 
 sub setData($$$) {
-	my ( $parent, $field, $value ) = @_;
-	if ( ref( $parent->{$field} ) =~ /ARRAY/ ) {
-		push( @{ $parent->{$field} }, split( /\|/, $value ) );
+	( my $hash, my $name, local $_ ) = @_;
+	if ( ref( $hash->{$name} ) =~ /ARRAY/ ) {
+		push( @{ $hash->{$name} }, split /\|/ );
 	}
-	elsif ( ref( $parent->{$field} ) =~  /HASH/ ) {
-		$parent->{$field}->{$_} = 1 foreach ( split( ':', $value ) );
+	elsif ( ref( $hash->{$name} ) =~ /HASH/ ) {
+		$hash->{$name}->{$_} = 1 foreach ( split /\|/ );
 	}
 	else {
-		$parent->{$field} = $value;
+		$hash->{$name} = $_;
 	}
 }
 
-sub processMetaData($$) {
-	my ( $insn, $data ) = @_;
-	my @fields = $data =~ /(\S+)/g;
-	mapShortCuts( \@fields, $insn->{environment}->{shortcuts} );
-	expandShortCuts( \@fields, $insn->{environment}->{shortcuts} );
-	foreach (@fields) {
-		my $parent = $insn;
-		/^(.+?)([=:])(.+)$/ || /(\S+)/;
-		my $name = $1;
-		my $value =  $3 // 1;
-		$parent = getParent( $insn, $name );
+sub applyShortCuts($$$) {
+	my ( $name, $value, $shortcuts ) = @_;
+	local $_ = '';
+	for ( my $i = 0 ; $i < scalar @$shortcuts ; $i += 2 ) {
+		my $shortcut = @$shortcuts[$i];
+		my @names = $shortcut =~ /^ARRAY\(.+\)$/ ? @$shortcut : $shortcut;
+		if ( $name ~~ @names ) {
+			$_ = @$shortcuts[ $i + 1 ];
+			s/\$/$name/;
+			last;
+		}
+	}
+	( $name, $value ) = ( $1, $2 // $value ) if (s/^([^\=]+)\=*(.+)*//);
+	return ( $name, $value );
+}
+
+sub processMetaData($$$) {
+	( my $template, local $_, my $shortcuts ) = @_;
+	while ($_) {
+		die "Can't match tokens in meta-data."
+		  unless (s/^\s*([^\=\s+]+)(?:(?:\=(?|(?:"\s*(.+?)\s*")|(\S+))))*\s*//);
+		my ( $name, $value ) = applyShortCuts( $1, $2 // 1, $shortcuts );
+		my $parent = getParent( $template, $name );
 		$name =~ s/.+\.//;
 		setData( $parent, $name, $value );
 	}
@@ -83,17 +52,18 @@ sub processMetaData($$) {
 
 sub getRegInfo($$) {
 	my ( $environment, $regname ) = @_;
+
 	foreach my $key ( keys %{ $environment->{registers} } ) {
-		my $value = $environment->{registers}->{$key};
-		return ( name => '', type => $key, map => $value->{map}, size => $value->{size} ) if ( $key eq $regname );
+		my $hash = $environment->{registers}->{$key};
+		return ( name => '', type => $hash->{type}, size => $hash->{size} ) if ( $key eq $regname );
 	}
+	
 	foreach my $key ( keys %{ $environment->{registers} } ) {
-		my $value = $environment->{registers}->{$key};
-		foreach ( @{ $value->{names} } ) {
-			return ( name => $_, type => $key, map => $value->{map}, size => $value->{size} ) if ( $_ eq $regname );
+		my $hash = $environment->{registers}->{$key};
+		foreach ( @{ $hash->{names} } ) {
+			return ( name => $_, type => $hash->{type}, size => $hash->{size} ) if ( $_ eq $regname );
 		}
 	}
 	();
 }
-
 1;
