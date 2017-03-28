@@ -65,12 +65,12 @@ sub processOperands($$) {
 
 				# process inside {...}.
 				( $arg->{masking}, $arg->{zeroing} ) = ( 1, defined $1 || 0 ) if ( $inside =~ /^k(z)*$/ );
-				$insn->{suppressAllExceptions} = $arg->{vectorHint} = $inside eq 'sae';
-				$insn->{embeddedRounding}      = $arg->{vectorHint} = $inside eq 'er';
+				$insn->{suppressAllExceptions} = $arg->{vectorHint} = $inside eq 'sae' || 0;
+				$insn->{embeddedRounding}      = $arg->{vectorHint} = $inside eq 'er'  || 0;
 			}
 			if (/^b(\d+)$/) {
 				$initMem->($arg);
-				$arg->{mem}->{broadcast} = $1;
+				$arg->{mem}->{broadcast} = $1 | 0;
 			}
 			elsif (/^\d+$/) {
 
