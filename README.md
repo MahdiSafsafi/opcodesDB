@@ -128,7 +128,6 @@ foreach my $instruction ( @{ $environment->{instructions} } ) {
 
 	# do something with $instruction ...
 }
-print "Done\n";
 ```
 ## Example:
 Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zmm, zmm/m512/b32 {er}'``` . After parsing it, the parser reports the following result:
