@@ -64,7 +64,7 @@ sub processOperands($$) {
 			if ( s/\s*\{(\w+)\}\s*// && ( my $inside = $1 ) ) {
 
 				# process inside {...}.
-				( $arg->{masking}, $arg->{zeroing} ) = ( 1, $1 // 0 ) if ( $inside =~ /^k(z)*$/ );
+				( $arg->{masking}, $arg->{zeroing} ) = ( 1, defined $1 || 0 ) if ( $inside =~ /^k(z)*$/ );
 				$insn->{suppressAllExceptions} = $arg->{vectorHint} = $inside eq 'sae';
 				$insn->{embeddedRounding}      = $arg->{vectorHint} = $inside eq 'er';
 			}
