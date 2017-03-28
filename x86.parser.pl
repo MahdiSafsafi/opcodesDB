@@ -152,7 +152,7 @@ sub processOperands($$) {
 
 sub processOpcodes($$) {
 	( my $insn, local $_ ) = @_;
-	$insn->{encoding} = '';
+	
 	my $architectures = $insn->{private}->{environment}->{architectures};
 	$insn->{architecture} = join( '|', sort keys %$architectures );
 	$insn->{architecture} = $1 if ( /^\s*(\w+):/ && exists $architectures->{$1} && $_ =~ s/^\s*(\w+):\s*// );
