@@ -1,12 +1,12 @@
-
 use strict;
 use warnings;
 use Data::Dumper;
-require 'x86.pl';
+require 'environments.pl';
 
-my $environment = getEnvironment();
+my $environment = getEnvironment('x86');
 foreach my $instruction ( @{ $environment->{instructions} } ) {
 	print Dumper $instruction;
+
 	# do something with $instruction ...
 }
 

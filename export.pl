@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use JSON;
+require 'environments.pl';
 
 sub exportEnvironment2json($$) {
 	my $environment = shift;
@@ -12,12 +13,12 @@ sub exportEnvironment2json($$) {
 }
 
 if ( scalar @ARGV ) {
-	require 'x86.pl';
-	my $dstFile = $ARGV[0];
+	my $environmentName = $ARGV[0];
+	my $dstFile         = $ARGV[1];
 	print "Fetching environment ...\n";
-	my $environment = getEnvironment();
+	my $environment = getEnvironment($environmentName);
 	print "Exporting to JSON ('$dstFile') ...\n";
-	exportEnvironment2json($environment,$dstFile);
+	exportEnvironment2json( $environment, $dstFile );
 	print "Done\n";
 }
 
