@@ -18,6 +18,7 @@ sub setData($$$) {
 		$hash->{$name}->{$_} = 1 foreach ( split /\|/ );
 	}
 	else {
+		print ref( $hash->{$name} ) . "\n";
 		$hash->{$name} = $_;
 	}
 }
@@ -57,7 +58,7 @@ sub getRegInfo($$) {
 		my $hash = $environment->{registers}->{$key};
 		return ( name => '', type => $hash->{type}, size => $hash->{size} ) if ( $key eq $regname );
 	}
-	
+
 	foreach my $key ( keys %{ $environment->{registers} } ) {
 		my $hash = $environment->{registers}->{$key};
 		foreach ( @{ $hash->{names} } ) {

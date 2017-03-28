@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-sub rmdup($) {
+sub rmdup(@) {
 	my %seen;
 	grep !$seen{$_}++, @_;
 }
