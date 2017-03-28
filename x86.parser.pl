@@ -229,18 +229,9 @@ sub processInstruction($$) {
 	return $insn;
 }
 
-sub processInstructions($) {
-	my $environment = shift;
-	foreach ( @{ $environment->{instructions} } ) {
-		$_ = processInstruction( $environment, $_ );
-
-		#print Dumper $_;
-	}
-}
-
 sub parser($) {
 	my $environment = shift;
-	processInstructions($environment);
+	$_ = processInstruction( $environment, $_ ) foreach ( @{ $environment->{instructions} } );
 }
 
 1;
