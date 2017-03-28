@@ -23,7 +23,7 @@ export.pl x86 x86.json
 ```
 This will produce a 'x86.json' file that contains all x86 environment informations (registers, instructions,...).
 
-## X86 environment:
+## x86 environment:
 -	**name** = environment name.
 -	**version** = environment version.
 -	**architectures** = x86 architectures (x86,x64 or both ‘x86-64’).
