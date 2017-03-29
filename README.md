@@ -84,27 +84,34 @@ Each instruction is represented as a hash and contains the following info:
   - opcodes = list of instruction opcodes. If a slash(/N) used, it means that modrm.reg must be equal to N.
   - mandatoryPrefixes = list of mandatory prefixes required to encode the instruction: (66|f0|f2|f3).
   - fields = dynamic fields: (imm|offset|moffs).	  
-- **operands**: a list of hash representing arguments used by the instruction.
-  - **optional**: if true, it means that this argument is optional and assembler/dissembler may omit it.
-  - **embedded**: argument is built-in instruction and it does not require encoding.
-  - **encoding**: info about how to encode/decode this argument.
-  - **value**:  if(embedded) it contains register name or immediate value.
-  - **read**: if true, the operand is read.
-  - **write**: if true, the operand is written.
-  - **size**: argument size in bits.
-  - **type**: argument type (reg, imm,…).
-  - **masking**: register|memory supports AVX512 masking.
-  - **zeroing**: register supports masking with zeroing.
-  - **signed**: if set, argument is signed. Otherwise it is unsigned.
-  - **mem**: if defined, it means that argument IS a memory OR supports memory addressing. It contains the following info:
-    - size : size of memory in bits.
-    - segment: memory segment.
-    - index: memory index register.
-    - base: memory base register.
-    - tuple: AVX512 tuple used to encode/decode compressed displacement (DISP8*N).
-    - broadcast : AVX512 memory broadcast size.
-    - vsibSize: AVX vsib size (128|256|512).
-    - type: memory type (m8,m128, ptr16,m16-m32,...).
+- **operands**: a list of hash representing arguments used by the instruction. Each operand contains standard info about the operand. An operand can have more than one form (eg: r/m where the argument could be a register OR a memory). To make the parsing easy, opcodesDB uses the variants notation. Each variant contains a specific info that applies only to that variant.
+  - **Standars info**:
+    - **optional**: if true, it means that this argument is optional and assembler/dissembler may omit it.
+    - **embedded**: argument is built-in instruction and it does not require encoding.
+    - **encoding**: info about how to encode/decode this argument.
+    - **read**: if true, the operand is read.
+    - **write**: if true, the operand is written.
+    - **masking**: register|memory supports AVX512 masking.
+    - **zeroing**: register supports masking with zeroing.
+    - **variants**: a list of hash representing possible variants that argument can support. To distinguish between variants, each one has a unique **variant** property: **(register|memory|immediate)**.
+  - **Register variant**:
+    - **value**: if(embedded), it contains register name.
+    - **size**: register size in bits.
+    - **type**: register type: (sreg|reg8|reg8x|reg16|reg32|reg64|fpureg|mmreg|creg|dreg|bndreg|kreg|xmmreg|ymmreg|zmmreg).
+  - **Immediate variant**:
+    - **value**: if(embedded), it contains immediate value.
+    - **size**: immediate size in bits.
+    - **type**: immediate type: (moffs|ptr|imm|rel).
+    - **signed**: if set, immediate is signed. Otherwise it is unsigned.
+  - **Memory variant**:
+    - **segment**: memory segment.
+    - **index**: memory index register.
+    - **base**: memory base register.
+    - **size**: memory size in bits.
+    - **tuple**: AVX512 tuple used to encode/decode compressed displacement (DISP8*N).
+    - **broadcast**: AVX512 memory broadcast size.
+    - **vsibSize**: AVX vsib size (128|256|512).
+    - **type**: memory type (m8,m128, ptr16,m16-m32,...).
 - **eflags|x87Flags|mxcsr**: modified flags by instruction. Each flag is represented as follow :
   - **T** = instruction Tests flag.
   - **M** = instruction Modifies flag.
