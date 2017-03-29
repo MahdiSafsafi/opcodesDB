@@ -4183,7 +4183,7 @@ our $environment = {
   ['vfnmadd132ps' , 'ymm {kz}, ymm, ymm/m256/b32'      , 'rvm:fv: evex.nds.256.66.0f38.w0 9c /r  ' , 'cpuid=avx512f-vl'],
   ['vfnmadd213ps' , 'ymm {kz}, ymm, ymm/m256/b32'      , 'rvm:fv: evex.nds.256.66.0f38.w0 ac /r  ' , 'cpuid=avx512f-vl'],
   ['vfnmadd231ps' , 'ymm {kz}, ymm, ymm/m256/b32'      , 'rvm:fv: evex.nds.256.66.0f38.w0 bc /r  ' , 'cpuid=avx512f-vl'],
-  ['vfnmadd132ps' , 'zmm {kz}, zmm, zmm/m512/b32 {er}' , 'rvm:fv: evex.nds.512.66.0f38.w0 9c /r  ' , 'cpuid=avx512f-vl'],
+  ['vfnmadd132ps' , 'zmm {kz}, zmm, zmm/m512/b32 {er}' , 'rvm:fv: evex.nds.512.66.0f38.w0 9c /r  ' , 'cpuid=avx512f'],
   ['vfnmadd213ps' , 'zmm {kz}, zmm, zmm/m512/b32 {er}' , 'rvm:fv: evex.nds.512.66.0f38.w0 ac /r  ' , 'cpuid=avx512f'],
   ['vfnmadd231ps' , 'zmm {kz}, zmm, zmm/m512/b32 {er}' , 'rvm:fv: evex.nds.512.66.0f38.w0 bc /r  ' , 'cpuid=avx512f'],
 

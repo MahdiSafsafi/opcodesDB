@@ -49,7 +49,6 @@ sub processMetaData($$$) {
 		setData( $parent, $name, $value );
 	}
 }
-
 sub getRegInfo($$) {
 	my ( $environment, $regname ) = @_;
 
@@ -58,7 +57,7 @@ sub getRegInfo($$) {
 		return ( name => '', type => $hash->{type}, size => $hash->{size} ) if ( $key eq $regname );
 	}
 
-	foreach my $key (sort keys %{ $environment->{registers} } ) {
+	foreach my $key ( sort keys %{ $environment->{registers} } ) {
 		my $hash = $environment->{registers}->{$key};
 		foreach ( @{ $hash->{names} } ) {
 			return ( name => $_, type => $hash->{type}, size => $hash->{size} ) if ( $_ eq $regname );
