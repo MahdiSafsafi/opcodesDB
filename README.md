@@ -157,62 +157,73 @@ Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zm
 	'embeddedRounding'      => 1,
 	'fpuStackPtr'           => 0,
 	'stackPtr'              => 0,
-	'cpuid'                 => [ 'avx512f' ],
+	'cpuid'                 => ['avx512f'],
 	'operands'              => [
 		{
-			'type'       => 'zmmreg',
 			'encoding'   => 'modrm.reg',
 			'embedded'   => 0,
 			'optional'   => 0,
-			'value'      => '',
-			'signed'     => 0,
 			'read'       => 0,
 			'write'      => 1,
 			'masking'    => 1,
 			'zeroing'    => 1,
-			'size'       => 512,
 			'vectorHint' => 0,
-			'mem'        => {}
+			'variants'   => [
+				{
+					'variant' => 'register',
+					'type'    => 'zmmreg',
+					'value'   => '',
+					'size'    => 512
+				}
+			]
 		},
 		{
-			'type'       => 'zmmreg',
 			'encoding'   => 'vvvv',
 			'embedded'   => 0,
 			'optional'   => 0,
-			'value'      => '',
-			'signed'     => 0,
 			'read'       => 1,
 			'write'      => 0,
 			'masking'    => 0,
 			'zeroing'    => 0,
-			'size'       => 512,
 			'vectorHint' => 0,
-			'mem'        => {}
+			'variants'   => [
+				{
+					'variant' => 'register',
+					'type'    => 'zmmreg',
+					'value'   => '',
+					'size'    => 512
+				}
+			]
 		},
 		{
-			'type'       => 'zmmreg',
 			'encoding'   => 'modrm.rm',
 			'embedded'   => 0,
 			'optional'   => 0,
-			'value'      => '',
-			'signed'     => 0,
 			'read'       => 1,
 			'write'      => 0,
 			'masking'    => 0,
 			'zeroing'    => 0,
-			'size'       => 512,
 			'vectorHint' => 1,
-			'mem'        => {
-				'type'      => 'm512',
-				'segment'   => '',
-				'base'      => '',
-				'index'     => '',
-				'scale'     => 0,
-				'size'      => '512',
-				'broadcast' => 32,
-				'vsibSize'  => 0,
-				'tuple'     => 'fv'
-			}
+			'variants'   => [
+				{
+					'variant' => 'register',
+					'type'    => 'zmmreg',
+					'value'   => '',
+					'size'    => 512
+				},
+				{
+					'variant'   => 'memory',
+					'type'      => 'm512',
+					'segment'   => '',
+					'base'      => '',
+					'index'     => '',
+					'scale'     => 0,
+					'size'      => '512',
+					'broadcast' => 32,
+					'vsibSize'  => 0,
+					'tuple'     => 'fv'
+				}
+			]
 		}
 	],
 	'opcodes' => {
@@ -228,7 +239,7 @@ Consider this instruction: ```'evex.nds.512.0f.w0 58 /r' 'vaddps zmm {k} {z}, zm
 		'vsib'              => 0,
 		'regcode'           => undef,
 		'mandatoryPrefixes' => [],
-		'opcodes'           => [ '58' ],
+		'opcodes'           => ['58'],
 		'fields'            => []
 	},
 	'eflags'   => {},
