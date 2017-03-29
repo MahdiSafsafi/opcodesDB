@@ -3,16 +3,26 @@ use warnings;
 use Storable 'dclone';
 use Data::Dumper;
 no warnings 'experimental::smartmatch';
+
 require 'base.pl';
 require 'utils.pl';
 
+# Useful conversions
 my %char2size = ( b => 8, w => 16, d => 32, p => 48, q => 64, x => 128, y => 256, z => 512 );
 my %char2vsibSize = ();
 grep { /^([xyz])$/ && ( $char2vsibSize{$1} = $char2size{$1} ) } keys %char2size;
+my %char2encoding = (
+	r => 'modrm.reg',
+	m => 'modrm.rm',
+	v => 'vvvv',
+	i => 'imm',
+	d => 'offset',
+	x => 'drex.dst',
+	o => 'opcode.reg'
+);
 
 sub processOperands($$) {
 	( my $insn, local $_ ) = @_;
-	my $log = $_;
 	s|\br/m(\d+)|r$1/m$1|g;
 
 	my @args = ();
@@ -20,10 +30,8 @@ sub processOperands($$) {
 	my $encoding = $insn->{private}->{opencoding};
 	my $tuple    = $insn->{private}->{tuple};
 	my $initMem  = sub($) {
-		my $arg = shift;
-		return 0 if ( %{ $arg->{mem} } );
-
-		$arg->{mem} = {
+		%{ $_[0] } = (
+			variant   => 'memory',
 			type      => '',
 			segment   => '',
 			base      => '',
@@ -33,81 +41,80 @@ sub processOperands($$) {
 			broadcast => 0,
 			vsibSize  => 0,
 			tuple     => '',
-		};
-		return 1;
+		);
 	};
-
 	my @access = ( 'X', ('R') x ( ( my $count = () = /,/g ) + 1 ) );
 	foreach ( split /,\s*/ ) {
 		my $arg = {
-			type       => '',
 			optional   => 0,
 			embedded   => 0,
 			masking    => 0,
 			zeroing    => 0,
-			size       => 0,
-			signed     => 0,
-			value      => '',
 			vectorHint => 0,
-			mem        => {},
 			read       => 0,
 			write      => 0,
+			variants   => [],
 		};
 		push( @args, $arg );
-		my $access = shift @access;
+
+		# Set access (read|write)
+		my $access = shift @access;    # default access.
 		$access = $1 if (s/^([RWX]):\s*//);    # override access.
 		( $arg->{read}, $arg->{write} ) = ( @{ { R => [ 1, 0 ], W => [ 0, 1 ], X => [ 1, 1 ] }->{$access} } );
-
 		$arg->{embedded} = $arg->{optional} = s/<\s*(.+)\s*>/$1/ || 0;
-		my @types = ();
+
+		# Extract broadcast size.
+		my $broadcast = s'/b(\d+)'' ? $1 | 0 : 0;
+
+		# Process multiple operands (varaints).
 		foreach ( split '/' ) {
+			my $variant = {};
+			push( @{ $arg->{variants} }, $variant );
+
 			if ( s/\s*\{(\w+)\}\s*// && ( my $inside = $1 ) ) {
 
-				# process inside {...}.
+				# process inside {...} : {k}{z}{er}{sae}.
 				( $arg->{masking}, $arg->{zeroing} ) = ( 1, defined $1 || 0 ) if ( $inside =~ /^k(z)*$/ );
 				$insn->{suppressAllExceptions} = $arg->{vectorHint} = $inside eq 'sae' || 0;
 				$insn->{embeddedRounding}      = $arg->{vectorHint} = $inside eq 'er'  || 0;
 			}
-			if (/^b(\d+)$/) {
-				$initMem->($arg);
-				$arg->{mem}->{broadcast} = $1 | 0;
-			}
-			elsif (/^\d+$/) {
+			if (/^\d+$/) {
 
 				# embedded constant
-				( $arg->{value}, $arg->{size}, $arg->{embedded} ) = ( $_, 8, 1 );
-				push( @types, "imm8" );
+				( $arg->{embedded}, $variant->{value}, $variant->{size}, $variant->{signed}, $variant->{variant}, $variant->{type} ) =
+				  ( 1, $_, 8, 0, qw/immediate pimm8/ );
 			}
 			elsif (/^(rel|moffs|p*imm|ptr)(\d+):*(\d+)*$/) {
-				$arg->{size} = my $sz = $2 + ( $3 // 0 );
-				push( @types, "$1$sz" );
-				$arg->{signed} = !/pimm/ || 0;
+				$variant->{size} = my $sz = $2 + ( $3 // 0 );
+				( $variant->{variant}, $variant->{type}, $variant->{signed}, $variant->{value} ) = ( q/immediate/, qq/$1$sz/, !/pimm/ || 0, '' );
 			}
 			elsif (/^m(\d+)([&:])(\d+)$/) {
 
 				# memory looks like : ('xxxxxxxx:yyyyyyyy') || ('selector:offset')
 				my $sz = $1 + $3;
 				my $type = { '&' => "m$1-m$3", ':' => "ptr$sz" }->{$2};
-				$initMem->($arg);
-				( $arg->{mem}->{size}, $arg->{mem}->{type} ) = ( $sz, $type );
-				push( @types, "mem" );
+				$initMem->($variant);
+				( $variant->{size}, $variant->{type} ) = ( $sz, $type );
+
 			}
 			elsif (s/\[(?:(\w+):)*(\**\w+)*(?:\+(\w+))*\]//) {
 
 				# memory = [seg:base+index]
-				$initMem->($arg);
-				( $arg->{embedded}, $arg->{mem}->{segment}, $arg->{mem}->{base}, $arg->{mem}->{index} ) = ( 1, $1, $2, $3 );
-				push( @types, 'mem' );
+				$initMem->($variant);
+				( $arg->{embedded}, $variant->{segment}, $variant->{base}, $variant->{index} ) = ( 1, $1, $2, $3 );
 			}
 
 			# The following block must be before the memory block !
 			elsif ( my %reginfo = getRegInfo( $insn->{private}->{environment}, $_ ) ) {
-				( $arg->{size}, $arg->{embedded} ) = ( $reginfo{size}, $reginfo{name} ne '' || 0 );
-				$arg->{value} = $_ if ( $arg->{embedded} );
-				push( @types, $reginfo{type} );
+
+				# Process register
+				( $variant->{variant}, $variant->{type}, $variant->{size}, $arg->{embedded} ) =
+				  ( 'register', $reginfo{type}, $reginfo{size}, $reginfo{name} ne '' || 0 );
+				$variant->{value} = $arg->{embedded} ? $_ : '';
 			}
 			elsif (/^(v)*(?:me)*m(\d+)*(.+)*$/) {
 
+				# Process memory...
 				# mem|m\d+|vm\d+[xyz]|m\d+xx
 				my $sz = $2 // 0;
 				my $vsibSize = defined $1 && defined $3 ? $char2vsibSize{$3} : 0;
@@ -115,40 +122,24 @@ sub processOperands($$) {
 				$type .= $sz if ($sz);
 				$type .= $3  if ( defined $3 );
 				$type = 'm' . $type if ($type);
-				$initMem->($arg);
-				( $arg->{mem}->{size}, $arg->{mem}->{type}, $arg->{mem}->{vsibSize} ) = ( $sz, $type, $vsibSize );
-				$arg->{mem}->{tuple} = $tuple;
-				push( @types, 'mem' );
+				$initMem->($variant);
+				( $variant->{size}, $variant->{type}, $variant->{vsibSize}, $variant->{broadcast}, $variant->{tuple} ) =
+				  ( $sz, $type, $vsibSize, $broadcast, $tuple );
 			}
 			else {
 				warn "symbol '$_' not handled in operands.";
 			}
 		}
 
-		# Add argument type.
-		@types = rmdup( sort { ( $a =~ /mem/ ) - ( $b =~ /mem/ ) } @types );
-		@types = grep( !/mem/, @types ) if ( scalar @types > 1 );
-		$arg->{type} = join( '|', @types );
-
 		# Apply encoding.
 		if ( !$arg->{embedded} && $encoding =~ s/^(.)// ) {
 			local $_ = $1;
-			my %char2encoding = (
-				r => 'modrm.reg',
-				m => 'modrm.rm',
-				v => 'vvvv',
-				i => 'imm',
-				d => 'offset',
-				x => 'drex.dst',
-				o => 'opcode.reg'
-			);
-			my $sz = '';
-			$sz = $arg->{size} if (/^i|d$/);
+			my $sz = /^i|d$/ ? $arg->{variants}[0]->{size} : '';
 			my $encoding = $char2encoding{$_};
-			$encoding = 'moffs' if ( $arg->{type} =~ /moffs/ );
+			$encoding = 'moffs' if ( $arg->{variants}[0]->{type} =~ /moffs/ );
 			$encoding .= $sz;
 			$encoding = 'imm8.low'  if ( $_ eq 'i' && $sz =~ /^4$/ );
-			$encoding = 'imm8.high' if ( $_ eq 'i' && $arg->{type} =~ /reg/ );
+			$encoding = 'imm8.high' if ( $_ eq 'i' && $arg->{variants}[0]->{type} =~ /reg/ );
 			$arg->{encoding} = $encoding;
 		}
 	}
@@ -196,7 +187,6 @@ sub processOpcodes($$) {
 		$opcodes->{opsize}      = $1 if (s/^os(\d+)$//);
 		$opcodes->{addressSize} = $1 if (s/^as(\d+)$//);
 		$opcodes->{vsib}        = 1  if (s/^vsib$//);
-		push( @{ $opcodes->{fields} }, 'imm8' ) if (s/^is4$//);
 
 		if (s/^([0-9a-f]+)\+*(\w+)*$//) {
 			push( @{ $opcodes->{opcodes} }, $1 );
@@ -210,8 +200,14 @@ sub processOpcodes($$) {
 			my $name = { i => 'imm', o => 'offset', m => 'moffs' }->{$1} . $char2size{$2};
 			push( @{ $opcodes->{fields} }, $name );
 		}
+
+		# Special case !
+		push( @{ $opcodes->{fields} }, 'imm8' ) if (s/^is4$//);
+
 		warn "'$_' not handled in opcodes." if ($_);
 	}
+
+	# Opsize == 64 ? => Include REX.W !
 	( $opcodes->{w}, $opcodes->{encoding} ) = ( 1, 'rex' ) if ( $opcodes->{opsize} == 64 );
 
 }
