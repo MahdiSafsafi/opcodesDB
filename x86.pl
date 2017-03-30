@@ -775,7 +775,7 @@ our $environment = {
   ['vcvtps2pd' , 'W:xmm, xmm/m64'                 , 'rm:    vex.128.0f.wig 5a /r  '          , 'cpuid=avx'],
   ['vcvtps2pd' , 'W:ymm, xmm/m128'                , 'rm:    vex.256.0f.wig 5a /r  '          , 'cpuid=avx'],
   ['vcvtps2pd' , 'W:xmm {kz}, xmm/m64/b32'        , 'rm:hv: evex.128.0f.w0 5a /r  '          , 'cpuid=avx512f-vl'],
-  ['vcvtps2pd' , 'W:ymm {kz}, xmm/m128/b32'       , 'rm:hv: evex.256.0f.w0 5a /r  '          , 'cpuid=avx512vl'],
+  ['vcvtps2pd' , 'W:ymm {kz}, xmm/m128/b32'       , 'rm:hv: evex.256.0f.w0 5a /r  '          , 'cpuid=avx512f-vl'],
   ['vcvtps2pd' , 'W:zmm {kz}, ymm/m256/b32 {sae}' , 'rm:hv: evex.512.0f.w0 5a /r  '          , 'cpuid=avx512f'],
 
   # => CVTPS2PI-Convert Packed Single-Precision FP Values to Packed Dword Integers
