@@ -3714,12 +3714,12 @@ our $environment = {
   ['sysenter' , ''                   , '0f 34'                                  , 'eflags.if=M eflags.vm=M'],
 
   # => SYSEXIT-Fast Return from Fast System Call
-  ['sysexit'   , ''                   , '     os32 0f 35           '             , ''],
-  ['sysexit64' , ''                   , 'x64: os64 0f 35           '             , ''],
+  ['sysexit'  , ''                   , '     os32 0f 35           '             , ''],
+  ['sysexit'  , ''                   , 'x64: os64 0f 35           '             , ''],
 
   # => SYSRET-Return From Fast System Call
   ['sysret'   , ''                   , 'x64: os32 0f 07           '             , ''],
-  ['sysret64' , ''                   , 'x64: os64 0f 07           '             , ''],
+  ['sysret'   , ''                   , 'x64: os64 0f 07           '             , ''],
 
   # => TEST-Logical Compare
   ['test'     , 'R:al, imm8'           , 'i:           a8 ib           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
