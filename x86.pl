@@ -37,9 +37,17 @@
 #   - os16 = 66 prefix is required for instruction.
 #   - os32 = rex prefix can't be used if (arch == x64).
 #   - os64 = instruction requires rex.w.
+#   - os   = opsize can be [16,32,64].
+#   - osv  = opsize can only be [32,64].
+#   - osz  = opsize can only be [16,32].
+#   - e*vex.vu = vector length can't be 128 => VL in [256,512].
+#   - e*vex.vx = vector length can't be 512 => VL in [128,256]. 
 
 # OPERANDS
 # --------
+# Notations: length is opsize length for legacy instruction 
+#            and is vector length (VL) for SIMD instructions.
+#
 # All inside <> are optional.
 # Read|Write info:
 #  - R: Read.
@@ -47,7 +55,29 @@
 #  - X: Read && Write.
 # If absent it defaults to (X,R,R,R,R,...).
 # * means any sub register eg: *di means di|edi|rdi.
-# b\d+ = broadcast.
+# b[n] = n = broadcast size in bits.
+# 
+# Packed form: 
+# vmm  = register size = length.
+# vm   = memory size   = length.
+# .N   = size = (length/N). eg: vm.2 => Size of memory is half of length.
+# .low = size = LowOf(length):
+#                  - VL:512 => 256.
+#                  - VL:256 => 128.
+#                  - VL:128 => 128.
+#                  - OS:64  => 32.
+#                  - OS:32  => 16.
+#                  - OS:16  => 16.
+# .dup = size = dupOf(VL):
+#                  - 512 => 512.
+#                  - 256 => 256.
+#                  - 128 => 64.
+# vm[sz][n]: 'sz' is memory size in bits. 'n' is vsib size:
+#                  - x => vsibSize = 128.
+#                  - y => vsibSize = 256.
+#                  - z => vsibSize = 512.
+#                  - v => vsibSize = VL .
+#                  - l => vsibSize = LowOf(VL).
 
 # META-DATA
 # ---------
@@ -60,6 +90,12 @@
 # level = Privilege level. Default to 3 if absent.
 #
 # cpuid = Instruction cpuid fields (separated by '|').
+#         Carefully interpret cpuid when cpuid = [avx-2|avx512*-vl]:
+#                             - avx-2 => AVX2 applies only when VL = 256.
+#                                        AVX  applies only when VL = 128.
+#                             - avx512*-vl => AVX512*VL applies only when VL != 512.
+#                                             AVX512*   applies only when VL =  512.
+# 
 #
 # branchType = short|near|far.
 #
@@ -93,6 +129,11 @@
 #  - U = Undefined.
 #  - N = Not affected.
 #  - X = TM.
+
+
+# TODO
+# ----
+# Fix mov instruction (Add: mov,r32,sreg).
 
 use strict;
 use warnings;
@@ -494,16 +535,16 @@ our $environment = {
   ['bzhi'     , 'W:r64, r/m64, r64'       , 'x64:rmv: vex.nds.lz.0f38.w1 f5 /r  '    , 'cpuid=bmi2 eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=U eflags.cf=M'],
 
   # => CALL-Call Procedure
-  ['call'     , 'rel32'              , 'm:     os32 e8 od           '           , 'stackPtr=-ptr_size branchType=near bnd'],
-  ['call'     , 'm16:16'             , 'm:     os16 ff /3           '           , 'stackPtr=-ptr_size branchType=far'],
-  ['call'     , 'm16:32'             , 'm:     os32 ff /3           '           , 'stackPtr=-ptr_size branchType=far'],
-  ['call'     , 'rel16'              , 'x86:m: os16 e8 ow           '           , 'stackPtr=-4 branchType=near bnd'],
-  ['call'     , 'R:r/m16'            , 'x86:m: os16 ff /2           '           , 'stackPtr=-4 branchType=near bnd'],
-  ['call'     , 'R:r/m32'            , 'x86:m:      ff /2           '           , 'stackPtr=-4 branchType=near bnd'],
-  ['call'     , 'R:r/m64'            , 'x64:m:      ff /2           '           , 'stackPtr=-8 branchType=near bnd'],
-  ['call'     , 'ptr16:16'           , 'x86:d: os16 9a od           '           , 'deprecated stackPtr=-4 branchType=far'],
-  ['call'     , 'ptr16:32'           , 'x86:d:      9a op           '           , 'deprecated stackPtr=-4 branchType=far'],
-  ['call'     , 'm16:64'             , 'x64:m: os64 ff /3           '           , 'stackPtr=-8 branchType=far'],
+  ['call'     , 'rel32'              , 'm:     os32 e8 od           '           , 'branchType=near bnd'],
+  ['call'     , 'm16:16'             , 'm:     os16 ff /3           '           , 'branchType=far'],
+  ['call'     , 'm16:32'             , 'm:     os32 ff /3           '           , 'branchType=far'],
+  ['call'     , 'rel16'              , 'x86:m: os16 e8 ow           '           , 'branchType=near bnd'],
+  ['call'     , 'R:r/m16'            , 'x86:m: os16 ff /2           '           , 'branchType=near bnd'],
+  ['call'     , 'R:r/m32'            , 'x86:m:      ff /2           '           , 'branchType=near bnd'],
+  ['call'     , 'R:r/m64'            , 'x64:m:      ff /2           '           , 'branchType=near bnd'],
+  ['call'     , 'ptr16:16'           , 'x86:d: os16 9a od           '           , 'deprecated branchType=far'],
+  ['call'     , 'ptr16:32'           , 'x86:d:      9a op           '           , 'deprecated branchType=far'],
+  ['call'     , 'm16:64'             , 'x64:m: os64 ff /3           '           , 'branchType=far'],
 
   # => CBW/CWDE/CDQE-Convert Byte to Word/Convert Word to Doubleword/Convert Doubleword to Quadword
   ['cbw'      , 'R:<ax>'             , '     os16 98              '             , ''],
@@ -927,14 +968,14 @@ our $environment = {
   ['emms'     , ''                   , '0f 77'                                  , ''],
 
   # => ENTER-Make Stack Frame for Procedure Parameters
-  #['enter'    , 'pimm16, 0'           , 'ii: c8 iw 00        '                   , 'stackPtr=-pimm16-ptr_size*(pimm8+1)'],
-  #['enter'    , 'pimm16, 1'           , 'ii: c8 iw 01        '                   , 'stackPtr=-pimm16-ptr_size*(pimm8+1)'],
-  ['enter'    , 'pimm16, pimm8'       , 'ii: c8 iw ib        '                   , 'stackPtr=-pimm16-ptr_size*(pimm8+1)'],
+  #['enter'    , 'pimm16, 0'           , 'ii: c8 iw 00        '                   , ''],
+  #['enter'    , 'pimm16, 1'           , 'ii: c8 iw 01        '                   , ''],
+  ['enter'    , 'pimm16, pimm8'       , 'ii: c8 iw ib        '                   , ''],
 
   # => EXTRACTPS-Extract Packed Floating-Point Values
-  ['extractps'  , 'W:r/m32, xmm, pimm8'       , 'mri:     66 0f 3a 17 /r ib              ' , 'cpuid=sse4v1'],
-  ['vextractps' , 'W:r/m32, xmm, pimm8'       , 'mri:     vex.128.66.0f3a.wig 17 /r ib   ' , 'cpuid=avx'],
-  ['vextractps' , 'W:r/m32, xmm, pimm8'       , 'mri:t1s: evex.128.66.0f3a.wig 17 /r ib  ' , 'cpuid=avx512f'],
+  ['extractps'  , 'W:reg/m32, xmm, pimm8'       , 'mri:     66 0f 3a 17 /r ib              ' , 'cpuid=sse4v1'],
+  ['vextractps' , 'W:reg/m32, xmm, pimm8'       , 'mri:     vex.128.66.0f3a.wig 17 /r ib   ' , 'cpuid=avx'],
+  ['vextractps' , 'W:reg/m32, xmm, pimm8'       , 'mri:t1s: evex.128.66.0f3a.wig 17 /r ib  ' , 'cpuid=avx512f'],
 
   # => F2XM1-Compute 2x-1
   ['f2xm1'    , ''                   , 'd9 f0'                                  , 'cpuid=fpu x87Flags.sw.c3=U x87Flags.sw.c2=U x87Flags.sw.c1=M x87Flags.sw.c0=U'],
@@ -1533,9 +1574,9 @@ our $environment = {
   ['lea'      , 'W:r64, mem'         , 'x64:rm: os64 8d /r           '          , ''],
 
   # => LEAVE-High Level Procedure Exit
-  ['leave'    , '<sp>, X:<bp>'         , '     os16 c9              '             , 'stackPtr=enter_size'],
-  ['leave'    , '<esp>, X:<ebp>'       , 'x86:      c9              '             , 'stackPtr=enter_size'],
-  ['leave'    , '<rsp>, X:<rbp>'       , 'x64:      c9              '             , 'stackPtr=enter_size'],
+  ['leave'    , '<sp>, X:<bp>'         , '     os16 c9              '             , ''],
+  ['leave'    , '<esp>, X:<ebp>'       , 'x86:      c9              '             , ''],
+  ['leave'    , '<rsp>, X:<rbp>'       , 'x64:      c9              '             , ''],
 
   # => LFENCE-Load Fence
   ['lfence'   , ''                   , '0f ae e8'                               , ''],
@@ -2406,24 +2447,24 @@ our $environment = {
   ['pext'     , 'W:r64, r64, r/m64'       , 'x64:rvm: vex.nds.lz.f3.0f38.w1 f5 /r  ' , 'cpuid=bmi2'],
 
   # => PEXTRB/PEXTRD/PEXTRQ-Extract Byte/Dword/Qword
-  ['pextrb'   , 'W:r/m8, xmm, pimm8'        , 'mri:         66 0f 3a 14 /r ib              ' , 'cpuid=sse4v1'],
-  ['pextrd'   , 'W:r/m32, xmm, pimm8'       , 'mri:         66 0f 3a 16 /r ib              ' , 'cpuid=sse4v1'],
-  ['pextrq'   , 'W:r/m64, xmm, pimm8'       , 'x64:mri:     66 rex.w 0f 3a 16 /r ib        ' , 'cpuid=sse4v1'],
-  ['vpextrb'  , 'W:r/m8, xmm, pimm8'        , 'mri:         vex.128.66.0f3a.w0 14 /r ib    ' , 'cpuid=avx'],
-  ['vpextrd'  , 'W:r/m32, xmm, pimm8'       , 'mri:         vex.128.66.0f3a.w0 16 /r ib    ' , 'cpuid=avx'],
-  ['vpextrq'  , 'W:r/m64, xmm, pimm8'       , 'x64:mri:     vex.128.66.0f3a.w1 16 /r ib    ' , 'cpuid=avx'],
-  ['vpextrb'  , 'W:r/m8, xmm, pimm8'        , 'mri:t1s:     evex.128.66.0f3a.wig 14 /r ib  ' , 'cpuid=avx512bw'],
-  ['vpextrd'  , 'W:r/m32, xmm, pimm8'       , 'mri:t1s:     evex.128.66.0f3a.w0 16 /r ib   ' , 'cpuid=avx512dq'],
-  ['vpextrq'  , 'W:r/m64, xmm, pimm8'       , 'x64:mri:t1s: evex.128.66.0f3a.w1 16 /r ib   ' , 'cpuid=avx512dq'],
+  ['pextrb'   , 'W:reg/m8, xmm, pimm8'       , 'mri:         66 0f 3a 14 /r ib              ' , 'cpuid=sse4v1'],
+  ['pextrd'   , 'W:r/m32, xmm, pimm8'        , 'mri:         66 0f 3a 16 /r ib              ' , 'cpuid=sse4v1'],
+  ['pextrq'   , 'W:r/m64, xmm, pimm8'        , 'x64:mri:     66 rex.w 0f 3a 16 /r ib        ' , 'cpuid=sse4v1'],
+  ['vpextrb'  , 'W:reg/m8, xmm, pimm8'       , 'mri:         vex.128.66.0f3a.w0 14 /r ib    ' , 'cpuid=avx'],
+  ['vpextrd'  , 'W:r/m32, xmm, pimm8'        , 'mri:         vex.128.66.0f3a.w0 16 /r ib    ' , 'cpuid=avx'],
+  ['vpextrq'  , 'W:r/m64, xmm, pimm8'        , 'x64:mri:     vex.128.66.0f3a.w1 16 /r ib    ' , 'cpuid=avx'],
+  ['vpextrb'  , 'W:reg/m8, xmm, pimm8'       , 'mri:t1s:     evex.128.66.0f3a.wig 14 /r ib  ' , 'cpuid=avx512bw'],
+  ['vpextrd'  , 'W:r/m32, xmm, pimm8'        , 'mri:t1s:     evex.128.66.0f3a.w0 16 /r ib   ' , 'cpuid=avx512dq'],
+  ['vpextrq'  , 'W:r/m64, xmm, pimm8'        , 'x64:mri:t1s: evex.128.66.0f3a.w1 16 /r ib   ' , 'cpuid=avx512dq'],
 
   # => PEXTRW-Extract Word
-  ['pextrw'   , 'W:reg, mm, pimm8'          , 'rmi:     0f c5 /r ib                    ' , 'cpuid=sse'],
-  ['pextrw'   , 'W:reg, xmm, pimm8'         , 'rmi:     66 0f c5 /r ib                 ' , 'cpuid=sse2'],
-  ['pextrw'   , 'W:r/m16, xmm, pimm8'       , 'mri:     66 0f 3a 15 /r ib              ' , 'cpuid=sse4v1'],
-  ['vpextrw'  , 'W:reg, xmm, pimm8'         , 'rmi:     vex.128.66.0f.w0 c5 /r ib      ' , 'cpuid=avx'],
-  ['vpextrw'  , 'W:r/m16, xmm, pimm8'       , 'mri:     vex.128.66.0f3a.w0 15 /r ib    ' , 'cpuid=avx'],
-  ['vpextrw'  , 'W:reg, xmm, pimm8'         , 'rmi:     evex.128.66.0f.wig c5 /r ib    ' , 'cpuid=avx512bw'],
-  ['vpextrw'  , 'W:r/m16, xmm, pimm8'       , 'mri:fvm: evex.128.66.0f3a.wig 15 /r ib  ' , 'cpuid=avx512bw'],
+  ['pextrw'   , 'W:reg, mm, pimm8'            , 'rmi:     0f c5 /r ib                    ' , 'cpuid=sse'],
+  ['pextrw'   , 'W:reg, xmm, pimm8'           , 'rmi:     66 0f c5 /r ib                 ' , 'cpuid=sse2'],
+  ['pextrw'   , 'W:reg/m16, xmm, pimm8'       , 'mri:     66 0f 3a 15 /r ib              ' , 'cpuid=sse4v1'],
+  ['vpextrw'  , 'W:reg, xmm, pimm8'           , 'rmi:     vex.128.66.0f.w0 c5 /r ib      ' , 'cpuid=avx'],
+  ['vpextrw'  , 'W:reg/m16, xmm, pimm8'       , 'mri:     vex.128.66.0f3a.w0 15 /r ib    ' , 'cpuid=avx'],
+  ['vpextrw'  , 'W:reg, xmm, pimm8'           , 'rmi:     evex.128.66.0f.wig c5 /r ib    ' , 'cpuid=avx512bw'],
+  ['vpextrw'  , 'W:reg/m16, xmm, pimm8'       , 'mri:fvm: evex.128.66.0f3a.wig 15 /r ib  ' , 'cpuid=avx512bw'],
 
   # => PHADDW/PHADDD-Packed Horizontal Add
   ['phaddw'   , 'mm, mm/m64'                 , 'rm:  0f 38 01 /r                    '   , 'cpuid=ssse3'],
@@ -2745,25 +2786,25 @@ our $environment = {
   ['vpmuludq' , 'W:zmm {kz}, zmm, zmm/m512/b64'       , 'rvm:fv: evex.nds.512.66.0f.w1 f4 /r  '  , 'cpuid=avx512f'],
 
   # => POP-Pop a Value from the Stack
-  ['pop'      , 'W:fs'               , '       os16 0f a1           '           , 'stackPtr=2'],
-  ['pop'      , 'W:gs'               , '       os16 0f a9           '           , 'stackPtr=2'],
-  ['pop'      , 'W:r/m16'            , 'm:     os16 8f /0           '           , 'stackPtr=2'],
-  ['pop'      , 'W:r16'              , 'o:     os16 58+rw           '           , 'stackPtr=2'],
-  ['pop'      , 'W:ds'               , 'x86:        1f              '           , 'stackPtr=2'],
-  ['pop'      , 'W:es'               , 'x86:        07              '           , 'stackPtr=2'],
-  ['pop'      , 'W:ss'               , 'x86:        17              '           , 'stackPtr=2'],
-  ['pop'      , 'W:fs'               , 'x86:        0f a1           '           , 'stackPtr=2'],
-  ['pop'      , 'W:fs'               , 'x64:        0f a1           '           , 'stackPtr=2'],
-  ['pop'      , 'W:gs'               , 'x86:        0f a9           '           , 'stackPtr=2'],
-  ['pop'      , 'W:gs'               , 'x64:        0f a9           '           , 'stackPtr=2'],
-  ['pop'      , 'W:r/m32'            , 'x86:m:      8f /0           '           , 'stackPtr=4'],
-  ['pop'      , 'W:r/m64'            , 'x64:m:      8f /0           '           , 'stackPtr=8'],
-  ['pop'      , 'W:r32'              , 'x86:o:      58+rd           '           , 'stackPtr=4'],
-  ['pop'      , 'W:r64'              , 'x64:o:      58+rd           '           , 'stackPtr=8'],
+  ['pop'      , 'W:fs'               , '       os16 0f a1           '           , ''],
+  ['pop'      , 'W:gs'               , '       os16 0f a9           '           , ''],
+  ['pop'      , 'W:r/m16'            , 'm:     os16 8f /0           '           , ''],
+  ['pop'      , 'W:r16'              , 'o:     os16 58+rw           '           , ''],
+  ['pop'      , 'W:ds'               , 'x86:        1f              '           , ''],
+  ['pop'      , 'W:es'               , 'x86:        07              '           , ''],
+  ['pop'      , 'W:ss'               , 'x86:        17              '           , ''],
+  ['pop'      , 'W:fs'               , 'x86:        0f a1           '           , ''],
+  ['pop'      , 'W:fs'               , 'x64:        0f a1           '           , ''],
+  ['pop'      , 'W:gs'               , 'x86:        0f a9           '           , ''],
+  ['pop'      , 'W:gs'               , 'x64:        0f a9           '           , ''],
+  ['pop'      , 'W:r/m32'            , 'x86:m:      8f /0           '           , ''],
+  ['pop'      , 'W:r/m64'            , 'x64:m:      8f /0           '           , ''],
+  ['pop'      , 'W:r32'              , 'x86:o:      58+rd           '           , ''],
+  ['pop'      , 'W:r64'              , 'x64:o:      58+rd           '           , ''],
 
   # => POPA/POPAD-Pop All General-Purpose Registers
-  ['popa'     , 'W:<di>, W:<si>, W:<bp>, W:<bx>, W:<dx>, W:<cx>, W:<ax>'              , 'x86: os16 61              '             , 'deprecated stackPtr=14'],
-  ['popad'    , 'W:<edi>, W:<esi>, W:<ebp>, W:<ebx>, W:<edx>, W:<ecx>, W:<eax>'       , 'x86:      61              '             , 'deprecated stackPtr=28'],
+  ['popa'     , 'W:<di>, W:<si>, W:<bp>, W:<bx>, W:<dx>, W:<cx>, W:<ax>'              , 'x86: os16 61              '             , 'deprecated'],
+  ['popad'    , 'W:<edi>, W:<esi>, W:<ebp>, W:<ebx>, W:<edx>, W:<ecx>, W:<eax>'       , 'x86:      61              '             , 'deprecated'],
 
   # => POPCNT-Return the Count of Number of Bits Set to 1
   ['popcnt'   , 'W:r16, r/m16'       , 'rm:     os16 f3 0f b8 /r     '          , 'cpuid=popcnt eflags.of=C eflags.sf=C eflags.zf=M eflags.af=C eflags.pf=C eflags.cf=C'],
@@ -2771,9 +2812,9 @@ our $environment = {
   ['popcnt'   , 'W:r64, r/m64'       , 'x64:rm: os64 f3 0f b8 /r     '          , 'cpuid=popcnt eflags.of=C eflags.sf=C eflags.zf=M eflags.af=C eflags.pf=C eflags.cf=C'],
 
   # => POPF/POPFD/POPFQ-Pop Stack into EFLAGS Register
-  ['popf'     , ''                   , '     os16 9d              '             , 'stackPtr=2 eflags.of=P eflags.sf=P eflags.zf=P eflags.af=P eflags.pf=P eflags.cf=P eflags.tf=P eflags.if=P eflags.df=P eflags.nt=P'],
-  ['popfd'    , ''                   , 'x86:      9d              '             , 'stackPtr=4 eflags.of=P eflags.sf=P eflags.zf=P eflags.af=P eflags.pf=P eflags.cf=P eflags.tf=P eflags.if=P eflags.df=P eflags.nt=P'],
-  ['popfq'    , ''                   , 'x64:      9d              '             , 'stackPtr=8 eflags.of=P eflags.sf=P eflags.zf=P eflags.af=P eflags.pf=P eflags.cf=P eflags.tf=P eflags.if=P eflags.df=P eflags.nt=P'],
+  ['popf'     , ''                   , '     os16 9d              '             , 'eflags.of=P eflags.sf=P eflags.zf=P eflags.af=P eflags.pf=P eflags.cf=P eflags.tf=P eflags.if=P eflags.df=P eflags.nt=P'],
+  ['popfd'    , ''                   , 'x86:      9d              '             , 'eflags.of=P eflags.sf=P eflags.zf=P eflags.af=P eflags.pf=P eflags.cf=P eflags.tf=P eflags.if=P eflags.df=P eflags.nt=P'],
+  ['popfq'    , ''                   , 'x64:      9d              '             , 'eflags.of=P eflags.sf=P eflags.zf=P eflags.af=P eflags.pf=P eflags.cf=P eflags.tf=P eflags.if=P eflags.df=P eflags.nt=P'],
 
   # => POR-Bitwise Logical OR
   ['por'      , 'mm, mm/m64'                          , 'rm:     0f eb /r                     '  , 'cpuid=mmx'],
@@ -3130,30 +3171,30 @@ our $environment = {
   ['vpunpcklwd'  , 'W:zmm {kz}, zmm, zmm/m512'           , 'rvm:fvm: evex.nds.512.66.0f.wig 61 /r  ' , 'cpuid=avx512bw'],
 
   # => PUSH-Push Word, Doubleword or Quadword Onto the Stack
-  ['push'     , 'R:fs'               , '            0f a0           '           , 'stackPtr=-2'],
-  ['push'     , 'R:gs'               , '            0f a8           '           , 'stackPtr=-2'],
-  ['push'     , 'R:r/m16'            , 'm:     os16 ff /6           '           , 'stackPtr=-2'],
-  ['push'     , 'R:r16'              , 'o:     os16 50+rw           '           , 'stackPtr=-2'],
-  ['push'     , 'imm8'               , 'i:          6a ib           '           , 'stackPtr=-1'],
-  ['push'     , 'imm16'              , 'i:     os16 68 iw           '           , 'stackPtr=-2'],
-  ['push'     , 'imm32'              , 'i:     os32 68 id           '           , 'stackPtr=-4'],
-  ['push'     , 'R:cs'               , 'x86:        0e              '           , 'stackPtr=-2'],
-  ['push'     , 'R:ss'               , 'x86:        16              '           , 'stackPtr=-2'],
-  ['push'     , 'R:ds'               , 'x86:        1e              '           , 'stackPtr=-2'],
-  ['push'     , 'R:es'               , 'x86:        06              '           , 'stackPtr=-2'],
-  ['push'     , 'R:r/m32'            , 'x86:m:      ff /6           '           , 'stackPtr=-4'],
-  ['push'     , 'R:r/m64'            , 'x64:m:      ff /6           '           , 'stackPtr=-8'],
-  ['push'     , 'R:r32'              , 'x86:o:      50+rd           '           , 'stackPtr=-4'],
-  ['push'     , 'R:r64'              , 'x64:o:      50+rd           '           , 'stackPtr=-8'],
+  ['push'     , 'R:fs'               , '            0f a0           '           , ''],
+  ['push'     , 'R:gs'               , '            0f a8           '           , ''],
+  ['push'     , 'R:r/m16'            , 'm:     os16 ff /6           '           , ''],
+  ['push'     , 'R:r16'              , 'o:     os16 50+rw           '           , ''],
+  ['push'     , 'imm8'               , 'i:          6a ib           '           , ''],
+  ['push'     , 'imm16'              , 'i:     os16 68 iw           '           , ''],
+  ['push'     , 'imm32'              , 'i:     os32 68 id           '           , ''],
+  ['push'     , 'R:cs'               , 'x86:        0e              '           , ''],
+  ['push'     , 'R:ss'               , 'x86:        16              '           , ''],
+  ['push'     , 'R:ds'               , 'x86:        1e              '           , ''],
+  ['push'     , 'R:es'               , 'x86:        06              '           , ''],
+  ['push'     , 'R:r/m32'            , 'x86:m:      ff /6           '           , ''],
+  ['push'     , 'R:r/m64'            , 'x64:m:      ff /6           '           , ''],
+  ['push'     , 'R:r32'              , 'x86:o:      50+rd           '           , ''],
+  ['push'     , 'R:r64'              , 'x64:o:      50+rd           '           , ''],
 
   # => PUSHA/PUSHAD-Push All General-Purpose Registers
-  ['pusha'    , 'R:<ax>, <cx>, <dx>, <bx>, <sp>, <bp>, <si>, <di>'               , 'x86: os16 60              '             , 'deprecated stackPtr=-14'],
-  ['pushad'   , 'R:<eax>, <ecx>, <edx>, <ebx>, <esp>, <ebp>, <esi>, <edi>'       , 'x86:      60              '             , 'deprecated stackPtr=-28'],
+  ['pusha'    , 'R:<ax>, <cx>, <dx>, <bx>, <sp>, <bp>, <si>, <di>'               , 'x86: os16 60              '             , 'deprecated'],
+  ['pushad'   , 'R:<eax>, <ecx>, <edx>, <ebx>, <esp>, <ebp>, <esi>, <edi>'       , 'x86:      60              '             , 'deprecated'],
 
   # => PUSHF/PUSHFD-Push EFLAGS Register onto the Stack
-  ['pushf'    , ''                   , '     os16 9c              '             , 'stackPtr=-2'],
-  ['pushfd'   , ''                   , 'x86:      9c              '             , 'stackPtr=-4'],
-  ['pushfq'   , ''                   , 'x64:      9c              '             , 'stackPtr=-8'],
+  ['pushf'    , ''                   , '     os16 9c              '             , ''],
+  ['pushfd'   , ''                   , 'x86:      9c              '             , ''],
+  ['pushfq'   , ''                   , 'x64:      9c              '             , ''],
 
   # => PXOR-Logical Exclusive OR
   ['pxor'     , 'mm, mm/m64'                          , 'rm:     0f ef /r                     '  , 'cpuid=mmx'],
@@ -3274,10 +3315,10 @@ our $environment = {
   ['rdtscp'   , 'W:<edx>, W:<eax>, W:<ecx>'       , '0f 01 f9'                               , 'cpuid=rdtscp'],
 
   # => RET-Return from Procedure
-  ['ret'      , ''                   , '   c3              '                    , 'stackPtr=ptr_size branchType=near bnd'],
-  ['ret'      , ''                   , '   cb              '                    , 'stackPtr=ptr_size branchType=far'],
-  ['ret'      , 'pimm16'             , 'i: c2 iw           '                    , 'stackPtr=ptr_size+pimm16 branchType=near bnd'],
-  ['ret'      , 'pimm16'             , 'i: ca iw           '                    , 'stackPtr=ptr_size+pimm16 branchType=far'],
+  ['ret'      , ''                   , '   c3              '                    , 'branchType=near bnd'],
+  ['ret'      , ''                   , '   cb              '                    , 'branchType=far'],
+  ['ret'      , 'pimm16'             , 'i: c2 iw           '                    , 'branchType=near bnd'],
+  ['ret'      , 'pimm16'             , 'i: ca iw           '                    , 'branchType=far'],
 
   # => RORX-Rotate Right Logical Without Affecting Flags
   ['rorx'     , 'W:r32, r/m32, pimm8'       , 'rmi:     vex.lz.f2.0f3a.w0 f0 /r ib  '  , 'cpuid=bmi2'],
