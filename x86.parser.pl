@@ -192,9 +192,9 @@ sub processOpcodes($$) {
 			push( @{ $opcodes->{opcodes} }, $1 );
 			$opcodes->{regcode} = $2 if ( defined $2 );
 		}
-		elsif (s'/r|/(\d+)'') {
-			$opcodes->{modrm} = 1;
-			push( @{ $opcodes->{opcodes} }, "/$1" ) if ( defined $1 );
+		elsif (s'/r([rm])*|/(\d+)'') {
+			$opcodes->{modrm} = { ''=> 1, r => 'reg', m => 'mem' }->{$1 // '' };
+			push( @{ $opcodes->{opcodes} }, "/$2" ) if ( defined $2 );
 		}
 		elsif (s/^([mio])([bwdqp])$//) {
 			my $name = { i => 'imm', o => 'offset', m => 'moffs' }->{$1} . $char2size{$2};
