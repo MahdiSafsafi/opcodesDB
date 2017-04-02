@@ -193,7 +193,7 @@ sub processOpcodes($$) {
 			$opcodes->{regcode} = $2 if ( defined $2 );
 		}
 		elsif (s'/r([rm])*|/(\d+)'') {
-			$opcodes->{modrm} = { ''=> 1, r => 'reg', m => 'mem' }->{$1 // '' };
+			$opcodes->{modrm} = { '' => 1, r => 'reg', m => 'mem' }->{ $1 // '' };
 			push( @{ $opcodes->{opcodes} }, "/$2" ) if ( defined $2 );
 		}
 		elsif (s/^([mio])([bwdqp])$//) {
