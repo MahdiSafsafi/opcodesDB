@@ -41,11 +41,11 @@
 #   - osv  = opsize can only be [32,64].
 #   - osz  = opsize can only be [16,32].
 #   - e*vex.vu = vector length can't be 128 => VL in [256,512].
-#   - e*vex.vx = vector length can't be 512 => VL in [128,256]. 
+#   - e*vex.vx = vector length can't be 512 => VL in [128,256].
 
 # OPERANDS
 # --------
-# Notations: length is opsize length for legacy instruction 
+# Notations: length is opsize length for legacy instruction
 #            and is vector length (VL) for SIMD instructions.
 #
 # All inside <> are optional.
@@ -56,8 +56,8 @@
 # If absent it defaults to (X,R,R,R,R,...).
 # * means any sub register eg: *di means di|edi|rdi.
 # b[n] = n = broadcast size in bits.
-# 
-# Packed form: 
+#
+# Packed form:
 # vmm  = register size = length.
 # vm   = memory size   = length.
 # .N   = size = (length/N). eg: vm.2 => Size of memory is half of length.
@@ -95,7 +95,7 @@
 #                                        AVX  applies only when VL = 128.
 #                             - avx512*-vl => AVX512*VL applies only when VL != 512.
 #                                             AVX512*   applies only when VL =  512.
-# 
+#
 #
 # branchType = short|near|far.
 #
@@ -130,10 +130,9 @@
 #  - N = Not affected.
 #  - X = TM.
 
-
 # TODO
 # ----
-# 
+#
 
 use strict;
 use warnings;
@@ -147,20 +146,19 @@ my %architectures = (
 );
 
 my %registers = (
-	r8  => { type => 'reg8',  size => 8,  names => [qw/al cl dl bl ah ch dh bh/] },
-	r8x => { type => 'reg8x', size => 8,  names => [ qw/al cl dl bl spl bpl sil dil/, map "r${_}b", 0 .. 15 ] },
-	r16 => { type => 'reg16', size => 16, names => [ qw/ax cx dx bx sp bp si di/, map "r${_}w", 0 .. 15 ] },
-	r32 => { type => 'reg32', size => 32, names => [ qw/eax ecx edx ebx esp ebp esi edi/, map "r${_}d", 0 .. 15 ] },
-	r64 => { type => 'reg64', size => 64, names => [ qw/rax rcx rdx rbx rsp rbp rsi rdi/, map "r$_", 0 .. 15 ] },
-	'st(i)' => { type => 'fpureg', size => 64,             names => [ map "st($_)",   0 .. 07 ] },
-	mm      => { type => 'mmreg',  size => 64,             names => [ map 'mm' . $_,  0 .. 07 ] },
-	creg    => { type => 'creg',   size => $PLATFORM_SIZE, names => [ map 'cr' . $_,  0 .. 15 ] },
-	dreg    => { type => 'dreg',   size => $PLATFORM_SIZE, names => [ map 'dr' . $_,  0 .. 15 ] },
-	k       => { type => 'kreg',   size => 64,             names => [ map 'k' . $_,   0 .. 07 ] },
-	bnd     => { type => 'bndreg', size => 128,            names => [ map 'bnd' . $_, 0 .. 03 ] },
-	xmm     => { type => 'xmmreg', size => 128,            names => [ map 'xmm' . $_, 0 .. 31 ] },
-	ymm     => { type => 'ymmreg', size => 256,            names => [ map 'zmm' . $_, 0 .. 31 ] },
-	zmm     => { type => 'zmmreg', size => 512,            names => [ map 'zmm' . $_, 0 .. 31 ] },
+	r8      => { type => 'reg8',   size => 8,              names => [ qw/al cl dl bl ah ch dh bh spl bpl sil dil/, map "r${_}b", 0 .. 15 ] },
+	r16     => { type => 'reg16',  size => 16,             names => [ qw/ax cx dx bx sp bp si di/,                 map "r${_}w", 0 .. 15 ] },
+	r32     => { type => 'reg32',  size => 32,             names => [ qw/eax ecx edx ebx esp ebp esi edi/,         map "r${_}d", 0 .. 15 ] },
+	r64     => { type => 'reg64',  size => 64,             names => [ qw/rax rcx rdx rbx rsp rbp rsi rdi/,         map "r$_",    0 .. 15 ] },
+	'st(i)' => { type => 'fpureg', size => 64,             names => [ map "st($_)",                                0 .. 07 ] },
+	mm      => { type => 'mmreg',  size => 64,             names => [ map 'mm' . $_,                               0 .. 07 ] },
+	creg    => { type => 'creg',   size => $PLATFORM_SIZE, names => [ map 'cr' . $_,                               0 .. 15 ] },
+	dreg    => { type => 'dreg',   size => $PLATFORM_SIZE, names => [ map 'dr' . $_,                               0 .. 15 ] },
+	k       => { type => 'kreg',   size => 64,             names => [ map 'k' . $_,                                0 .. 07 ] },
+	bnd     => { type => 'bndreg', size => 128,            names => [ map 'bnd' . $_,                              0 .. 03 ] },
+	xmm     => { type => 'xmmreg', size => 128,            names => [ map 'xmm' . $_,                              0 .. 31 ] },
+	ymm     => { type => 'ymmreg', size => 256,            names => [ map 'zmm' . $_,                              0 .. 31 ] },
+	zmm     => { type => 'zmmreg', size => 512,            names => [ map 'zmm' . $_,                              0 .. 31 ] },
 	sreg    => { type => 'sreg',   size => 16,             names => [qw/es cs ss ds fs gs/] },
 	reg     => { type => 'reg',    size => $PLATFORM_SIZE, names => [] },
 );
@@ -255,12 +253,9 @@ our $environment = {
   ['adc'      , 'r16, r/m16'         , 'rm:     os16 13 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['adc'      , 'r32, r/m32'         , 'rm:     os32 13 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['adc'      , 'rax, imm32'         , 'x64:i:  os64 15 id           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
-  ['adc'      , 'r8x/m8, imm8'       , 'x64:mi: rex  80 /2 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['adc'      , 'r/m64, imm32'       , 'x64:mi: os64 81 /2 id        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['adc'      , 'r/m64, imm8'        , 'x64:mi: os64 83 /2 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
-  ['adc'      , 'r8x/m8, r8x'        , 'x64:mr: rex  10 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['adc'      , 'r/m64, r64'         , 'x64:mr: os64 11 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
-  ['adc'      , 'r8x, r8x/m8'        , 'x64:rm: rex  12 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['adc'      , 'r64, r/m64'         , 'x64:rm: os64 13 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
 
   # => ADCX-Unsigned Integer Addition of Two Operands with Carry Flag
@@ -283,12 +278,9 @@ our $environment = {
   ['add'      , 'r16, r/m16'         , 'rm:     os16 03 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['add'      , 'r32, r/m32'         , 'rm:     os32 03 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['add'      , 'rax, imm32'         , 'x64:i:  os64 05 id           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['add'      , 'r8x/m8, imm8'       , 'x64:mi: rex  80 /0 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['add'      , 'r/m64, imm32'       , 'x64:mi: os64 81 /0 id        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['add'      , 'r/m64, imm8'        , 'x64:mi: os64 83 /0 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['add'      , 'r8x/m8, r8x'        , 'x64:mr: rex  00 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['add'      , 'r/m64, r64'         , 'x64:mr: os64 01 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['add'      , 'r8x, r8x/m8'        , 'x64:rm: rex  02 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['add'      , 'r64, r/m64'         , 'x64:rm: os64 03 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
 
   # => ADDPD-Add Packed Double-Precision Floating-Point Values
@@ -371,12 +363,9 @@ our $environment = {
   ['and'      , 'r16, r/m16'         , 'rm:     os16 23 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['and'      , 'r32, r/m32'         , 'rm:     os32 23 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['and'      , 'rax, imm32'         , 'x64:i:  os64 25 id           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['and'      , 'r8x/m8, imm8'       , 'x64:mi: rex  80 /4 ib        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['and'      , 'r/m64, imm32'       , 'x64:mi: os64 81 /4 id        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['and'      , 'r/m64, imm8'        , 'x64:mi: os64 83 /4 ib        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['and'      , 'r8x/m8, r8x'        , 'x64:mr: rex  20 /r           '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['and'      , 'r/m64, r64'         , 'x64:mr: os64 21 /r           '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['and'      , 'r8x, r8x/m8'        , 'x64:rm: rex  22 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['and'      , 'r64, r/m64'         , 'x64:rm: os64 23 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
 
   # => ANDN-Logical AND NOT
@@ -686,12 +675,9 @@ our $environment = {
   ['cmp'      , 'R:r16, r/m16'         , 'rm:     os16 3b /r           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmp'      , 'R:r32, r/m32'         , 'rm:     os32 3b /r           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmp'      , 'R:rax, imm32'         , 'x64:i:  os64 3d id           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['cmp'      , 'R:r8x/m8, imm8'       , 'x64:mi: rex  80 /7 ib        '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmp'      , 'R:r/m64, imm32'       , 'x64:mi: os64 81 /7 id        '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmp'      , 'R:r/m64, imm8'        , 'x64:mi: os64 83 /7 ib        '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['cmp'      , 'R:r8x/m8, r8x'        , 'x64:mr: rex  38 /r           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmp'      , 'R:r/m64, r64'         , 'x64:mr: os64 39 /r           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['cmp'      , 'R:r8x, r8x/m8'        , 'x64:rm: rex  3a /r           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmp'      , 'R:r64, r/m64'         , 'x64:rm: os64 3b /r           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
 
   # => CMPPD-Compare Packed Double-Precision Floating-Point Values
@@ -734,7 +720,6 @@ our $environment = {
   ['cmpxchg'  , 'r/m8, r8, <al>'          , 'mr:          0f b0 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmpxchg'  , 'r/m16, r16, <ax>'        , 'mr:     os16 0f b1 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmpxchg'  , 'r/m32, r32, <eax>'       , 'mr:     os32 0f b1 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['cmpxchg'  , 'r8x/m8, r8x, <al>'       , 'x64:mr: rex  0f b0 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['cmpxchg'  , 'r/m64, r64, <rax>'       , 'x64:mr: os64 0f b1 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
 
   # => CMPXCHG8B/CMPXCHG16B-Compare and Exchange Bytes
@@ -758,7 +743,6 @@ our $environment = {
   ['crc32'    , 'r32, r/m8'          , 'rm:          f2 0f 38 f0 /r      '      , 'cpuid=sse4v2'],
   ['crc32'    , 'r32, r/m16'         , 'rm:     os16 f2 0f 38 f1 /r      '      , 'cpuid=sse4v2'],
   ['crc32'    , 'r32, r/m32'         , 'rm:     os32 f2 0f 38 f1 /r      '      , 'cpuid=sse4v2'],
-  ['crc32'    , 'r32, r8x/m8'        , 'x64:rm:      f2 rex 0f 38 f0 /r  '      , 'cpuid=sse4v2'],
   ['crc32'    , 'r64, r/m8'          , 'x64:rm: os64 f2 0f 38 f0 /r      '      , 'cpuid=sse4v2'],
   ['crc32'    , 'r64, r/m64'         , 'x64:rm: os64 f2 0f 38 f1 /r      '      , 'cpuid=sse4v2'],
 
@@ -917,7 +901,6 @@ our $environment = {
   ['dec'      , 'r/m8'               , 'm:          fe /1           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['dec'      , 'r/m16'              , 'm:     os16 ff /1           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['dec'      , 'r/m32'              , 'm:     os32 ff /1           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
-  ['dec'      , 'r8x/m8'             , 'x64:m: rex  fe /1           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['dec'      , 'r/m64'              , 'x64:m: os64 ff /1           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['dec'      , 'r16'                , 'x86:o: os16 48+rw           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['dec'      , 'r32'                , 'x86:o:      48+rd           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
@@ -926,7 +909,6 @@ our $environment = {
   ['div'      , 'W:r/m8, X:<ax>'                  , 'm:          f6 /6           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
   ['div'      , 'W:r/m16, X:<dx>, X:<ax>'         , 'm:     os16 f7 /6           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
   ['div'      , 'W:r/m32, X:<edx>, X:<eax>'       , 'm:     os32 f7 /6           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
-  ['div'      , 'W:r8x/m8, X:<ax>'                , 'x64:m: rex  f6 /6           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
   ['div'      , 'W:r/m64, X:<rdx>, X:<rax>'       , 'x64:m: os64 f7 /6           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
 
   # => DIVPD-Divide Packed Double-Precision Floating-Point Values
@@ -1270,7 +1252,6 @@ our $environment = {
   ['idiv'     , 'R:r/m8, X:<ax>'                  , 'm:          f6 /7           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
   ['idiv'     , 'R:r/m16, X:<dx>, X:<ax>'         , 'm:     os16 f7 /7           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
   ['idiv'     , 'R:r/m32, X:<edx>, X:<eax>'       , 'm:     os32 f7 /7           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
-  ['idiv'     , 'R:r8x/m8, X:<ax>'                , 'x64:m: rex  f6 /7           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
   ['idiv'     , 'R:r/m64, X:<rdx>, X:<rax>'       , 'x64:m: os64 f7 /7           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
 
   # => IMUL-Signed Multiply
@@ -1300,7 +1281,6 @@ our $environment = {
   ['inc'      , 'r/m8'               , 'm:          fe /0           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['inc'      , 'r/m16'              , 'm:     os16 ff /0           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['inc'      , 'r/m32'              , 'm:     os32 ff /0           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
-  ['inc'      , 'r8x/m8'             , 'x64:m: rex  fe /0           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['inc'      , 'r/m64'              , 'x64:m: os64 ff /0           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['inc'      , 'r16'                , 'x86:o: os16 40+rw           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['inc'      , 'r32'                , 'x86:o:      40+rd           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
@@ -1541,8 +1521,9 @@ our $environment = {
   ['lahf'     , 'W:<ah>'             , 'x86: 9f'                                , 'cpuid=sahf'],
 
   # => LAR-Load Access Rights Byte
-  ['lar'      , 'W:r16, r/m16'         , 'rm: os16 0f 02 /r        '              , 'eflags.zf=M'],
-  ['lar'      , 'W:reg, r32/m16'       , 'rm: os32 0f 02 /r        '              , 'eflags.zf=M'],
+  ['lar'      , 'W:r16, r/m16'         , 'rm:     os16 0f 02 /r        '          , 'eflags.zf=M'],
+  ['lar'      , 'W:r32, r32/m16'       , 'rm:     os32 0f 02 /r        '          , 'eflags.zf=M'],
+  ['lar'      , 'W:r64, r32/m16'       , 'x64:rm: os64 0f 02 /r        '          , 'eflags.zf=M'],
 
   # => LDDQU-Load Unaligned Integer 128 Bits
   ['lddqu'    , 'W:xmm, mem'         , 'rm: f2 0f f0 /r              '          , 'cpuid=sse3'],
@@ -1562,11 +1543,11 @@ our $environment = {
   ['lgs'      , 'W:r32, m16:32'       , 'rm:     os32 0f b5 /r        '          , ''],
   ['lds'      , 'W:r16, m16:16'       , 'x86:rm: os16 c5 /r           '          , 'deprecated'],
   ['lds'      , 'W:r32, m16:32'       , 'x86:rm:      c5 /r           '          , 'deprecated'],
-  ['lss'      , 'W:r64, m16:64'       , 'x64:rm: rex  0f b2 /r        '          , ''],
+  ['lss'      , 'W:r64, m16:64'       , 'x64:rm: os64 0f b2 /r        '          , ''],
   ['les'      , 'W:r16, m16:16'       , 'x86:rm: os16 c4 /r           '          , 'deprecated'],
   ['les'      , 'W:r32, m16:32'       , 'x86:rm:      c4 /r           '          , 'deprecated'],
-  ['lfs'      , 'W:r64, m16:64'       , 'x64:rm: rex  0f b4 /r        '          , ''],
-  ['lgs'      , 'W:r64, m16:64'       , 'x64:rm: rex  0f b5 /r        '          , ''],
+  ['lfs'      , 'W:r64, m16:64'       , 'x64:rm: os64 0f b4 /r        '          , ''],
+  ['lgs'      , 'W:r64, m16:64'       , 'x64:rm: os64 0f b5 /r        '          , ''],
 
   # => LEA-Load Effective Address
   ['lea'      , 'W:r16, mem'         , 'rm:     os16 8d /r           '          , ''],
@@ -1719,15 +1700,11 @@ our $environment = {
   ['mov'      , 'W:rax, moffs64'       , 'x64:d:  os64 a1 mq           '          , ''],
   ['mov'      , 'W:moffs8, al'         , 'x64:d:  os64 a2 mb           '          , ''],
   ['mov'      , 'W:moffs64, rax'       , 'x64:d:  os64 a3 mq           '          , ''],
-  ['mov'      , 'W:r8x/m8, r8x'        , 'x64:mr: rex  88 /r           '          , 'lock=hardware'],
   ['mov'      , 'W:r/m64, r64'         , 'x64:mr: os64 89 /r           '          , 'lock=hardware'],
-  ['mov'      , 'W:r8x, r8x/m8'        , 'x64:rm: rex  8a /r           '          , ''],
   ['mov'      , 'W:r64, r/m64'         , 'x64:rm: os64 8b /r           '          , ''],
   ['mov'      , 'W:r/m64, sreg'        , 'x64:mr: os64 8c /r           '          , ''],
   ['mov'      , 'W:sreg, r/m64'        , 'x64:rm: os64 8e /r           '          , ''],
-  ['mov'      , 'W:r8x, imm8'          , 'x64:oi: rex  b0+rb ib        '          , ''],
   ['mov'      , 'W:r64, imm64'         , 'x64:oi: os64 b8+rd iq        '          , ''],
-  ['mov'      , 'W:r8x/m8, imm8'       , 'x64:mi: rex  c6 /0 ib        '          , 'lock=hardware'],
   ['mov'      , 'W:r/m64, imm32'       , 'x64:mi: os64 c7 /0 id        '          , 'lock=hardware'],
 
   # => MOV-Move to/from Control Registers
@@ -2016,12 +1993,12 @@ our $environment = {
   ['vmovss'   , 'W:m32 {k}, xmm'             , 'mr:t1s: evex.lig.f3.0f.w0 11 /r      '  , 'cpuid=avx512f'],
 
   # => MOVSX/MOVSXD-Move with Sign-Extension
-  ['movsx'    , 'W:r16, r/m8'         , 'rm:     os16 0f be /r        '          , ''],
-  ['movsx'    , 'W:r32, r/m8'         , 'rm:     os32 0f be /r        '          , ''],
-  ['movsx'    , 'W:r32, r/m16'        , 'rm:     os32 0f bf /r        '          , ''],
-  ['movsx'    , 'W:r64, r8x/m8'       , 'x64:rm: rex  0f be /r        '          , ''],
-  ['movsx'    , 'W:r64, r/m16'        , 'x64:rm: os64 0f bf /r        '          , ''],
-  ['movsxd'   , 'W:r64, r/m32'        , 'x64:rm:      rex.w 63 /r     '          , ''],
+  ['movsx'    , 'W:r16, r/m8'        , 'rm:     os16 0f be /r        '          , ''],
+  ['movsx'    , 'W:r32, r/m8'        , 'rm:     os32 0f be /r        '          , ''],
+  ['movsx'    , 'W:r32, r/m16'       , 'rm:     os32 0f bf /r        '          , ''],
+  ['movsx'    , 'W:r64, r/m8'        , 'x64:rm: os64 0f be /r        '          , ''],
+  ['movsx'    , 'W:r64, r/m16'       , 'x64:rm: os64 0f bf /r        '          , ''],
+  ['movsxd'   , 'W:r64, r/m32'       , 'x64:rm:      rex.w 63 /r     '          , ''],
 
   # => MOVUPD-Move Unaligned Packed Double-Precision Floating-Point Values
   ['movupd'   , 'W:xmm, xmm/m128'            , 'rm:     66 0f 10 /r              '      , 'cpuid=sse2'],
@@ -2067,7 +2044,6 @@ our $environment = {
   ['mul'      , 'R:r/m8, X:<ax>'                  , 'm:          f6 /4           '           , 'eflags.of=M eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=M'],
   ['mul'      , 'R:r/m16, X:<dx>, X:<ax>'         , 'm:     os16 f7 /4           '           , 'eflags.of=M eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=M'],
   ['mul'      , 'R:r/m32, X:<edx>, X:<eax>'       , 'm:     os32 f7 /4           '           , 'eflags.of=M eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=M'],
-  ['mul'      , 'R:r8x/m8, X:<ax>'                , 'x64:m: rex  f6 /4           '           , 'eflags.of=M eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=M'],
   ['mul'      , 'R:r/m64, X:<rdx>, X:<rax>'       , 'x64:m: os64 f7 /4           '           , 'eflags.of=M eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=M'],
 
   # => MULPD-Multiply Packed Double-Precision Floating-Point Values
@@ -2107,7 +2083,6 @@ our $environment = {
   ['neg'      , 'r/m8'               , 'm:          f6 /3           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['neg'      , 'r/m16'              , 'm:     os16 f7 /3           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['neg'      , 'r/m32'              , 'm:     os32 f7 /3           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['neg'      , 'r8x/m8'             , 'x64:m: rex  f6 /3           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['neg'      , 'r/m64'              , 'x64:m: os64 f7 /3           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
 
   # => NOP-No Operation
@@ -2120,7 +2095,6 @@ our $environment = {
   ['not'      , 'r/m8'               , 'm:          f6 /2           '           , 'lock=legacy|hardware|explicit'],
   ['not'      , 'r/m16'              , 'm:     os16 f7 /2           '           , 'lock=legacy|hardware|explicit'],
   ['not'      , 'r/m32'              , 'm:     os32 f7 /2           '           , 'lock=legacy|hardware|explicit'],
-  ['not'      , 'r8x/m8'             , 'x64:m: rex  f6 /2           '           , 'lock=legacy|hardware|explicit'],
   ['not'      , 'r/m64'              , 'x64:m: os64 f7 /2           '           , 'lock=legacy|hardware|explicit'],
 
   # => OR-Logical Inclusive OR
@@ -2139,12 +2113,9 @@ our $environment = {
   ['or'       , 'r16, r/m16'         , 'rm:     os16 0b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['or'       , 'r32, r/m32'         , 'rm:     os32 0b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['or'       , 'rax, imm32'         , 'x64:i:  os64 0d id           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['or'       , 'r8x/m8, imm8'       , 'x64:mi: rex  80 /1 ib        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['or'       , 'r/m64, imm32'       , 'x64:mi: os64 81 /1 id        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['or'       , 'r/m64, imm8'        , 'x64:mi: os64 83 /1 ib        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['or'       , 'r8x/m8, r8x'        , 'x64:mr: rex  08 /r           '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['or'       , 'r/m64, r64'         , 'x64:mr: os64 09 /r           '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['or'       , 'r8x, r8x/m8'        , 'x64:rm: rex  0a /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['or'       , 'r64, r/m64'         , 'x64:rm: os64 0b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
 
   # => ORPD-Bitwise Logical OR of Packed Double Precision Floating-Point Values
@@ -3249,29 +3220,17 @@ our $environment = {
   ['ror'      , 'W:r/m8, pimm8'         , 'mi:          c0 /1 ib        '          , 'eflags.of=U eflags.cf=M'],
   ['ror'      , 'W:r/m16, pimm8'        , 'mi:     os16 c1 /1 ib        '          , 'eflags.of=U eflags.cf=M'],
   ['ror'      , 'W:r/m32, pimm8'        , 'mi:     os32 c1 /1 ib        '          , 'eflags.of=U eflags.cf=M'],
-  ['rcl'      , 'W:r8x/m8, 1'           , 'x64:m:  rex  d0 /2           '          , 'eflags.of=M eflags.cf=TM eflags.of=U eflags.cf=TM'],
-  ['rcl'      , 'W:r8x/m8, cl'          , 'x64:m:  rex  d2 /2           '          , 'eflags.of=U eflags.cf=TM'],
   ['rcl'      , 'W:r/m64, 1'            , 'x64:m:  os64 d1 /2           '          , 'eflags.of=M eflags.cf=TM eflags.of=U eflags.cf=TM'],
   ['rcl'      , 'W:r/m64, cl'           , 'x64:m:  os64 d3 /2           '          , 'eflags.of=U eflags.cf=TM'],
-  ['rcr'      , 'W:r8x/m8, 1'           , 'x64:m:  rex  d0 /3           '          , 'eflags.of=M eflags.cf=TM eflags.of=U eflags.cf=TM'],
-  ['rcr'      , 'W:r8x/m8, cl'          , 'x64:m:  rex  d2 /3           '          , 'eflags.of=U eflags.cf=TM'],
   ['rcr'      , 'W:r/m64, 1'            , 'x64:m:  os64 d1 /3           '          , 'eflags.of=M eflags.cf=TM eflags.of=U eflags.cf=TM'],
   ['rcr'      , 'W:r/m64, cl'           , 'x64:m:  os64 d3 /3           '          , 'eflags.of=U eflags.cf=TM'],
-  ['rol'      , 'W:r8x/m8, 1'           , 'x64:m:  rex  d0 /0           '          , 'eflags.of=M eflags.cf=M eflags.of=U eflags.cf=M'],
-  ['rol'      , 'W:r8x/m8, cl'          , 'x64:m:  rex  d2 /0           '          , 'eflags.of=U eflags.cf=M'],
   ['rol'      , 'W:r/m64, 1'            , 'x64:m:  os64 d1 /0           '          , 'eflags.of=M eflags.cf=M eflags.of=U eflags.cf=M'],
   ['rol'      , 'W:r/m64, cl'           , 'x64:m:  os64 d3 /0           '          , 'eflags.of=U eflags.cf=M'],
-  ['ror'      , 'W:r8x/m8, 1'           , 'x64:m:  rex  d0 /1           '          , 'eflags.of=M eflags.cf=M eflags.of=U eflags.cf=M'],
-  ['ror'      , 'W:r8x/m8, cl'          , 'x64:m:  rex  d2 /1           '          , 'eflags.of=U eflags.cf=M'],
   ['ror'      , 'W:r/m64, 1'            , 'x64:m:  os64 d1 /1           '          , 'eflags.of=M eflags.cf=M eflags.of=U eflags.cf=M'],
   ['ror'      , 'W:r/m64, cl'           , 'x64:m:  os64 d3 /1           '          , 'eflags.of=U eflags.cf=M'],
-  ['rcl'      , 'W:r8x/m8, pimm8'       , 'x64:mi: rex  c0 /2 ib        '          , 'eflags.of=U eflags.cf=TM'],
   ['rcl'      , 'W:r/m64, pimm8'        , 'x64:mi: os64 c1 /2 ib        '          , 'eflags.of=U eflags.cf=TM'],
-  ['rcr'      , 'W:r8x/m8, pimm8'       , 'x64:mi: rex  c0 /3 ib        '          , 'eflags.of=U eflags.cf=TM'],
   ['rcr'      , 'W:r/m64, pimm8'        , 'x64:mi: os64 c1 /3 ib        '          , 'eflags.of=U eflags.cf=TM'],
-  ['rol'      , 'W:r8x/m8, pimm8'       , 'x64:mi: rex  c0 /0 ib        '          , 'eflags.of=U eflags.cf=M'],
   ['rol'      , 'W:r/m64, pimm8'        , 'x64:mi: os64 c1 /0 ib        '          , 'eflags.of=U eflags.cf=M'],
-  ['ror'      , 'W:r8x/m8, pimm8'       , 'x64:mi: rex  c0 /1 ib        '          , 'eflags.of=U eflags.cf=M'],
   ['ror'      , 'W:r/m64, pimm8'        , 'x64:mi: os64 c1 /1 ib        '          , 'eflags.of=U eflags.cf=M'],
 
   # => RCPPS-Compute Reciprocals of Packed Single-Precision Floating-Point Values
@@ -3398,29 +3357,17 @@ our $environment = {
   ['shr'      , 'r/m8, pimm8'         , 'mi:          c0 /5 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shr'      , 'r/m16, pimm8'        , 'mi:     os16 c1 /5 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shr'      , 'r/m32, pimm8'        , 'mi:     os32 c1 /5 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['sal'      , 'r8x/m8, 1'           , 'x64:m:  rex  d0 /4           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['sal'      , 'r8x/m8, cl'          , 'x64:m:  rex  d2 /4           '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['sal'      , 'r/m64, 1'            , 'x64:m:  os64 d1 /4           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['sal'      , 'r/m64, cl'           , 'x64:m:  os64 d3 /4           '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['sar'      , 'r8x/m8, 1'           , 'x64:m:  rex  d0 /7           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['sar'      , 'r8x/m8, cl'          , 'x64:m:  rex  d2 /7           '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['sar'      , 'r/m64, 1'            , 'x64:m:  os64 d1 /7           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['sar'      , 'r/m64, cl'           , 'x64:m:  os64 d3 /7           '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['shl'      , 'r8x/m8, 1'           , 'x64:m:  rex  d0 /4           '          , 'aliasOf=sal eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['shl'      , 'r8x/m8, cl'          , 'x64:m:  rex  d2 /4           '          , 'aliasOf=sal eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shl'      , 'r/m64, 1'            , 'x64:m:  os64 d1 /4           '          , 'aliasOf=sal eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shl'      , 'r/m64, cl'           , 'x64:m:  os64 d3 /4           '          , 'aliasOf=sal eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['shr'      , 'r8x/m8, 1'           , 'x64:m:  rex  d0 /5           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['shr'      , 'r8x/m8, cl'          , 'x64:m:  rex  d2 /5           '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shr'      , 'r/m64, 1'            , 'x64:m:  os64 d1 /5           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shr'      , 'r/m64, cl'           , 'x64:m:  os64 d3 /5           '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['sal'      , 'r8x/m8, pimm8'       , 'x64:mi: rex  c0 /4 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['sal'      , 'r/m64, pimm8'        , 'x64:mi: os64 c1 /4 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['sar'      , 'r8x/m8, pimm8'       , 'x64:mi: rex  c0 /7 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['sar'      , 'r/m64, pimm8'        , 'x64:mi: os64 c1 /7 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['shl'      , 'r8x/m8, pimm8'       , 'x64:mi: rex  c0 /4 ib        '          , 'aliasOf=sal eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shl'      , 'r/m64, pimm8'        , 'x64:mi: os64 c1 /4 ib        '          , 'aliasOf=sal eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
-  ['shr'      , 'r8x/m8, pimm8'       , 'x64:mi: rex  c0 /5 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
   ['shr'      , 'r/m64, pimm8'        , 'x64:mi: os64 c1 /5 ib        '          , 'eflags.of=U eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=M'],
 
   # => SARX/SHLX/SHRX-Shift Without Affecting Flags
@@ -3447,12 +3394,9 @@ our $environment = {
   ['sbb'      , 'W:r16, r/m16'         , 'rm:     os16 1b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['sbb'      , 'W:r32, r/m32'         , 'rm:     os32 1b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['sbb'      , 'W:rax, imm32'         , 'x64:i:  os64 1d id           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
-  ['sbb'      , 'W:r8x/m8, imm8'       , 'x64:mi: rex  80 /3 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['sbb'      , 'W:r/m64, imm32'       , 'x64:mi: os64 81 /3 id        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['sbb'      , 'W:r/m64, imm8'        , 'x64:mi: os64 83 /3 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
-  ['sbb'      , 'W:r8x/m8, r8x'        , 'x64:mr: rex  18 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['sbb'      , 'W:r/m64, r64'         , 'x64:mr: os64 19 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
-  ['sbb'      , 'W:r8x, r8x/m8'        , 'x64:rm: rex  1a /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
   ['sbb'      , 'W:r64, r/m64'         , 'x64:rm: os64 1b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=TM'],
 
   # => SCAS/SCASB/SCASW/SCASD-Scan String
@@ -3496,36 +3440,6 @@ our $environment = {
   ['setpo'    , 'R:r/m8'             , 'm:         0f 9b           '            , 'aliasOf=setnp eflags.pf=T'],
   ['sets'     , 'R:r/m8'             , 'm:         0f 98           '            , 'eflags.sf=T'],
   ['setz'     , 'R:r/m8'             , 'm:         0f 94           '            , 'aliasOf=sete eflags.zf=T'],
-  ['seta'     , 'R:r8x/m8'           , 'x64:m: rex 0f 97           '            , 'eflags.cf=T eflags.zf=T'],
-  ['setae'    , 'R:r8x/m8'           , 'x64:m: rex 0f 93           '            , 'eflags.cf=T'],
-  ['setb'     , 'R:r8x/m8'           , 'x64:m: rex 0f 92           '            , 'eflags.cf=T'],
-  ['setbe'    , 'R:r8x/m8'           , 'x64:m: rex 0f 96           '            , 'eflags.cf=T eflags.zf=T'],
-  ['setc'     , 'R:r8x/m8'           , 'x64:m: rex 0f 92           '            , 'aliasOf=setb eflags.cf=T'],
-  ['sete'     , 'R:r8x/m8'           , 'x64:m: rex 0f 94           '            , 'eflags.zf=T'],
-  ['setg'     , 'R:r8x/m8'           , 'x64:m: rex 0f 9f           '            , 'eflags.zf=T eflags.sf=T eflags.of=T'],
-  ['setge'    , 'R:r8x/m8'           , 'x64:m: rex 0f 9d           '            , 'eflags.sf=T eflags.of=T'],
-  ['setl'     , 'R:r8x/m8'           , 'x64:m: rex 0f 9c           '            , 'eflags.sf=T eflags.of=T'],
-  ['setle'    , 'R:r8x/m8'           , 'x64:m: rex 0f 9e           '            , 'eflags.zf=T eflags.sf=T eflags.of=T'],
-  ['setna'    , 'R:r8x/m8'           , 'x64:m: rex 0f 96           '            , 'aliasOf=setbe eflags.cf=T eflags.zf=T'],
-  ['setnae'   , 'R:r8x/m8'           , 'x64:m: rex 0f 92           '            , 'aliasOf=setb eflags.cf=T'],
-  ['setnb'    , 'R:r8x/m8'           , 'x64:m: rex 0f 93           '            , 'aliasOf=setae eflags.cf=T'],
-  ['setnbe'   , 'R:r8x/m8'           , 'x64:m: rex 0f 97           '            , 'aliasOf=seta eflags.cf=T eflags.zf=T'],
-  ['setnc'    , 'R:r8x/m8'           , 'x64:m: rex 0f 93           '            , 'aliasOf=setae eflags.cf=T'],
-  ['setne'    , 'R:r8x/m8'           , 'x64:m: rex 0f 95           '            , 'eflags.zf=T'],
-  ['setng'    , 'R:r8x/m8'           , 'x64:m: rex 0f 9e           '            , 'aliasOf=setle eflags.zf=T eflags.sf=T eflags.of=T'],
-  ['setnge'   , 'R:r8x/m8'           , 'x64:m: rex 0f 9c           '            , 'aliasOf=setl eflags.sf=T eflags.of=T'],
-  ['setnl'    , 'R:r8x/m8'           , 'x64:m: rex 0f 9d           '            , 'aliasOf=setge eflags.sf=T eflags.of=T'],
-  ['setnle'   , 'R:r8x/m8'           , 'x64:m: rex 0f 9f           '            , 'aliasOf=setg eflags.zf=T eflags.sf=T eflags.of=T'],
-  ['setno'    , 'R:r8x/m8'           , 'x64:m: rex 0f 91           '            , 'eflags.of=T'],
-  ['setnp'    , 'R:r8x/m8'           , 'x64:m: rex 0f 9b           '            , 'eflags.pf=T'],
-  ['setns'    , 'R:r8x/m8'           , 'x64:m: rex 0f 99           '            , 'eflags.sf=T'],
-  ['setnz'    , 'R:r8x/m8'           , 'x64:m: rex 0f 95           '            , 'aliasOf=setne eflags.zf=T'],
-  ['seto'     , 'R:r8x/m8'           , 'x64:m: rex 0f 90           '            , 'eflags.of=T'],
-  ['setp'     , 'R:r8x/m8'           , 'x64:m: rex 0f 9a           '            , 'eflags.pf=T'],
-  ['setpe'    , 'R:r8x/m8'           , 'x64:m: rex 0f 9a           '            , 'aliasOf=setp eflags.pf=T'],
-  ['setpo'    , 'R:r8x/m8'           , 'x64:m: rex 0f 9b           '            , 'aliasOf=setnp eflags.pf=T'],
-  ['sets'     , 'R:r8x/m8'           , 'x64:m: rex 0f 98           '            , 'eflags.sf=T'],
-  ['setz'     , 'R:r8x/m8'           , 'x64:m: rex 0f 94           '            , 'aliasOf=sete eflags.zf=T'],
 
   # => SFENCE-Store Fence
   ['sfence'   , ''                   , '0f ae f8'                               , ''],
@@ -3670,12 +3584,9 @@ our $environment = {
   ['sub'      , 'r16, r/m16'         , 'rm:     os16 2b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['sub'      , 'r32, r/m32'         , 'rm:     os32 2b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['sub'      , 'rax, imm32'         , 'x64:i:  os64 2d id           '          , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['sub'      , 'r8x/m8, imm8'       , 'x64:mi: rex  80 /5 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['sub'      , 'r/m64, imm32'       , 'x64:mi: os64 81 /5 id        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['sub'      , 'r/m64, imm8'        , 'x64:mi: os64 83 /5 ib        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['sub'      , 'r8x/m8, r8x'        , 'x64:mr: rex  28 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['sub'      , 'r/m64, r64'         , 'x64:mr: os64 29 /r           '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['sub'      , 'r8x, r8x/m8'        , 'x64:rm: rex  2a /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['sub'      , 'r64, r/m64'         , 'x64:rm: os64 2b /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
 
   # => SUBPD-Subtract Packed Double-Precision Floating-Point Values
@@ -3732,9 +3643,7 @@ our $environment = {
   ['test'     , 'R:r/m16, r16'         , 'mr:     os16 85 /r           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['test'     , 'R:r/m32, r32'         , 'mr:     os32 85 /r           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['test'     , 'R:rax, imm32'         , 'x64:i:  os64 a9 id           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['test'     , 'R:r8x/m8, imm8'       , 'x64:mi: rex  f6 /0 ib        '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['test'     , 'R:r/m64, imm32'       , 'x64:mi: os64 f7 /0 id        '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['test'     , 'R:r8x/m8, r8x'        , 'x64:mr: rex  84 /r           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['test'     , 'R:r/m64, r64'         , 'x64:mr: os64 85 /r           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
 
   # => TZCNT-Count the Number of Trailing Zero Bits
@@ -5070,7 +4979,6 @@ our $environment = {
   ['xadd'     , 'r/m8, X:r8'          , 'mr:          0f c0 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['xadd'     , 'r/m16, X:r16'        , 'mr:     os16 0f c1 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['xadd'     , 'r/m32, X:r32'        , 'mr:     os32 0f c1 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
-  ['xadd'     , 'r8x/m8, X:r8x'       , 'x64:mr: rex  0f c0 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
   ['xadd'     , 'r/m64, X:r64'        , 'x64:mr: os64 0f c1 /r        '          , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M eflags.cf=M'],
 
   # => XBEGIN-Transactional Begin
@@ -5091,8 +4999,6 @@ our $environment = {
   ['xchg'     , 'rax, X:r64'          , 'x64:o:  os64 90+rd           '          , 'form=preferred'],
   ['xchg'     , 'r64, X:rax'          , 'x64:o:  os64 90+rd           '          , 'form=alternative'],
   ['xchg'     , 'r/m64, X:r64'        , 'x64:mr: os64 87 /r           '          , 'form=preferred lock=legacy|hardware|implied'],
-  ['xchg'     , 'r8x/m8, X:r8x'       , 'x64:mr: rex  86 /r           '          , 'form=alternative lock=legacy|hardware|implied'],
-  ['xchg'     , 'r8x, X:r8x/m8'       , 'x64:rm: rex  86 /r           '          , 'form=alternative lock=legacy|hardware|implied'],
   ['xchg'     , 'r64, X:r/m64'        , 'x64:rm: os64 87 /r           '          , 'form=alternative lock=legacy|hardware|implied'],
 
   # => XEND-Transactional End
@@ -5122,12 +5028,9 @@ our $environment = {
   ['xor'      , 'r16, r/m16'         , 'rm:     os16 33 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['xor'      , 'r32, r/m32'         , 'rm:     os32 33 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['xor'      , 'rax, imm32'         , 'x64:i:  os64 35 id           '          , 'eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['xor'      , 'r8x/m8, imm8'       , 'x64:mi: rex  80 /6 ib        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['xor'      , 'r/m64, imm32'       , 'x64:mi: os64 81 /6 id        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['xor'      , 'r/m64, imm8'        , 'x64:mi: os64 83 /6 ib        '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['xor'      , 'r8x/m8, r8x'        , 'x64:mr: rex  30 /r           '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['xor'      , 'r/m64, r64'         , 'x64:mr: os64 31 /r           '          , 'lock=legacy|hardware|explicit eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
-  ['xor'      , 'r8x, r8x/m8'        , 'x64:rm: rex  32 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
   ['xor'      , 'r64, r/m64'         , 'x64:rm: os64 33 /r           '          , 'lock=legacy|hardware|explicit|ignore eflags.of=C eflags.sf=M eflags.zf=M eflags.af=U eflags.pf=M eflags.cf=C'],
 
   # => XORPD-Bitwise Logical XOR of Packed Double Precision Floating-Point Values
