@@ -1556,7 +1556,7 @@ our $environment = {
 
   # => LEAVE-High Level Procedure Exit
   ['leave'    , '<sp>, X:<bp>'         , '     os16 c9              '             , 'stackPtr=enter_size'],
-  ['leave'    , '<esp>, X:<ebp>'       , 'x86:      c9              '             , 'stackPtr=enter_size'],
+  ['leave'    , '<esp>, X:<ebp>'       , 'x86: os32 c9              '             , 'stackPtr=enter_size'],
   ['leave'    , '<rsp>, X:<rbp>'       , 'x64:      c9              '             , 'stackPtr=enter_size'],
 
   # => LFENCE-Load Fence
