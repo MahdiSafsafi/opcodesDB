@@ -529,10 +529,10 @@ our $environment = {
   ['call'     , 'm16:32'             , 'm:     os32 ff /3           '           , 'stackPtr=-ptr_size branchType=far'],
   ['call'     , 'rel16'              , 'x86:m: os16 e8 ow           '           , 'stackPtr=-4 branchType=near bnd'],
   ['call'     , 'R:r/m16'            , 'x86:m: os16 ff /2           '           , 'stackPtr=-4 branchType=near bnd'],
-  ['call'     , 'R:r/m32'            , 'x86:m:      ff /2           '           , 'stackPtr=-4 branchType=near bnd'],
+  ['call'     , 'R:r/m32'            , 'x86:m: os32 ff /2           '           , 'stackPtr=-4 branchType=near bnd'],
   ['call'     , 'R:r/m64'            , 'x64:m:      ff /2           '           , 'stackPtr=-8 branchType=near bnd'],
   ['call'     , 'ptr16:16'           , 'x86:d: os16 9a od           '           , 'deprecated stackPtr=-4 branchType=far'],
-  ['call'     , 'ptr16:32'           , 'x86:d:      9a op           '           , 'deprecated stackPtr=-4 branchType=far'],
+  ['call'     , 'ptr16:32'           , 'x86:d: os32 9a op           '           , 'deprecated stackPtr=-4 branchType=far'],
   ['call'     , 'm16:64'             , 'x64:m: os64 ff /3           '           , 'stackPtr=-8 branchType=far'],
 
   # => CBW/CWDE/CDQE-Convert Byte to Word/Convert Word to Doubleword/Convert Doubleword to Quadword
@@ -903,7 +903,7 @@ our $environment = {
   ['dec'      , 'r/m32'              , 'm:     os32 ff /1           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['dec'      , 'r/m64'              , 'x64:m: os64 ff /1           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['dec'      , 'r16'                , 'x86:o: os16 48+rw           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
-  ['dec'      , 'r32'                , 'x86:o:      48+rd           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
+  ['dec'      , 'r32'                , 'x86:o: os32 48+rd           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
 
   # => DIV-Unsigned Divide
   ['div'      , 'W:r/m8, X:<ax>'                  , 'm:          f6 /6           '           , 'eflags.of=U eflags.sf=U eflags.zf=U eflags.af=U eflags.pf=U eflags.cf=U'],
@@ -1283,7 +1283,7 @@ our $environment = {
   ['inc'      , 'r/m32'              , 'm:     os32 ff /0           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['inc'      , 'r/m64'              , 'x64:m: os64 ff /0           '           , 'lock=legacy|hardware|explicit eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
   ['inc'      , 'r16'                , 'x86:o: os16 40+rw           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
-  ['inc'      , 'r32'                , 'x86:o:      40+rd           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
+  ['inc'      , 'r32'                , 'x86:o: os32 40+rd           '           , 'eflags.of=M eflags.sf=M eflags.zf=M eflags.af=M eflags.pf=M'],
 
   # => INS/INSB/INSW/INSD-Input from Port to String
   #['ins'      , 'm8, dx'                   , '     6c              '                  , 'rep eflags.df=T'],
@@ -1422,10 +1422,10 @@ our $environment = {
   ['jmp'      , 'm16:32'             , 'm:     os32 ff /5           '           , 'branchType=far'],
   ['jmp'      , 'rel16'              , 'x86:d: os16 e9 ow           '           , 'branchType=near bnd'],
   ['jmp'      , 'R:r/m16'            , 'x86:m: os16 ff /4           '           , 'branchType=near bnd'],
-  ['jmp'      , 'R:r/m32'            , 'x86:m:      ff /4           '           , 'branchType=near bnd'],
+  ['jmp'      , 'R:r/m32'            , 'x86:m: os32 ff /4           '           , 'branchType=near bnd'],
   ['jmp'      , 'R:r/m64'            , 'x64:m:      ff /4           '           , 'branchType=near bnd'],
   ['jmp'      , 'ptr16:16'           , 'x86:d: os16 ea od           '           , 'deprecated branchType=far'],
-  ['jmp'      , 'ptr16:32'           , 'x86:d:      ea op           '           , 'deprecated branchType=far'],
+  ['jmp'      , 'ptr16:32'           , 'x86:d: os32 ea op           '           , 'deprecated branchType=far'],
   ['jmp'      , 'm16:64'             , 'x64:m: os64 ff /5           '           , 'branchType=far'],
 
   # => KADDW/KADDB/KADDQ/KADDD-ADD Two Masks
@@ -2768,13 +2768,13 @@ our $environment = {
   ['pop'      , 'W:ds'               , 'x86:        1f              '           , 'stackPtr=2'],
   ['pop'      , 'W:es'               , 'x86:        07              '           , 'stackPtr=2'],
   ['pop'      , 'W:ss'               , 'x86:        17              '           , 'stackPtr=2'],
-  ['pop'      , 'W:fs'               , 'x86:        0f a1           '           , 'stackPtr=2'],
+  ['pop'      , 'W:fs'               , 'x86:   os32 0f a1           '           , 'stackPtr=2'],
   ['pop'      , 'W:fs'               , 'x64:        0f a1           '           , 'stackPtr=2'],
-  ['pop'      , 'W:gs'               , 'x86:        0f a9           '           , 'stackPtr=2'],
+  ['pop'      , 'W:gs'               , 'x86:   os32 0f a9           '           , 'stackPtr=2'],
   ['pop'      , 'W:gs'               , 'x64:        0f a9           '           , 'stackPtr=2'],
-  ['pop'      , 'W:r/m32'            , 'x86:m:      8f /0           '           , 'stackPtr=4'],
+  ['pop'      , 'W:r/m32'            , 'x86:m: os32 8f /0           '           , 'stackPtr=4'],
   ['pop'      , 'W:r/m64'            , 'x64:m:      8f /0           '           , 'stackPtr=8'],
-  ['pop'      , 'W:r32'              , 'x86:o:      58+rd           '           , 'stackPtr=4'],
+  ['pop'      , 'W:r32'              , 'x86:o: os32 58+rd           '           , 'stackPtr=4'],
   ['pop'      , 'W:r64'              , 'x64:o:      58+rd           '           , 'stackPtr=8'],
 
   # => POPA/POPAD-Pop All General-Purpose Registers
@@ -3157,9 +3157,9 @@ our $environment = {
   ['push'     , 'R:ss'               , 'x86:        16              '           , 'stackPtr=-2'],
   ['push'     , 'R:ds'               , 'x86:        1e              '           , 'stackPtr=-2'],
   ['push'     , 'R:es'               , 'x86:        06              '           , 'stackPtr=-2'],
-  ['push'     , 'R:r/m32'            , 'x86:m:      ff /6           '           , 'stackPtr=-4'],
+  ['push'     , 'R:r/m32'            , 'x86:m: os32 ff /6           '           , 'stackPtr=-4'],
   ['push'     , 'R:r/m64'            , 'x64:m:      ff /6           '           , 'stackPtr=-8'],
-  ['push'     , 'R:r32'              , 'x86:o:      50+rd           '           , 'stackPtr=-4'],
+  ['push'     , 'R:r32'              , 'x86:o: os32 50+rd           '           , 'stackPtr=-4'],
   ['push'     , 'R:r64'              , 'x64:o:      50+rd           '           , 'stackPtr=-8'],
 
   # => PUSHA/PUSHAD-Push All General-Purpose Registers
