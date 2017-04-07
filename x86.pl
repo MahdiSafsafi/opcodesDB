@@ -17,7 +17,7 @@
 
 # OPCODE
 # ------
-# Pattern : [arch]*:[openc]*:[tuple]*:opcode.
+# Pattern : [arch]*:[openc]*:[tuple]*:opcodes.
 # * means optional.
 # arch   = x86|x64. Default to (Both) if absent.
 # openc  = Instruction operands encoding. Default to NONE if absent.
@@ -30,23 +30,20 @@
 #   - o => Opcode.
 # tuple  = evex memory tuple. Must present when there is a memory with evex encoding.
 #          If tuple is present, openc must too !
-# opcode = Similar to Intel notation. However there is some difference here:
+# opcodes = Similar to Intel notation. However there is some difference here:
 #   - m[bwdq] = moffs.
 #   - o[bwdq] = code offset for branch.
+#   - /r      = Instruction uses ModRm field.
+#   - /rr     = ModRm.Mod  = 0b11.
+#   - /rm     = ModRm.Mod != 0b11.
+#   - vsib    = Instruction uses vsib field.
 #   - as16|as32|as64 = instruction must be encoded with specific address size.
 #   - os16 = 66 prefix is required for instruction.
-#   - os32 = rex prefix can't be used if (arch == x64).
+#   - os32 = rex.w can't be used if (arch == x64).
 #   - os64 = instruction requires rex.w.
-#   - os   = opsize can be [16,32,64].
-#   - osv  = opsize can only be [32,64].
-#   - osz  = opsize can only be [16,32].
-#   - e*vex.vu = vector length can't be 128 => VL in [256,512].
-#   - e*vex.vx = vector length can't be 512 => VL in [128,256].
 
 # OPERANDS
 # --------
-# Notations: length is opsize length for legacy instruction
-#            and is vector length (VL) for SIMD instructions.
 #
 # All inside <> are optional.
 # Read|Write info:
@@ -57,27 +54,6 @@
 # * means any sub register eg: *di means di|edi|rdi.
 # b[n] = n = broadcast size in bits.
 #
-# Packed form:
-# vmm  = register size = length.
-# vm   = memory size   = length.
-# .N   = size = (length/N). eg: vm.2 => Size of memory is half of length.
-# .low = size = LowOf(length):
-#                  - VL:512 => 256.
-#                  - VL:256 => 128.
-#                  - VL:128 => 128.
-#                  - OS:64  => 32.
-#                  - OS:32  => 16.
-#                  - OS:16  => 16.
-# .dup = size = dupOf(VL):
-#                  - 512 => 512.
-#                  - 256 => 256.
-#                  - 128 => 64.
-# vm[sz][n]: 'sz' is memory size in bits. 'n' is vsib size:
-#                  - x => vsibSize = 128.
-#                  - y => vsibSize = 256.
-#                  - z => vsibSize = 512.
-#                  - v => vsibSize = VL .
-#                  - l => vsibSize = LowOf(VL).
 
 # META-DATA
 # ---------
