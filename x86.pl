@@ -133,7 +133,7 @@ my %registers = (
 	k       => { type => 'kreg',   size => 64,             names => [ map 'k' . $_,                                0 .. 07 ] },
 	bnd     => { type => 'bndreg', size => 128,            names => [ map 'bnd' . $_,                              0 .. 03 ] },
 	xmm     => { type => 'xmmreg', size => 128,            names => [ map 'xmm' . $_,                              0 .. 31 ] },
-	ymm     => { type => 'ymmreg', size => 256,            names => [ map 'zmm' . $_,                              0 .. 31 ] },
+	ymm     => { type => 'ymmreg', size => 256,            names => [ map 'ymm' . $_,                              0 .. 31 ] },
 	zmm     => { type => 'zmmreg', size => 512,            names => [ map 'zmm' . $_,                              0 .. 31 ] },
 	sreg    => { type => 'sreg',   size => 16,             names => [qw/es cs ss ds fs gs/] },
 	reg     => { type => 'reg',    size => $PLATFORM_SIZE, names => [] },
